@@ -50,19 +50,19 @@ function emp_reset_password(data){
     return schema.validate(data);
 }
 
-const base64ImageSizeValidator = (value, helpers) => {
-    const buffer = Buffer.from(value, "base64");
-    const sizeInBytes = buffer.length;
-    const limitBytes = 250 * 1024;
-    if (sizeInBytes <= limitBytes) return value;
-    else return helpers.error("any.invalid");
-  };
+// const base64ImageSizeValidator = (value, helpers) => {
+//     const buffer = Buffer.from(value, "base64");
+//     const sizeInBytes = buffer.length;
+//     const limitBytes = 250 * 1024;
+//     if (sizeInBytes <= limitBytes) return value;
+//     else return helpers.error("any.invalid");
+//   };
 function add_update_org(data){
     const schema = Joi.object({
         organisation_name: Joi.string().min(5).max(15).required(),
         organisation_type: Joi.string().min(2).max(15).required(),
         logo: Joi.string()
-            .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
+            // .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
             .required()
             .messages({
             "any.invalid": "Size should be 250kb only", // Define the custom error message
