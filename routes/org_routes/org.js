@@ -216,9 +216,15 @@ router.post('/add_update_designation', Auth, async (req, res) => {
                 }
             );
         } else {
+            const processedLeaves = data.leaves.map(leave => ({
+                ...leave,
+                leave_id: functions.get_random_string("L",8,true) // Generate a unique ID for each leave
+            }));
             let new_designation_data = {
                 designation_id: functions.get_random_string("D", 10, true),
                 designation_name: data.designation_name.toLowerCase(),
+                leaves:processedLeaves,
+
             };
 
             designation_up = await mongoFunctions.find_one_and_update(

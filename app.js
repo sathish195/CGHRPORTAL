@@ -9,6 +9,9 @@ port=process.env.PORT
 
 require("./helpers/cors")(app);
 require("./helpers/db")();
+//process.env is pending
+//error handling is pending
+//redis is pending
 
 require("./helpers/routeConfig")(app);
 

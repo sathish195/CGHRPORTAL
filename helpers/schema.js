@@ -88,10 +88,15 @@ function add_update_department(data){
       return schema.validate(data);
 }
 function add_update_designation(data){
+    const leaves_obj = Joi.object({
+        leave_name: Joi.string().required().min(4).max(15),
+        max_leaves: Joi.number().required().min(1).max(10),
+      });
     const schema = Joi.object({
         organisation_id: Joi.string().min(10).max(18).required(),
         designation_name: Joi.string().trim().strip().min(5).max(20).required(),
         designation_id: Joi.string().allow(null, "").optional(),
+        leaves:Joi.array(leaves_obj).required(),
       });
       return schema.validate(data);
 }
