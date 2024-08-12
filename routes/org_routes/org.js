@@ -46,19 +46,19 @@ router.post('/add_update_org_details',Auth,async (req,res)=>{
         roles:[
             {
                 role_id: functions.get_random_string("R", 15, true),
-                role_name: "TEAM MEMBER",
+                role_name: "Team Member",
             },
             {
                 role_id: functions.get_random_string("R", 15, true),
-                role_name: "MANAGER",
+                role_name: "Manager",
             },
             {
                 role_id: functions.get_random_string("R", 15, true),
-                role_name: "DIRECTOR",
+                role_name: "Director",
             },
             {
                 role_id: functions.get_random_string("R", 15, true),
-                role_name: "TEAM INCHARGE",
+                role_name: "Team Incharge",
             },
         ]
     };
