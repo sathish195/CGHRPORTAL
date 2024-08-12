@@ -32,7 +32,7 @@ function emp_login_verify(data){
     const schema = Joi.object({
         email: Joi.string().required().email().max(55),
         otp: Joi.string().required().min(6).max(6),
-        code2fa:Joi.string().required(),
+        code2fa:Joi.string().allow(null, "").optional(),
         last_ip: Joi.string().required(),
         device_id: Joi.string().required(), // Add parentheses to call required() method
         browserid: Joi.string().required()
