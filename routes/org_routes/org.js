@@ -87,12 +87,14 @@ router.post('/add_update_department', Auth, async (req, res) => {
     if (error) return res.status(400).send(error.details[0].message);
     if (req.employee.role_name.toLowerCase() !== "director") 
         return res.status(403).send("Only Director can access this endpoint");
-
+    org=await mongoFunctions.find_one("ORGANISATIONS", {
+        email: req.employee.email,
+      });
 
     // Retrieve organisation data from Redis
     let org_data = await redis.redisGet(
         "CRM_ORGANISATIONS",
-        req.employee.organisation_id,
+        org.organisation_id,
         true
     );
     console.log(org_data);
@@ -171,11 +173,13 @@ router.post('/add_update_designation', Auth, async (req, res) => {
     if (req.employee.role_name.toLowerCase() !== "director") 
         return res.status(403).send("Only Director can access this endpoint");
 
-
+    org=await mongoFunctions.find_one("ORGANISATIONS", {
+        email: req.employee.email,
+      });
     // Retrieve organisation data from Redis
     let org_data = await redis.redisGet(
         "CRM_ORGANISATIONS",
-        req.employee.organisation_id,
+        org.organisation_id,
         true
     );
 
@@ -249,11 +253,14 @@ router.post("/add_update_role", Auth, async (req, res) => {
     // Validate data
     const { error } = validations.add_update_role(data);
     if (error) return res.status(400).send(error.details[0].message);
+    org=await mongoFunctions.find_one("ORGANISATIONS", {
+        email: req.employee.email,
+      });
 
     // Fetch organization data from Redis
     let org_data = await redis.redisGet(
         "CRM_ORGANISATIONS",
-        req.employee.organisation_id,
+        org.organisation_id,
         true
     );
 
@@ -319,9 +326,12 @@ router.post("/add_update_role", Auth, async (req, res) => {
 });
 
 router.post("/universal" ,Auth,async(req, res) => {
+    org=await mongoFunctions.find_one("ORGANISATIONS", {
+        email: req.employee.email,
+      });
     let org_data = await redis.redisGet(
         "CRM_ORGANISATIONS",
-        req.employee.organisation_id,
+        org.organisation_id,
         true
     );
     return res
