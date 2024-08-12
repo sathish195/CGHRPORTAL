@@ -319,7 +319,6 @@ router.post("/add_update_role", Auth, async (req, res) => {
 });
 
 router.post("/universal" ,Auth,async(req, res) => {
-    
     let org_data = await redis.redisGet(
         "CRM_ORGANISATIONS",
         req.employee.organisation_id,
