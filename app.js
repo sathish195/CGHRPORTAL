@@ -9,5 +9,8 @@ require("./helpers/db")();
 require("./helpers/cors")(app);
 
 
-
-app.listen(8080,console.log("Listening on port 8080"));
+port=process.env.PORT
+// app.listen(port,console.log("Listening on port 8080"));
+app.listen(port, () => {
+    console.log(`Listening on port http://localhost:${port}`);
+  });
