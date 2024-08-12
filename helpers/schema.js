@@ -65,7 +65,7 @@ function add_update_org(data){
             // .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
             .required()
             .messages({
-            "any.invalid": "Size should be 250kb only", // Define the custom error message
+            "any.invalid": "Size should be 250kb only", 
             }),
         org_mail_id: Joi.string()
             .email()
