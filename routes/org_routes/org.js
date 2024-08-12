@@ -193,7 +193,7 @@ router.post('/add_update_designation', Auth, async (req, res) => {
 
         // Update or add designation
         if (data.designation_id && data.designation_id.length > 9) {
-            designation_up = await mongofunctions.find_one_and_update(
+            designation_up = await mongoFunctions.find_one_and_update(
                 "ORGANISATIONS",
                 {
                     organisation_id: org_data.organisation_id,
@@ -217,7 +217,7 @@ router.post('/add_update_designation', Auth, async (req, res) => {
                 designation_name: data.designation_name.toLowerCase(),
             };
 
-            designation_up = await mongofunctions.find_one_and_update(
+            designation_up = await mongoFunctions.find_one_and_update(
                 "ORGANISATIONS",
                 {
                     organisation_id: org_data.organisation_id,
