@@ -243,75 +243,79 @@ router.post('/add_update_designation', Auth, async (req, res) => {
     return res.status(400).send("Invalid Organisation id");
 });
 
-  router.post("/add_update_role", Auth, async (req, res) => {
+router.post("/add_update_role", Auth, async (req, res) => {
     let data = req.body;
-    var { error } = validate.add_role(data);
+
+    // Validate data
+    const { error } = validations.add_update_role(data);
     if (error) return res.status(400).send(error.details[0].message);
-    let org_data = await rediscon.redisGet(
-    "CRM_ORGANISATIONS",
-    req.user.organisation_id,
-    true
+
+    // Fetch organization data from Redis
+    let org_data = await redis.redisGet(
+        "CRM_ORGANISATIONS",
+        req.employee.organisation_id,
+        true
     );
+
+    // Check if organization data exists and the organization ID matches
     if (org_data && org_data.organisation_id === data.organisation_id) {
-    let location_exists = org_data.locations.find(
-        (e) => e.location_id.toLowerCase() === data.location_id.toLowerCase()
-    );
-    let role_data_up;
-    if (location_exists) {
-        let find_role = location_exists.roles.find(
-        (e) => e.role_name.toLowerCase() === data.role_name.toLowerCase()
+        // Check if the role already exists
+        let role_exists = org_data.roles.find(
+            (e) => e.role_name.toLowerCase() === data.role_name.toLowerCase()
         );
-        if (find_role) return res.status(400).send("Role Already Exists..!");
-        if (data.role_id && data.role_id.length > 9) {
-        role_data_up = await mongofunctions.find_one_and_update(
-            "ORGANISATIONS",
-            {
-            organisation_id: org_data.organisation_id,
-            "locations.location_id": data.location_id,
-            "locations.roles.role_id": data.role_id,
-            },
-            {
-            $set: {
-                "locations.$[loc].roles.$[r].role_name":
-                data.role_name.toLowerCase(),
-            },
-            },
-            {
-            arrayFilters: [
-                { "loc.location_id": location_exists.location_id },
-                { "r.role_id": data.role_id },
-            ],
-            new: true,
-            }
-        );
-        } else {
-        let new_role_data = {
-            role_id: functions.get_random_string("R", 10, true),
-            role_name: data.role_name.toLowerCase(),
-        };
-        role_data_up = await mongofunctions.find_one_and_update(
-            "ORGANISATIONS",
-            {
-            organisation_id: org_data.organisation_id,
-            "locations.location_id": data.location_id,
-            },
-            {
-            $push: {
-                "locations.$.roles": new_role_data,
-            },
-            },
-            { new: true }
-        );
+        if (role_exists) {
+            return res.status(400).send("Role Already Exists..!");
         }
-        await rediscon.update_redis("ORGANISATIONS", role_data_up);
+
+        let role_data_up;
+        if (data.role_id && data.role_id.length > 9) {
+            // Update existing role
+            role_data_up = await mongoFunctions.find_one_and_update(
+                "ORGANISATIONS",
+                {
+                    organisation_id: org_data.organisation_id,
+                    "roles.role_id": data.role_id,
+                },
+                {
+                    $set: {
+                        "roles.$[r].role_name": data.role_name.toLowerCase(),
+                    },
+                },
+                {
+                    arrayFilters: [{ "r.role_id": data.role_id }],
+                    new: true,
+                }
+            );
+        } else {
+            // Add new role
+            let new_role_data = {
+                role_id: functions.get_random_string("R", 10, true),
+                role_name: data.role_name.toLowerCase(),
+            };
+            role_data_up = await mongoFunctions.find_one_and_update(
+                "ORGANISATIONS",
+                {
+                    organisation_id: org_data.organisation_id,
+                },
+                {
+                    $push: {
+                        roles: new_role_data,
+                    },
+                },
+                { new: true }
+            );
+        }
+
+        // Update Redis with the new role data
+        await redis.update_redis("ORGANISATIONS", role_data_up);
+
         return res.status(200).send({
-        success: "Role Details Added..!",
-        data: role_data_up,
+            success: "Role Details Added..!",
+            data: role_data_up,
         });
     }
-    return res.status(400).send("Location Not Found..!");
-    }
+
     return res.status(400).send("Invalid Organisation id");
-})
+});
 
 module.exports = router;
