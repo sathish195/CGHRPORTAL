@@ -166,7 +166,7 @@ router.post('/add_update_designation', Auth, async (req, res) => {
     let data = req.body;
 
     // Validate data
-    var { error } = validate.add_designation(data);
+    var { error } = validations.add_update_designation(data);
     if (error) return res.status(400).send(error.details[0].message);
     if (req.employee.role_name.toLowerCase() !== "director") 
         return res.status(403).send("Only Director can access this endpoint");
