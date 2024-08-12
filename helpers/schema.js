@@ -7,7 +7,7 @@ function emp_login(data) {
         password: Joi.string().required().min(8).max(10),
         last_ip: Joi.string().required(),
         fcm_token: Joi.string().required(),
-        device_id: Joi.string().required(), // Add parentheses to call required() method
+        device_id: Joi.string().required(),
         browserid: Joi.string().required()
     });
     return schema.validate(data);
