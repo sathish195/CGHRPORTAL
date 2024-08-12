@@ -90,7 +90,7 @@ function add_update_department(data){
 function add_update_designation(data){
     const leaves_obj = Joi.object({
         leave_name: Joi.string().required().min(4).max(15),
-        max_leaves: Joi.number().required().min(1).max(10),
+        total_leaves: Joi.number().required().min(1).max(10),
       });
     const schema = Joi.object({
         organisation_id: Joi.string().min(10).max(18).required(),
