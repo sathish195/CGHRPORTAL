@@ -339,14 +339,15 @@ router.post("/universal" ,Auth,async(req, res) => {
     org=await mongoFunctions.find_one("ORGANISATIONS", {
         email: req.employee.email,
       });
-    let org_data = await redis.redisGet(
-        "CRM_ORGANISATIONS",
-        org.organisation_id,
-        true
-    );
+    // let org_data = await redis.redisGet(
+    //     "CRM_ORGANISATIONS",
+    //     org.organisation_id,
+    //     true
+    // );
+    await redis.update_redis("ORGANISATIONS",org);
     return res
         .status(200)
-        .send({ organisation_details: org_data });
+        .send({ organisation_details: org });
     });
-
+    // await redis.update_redis("ORGANISATIONS",org);
 module.exports = router;
