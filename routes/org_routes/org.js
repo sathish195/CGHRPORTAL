@@ -318,4 +318,16 @@ router.post("/add_update_role", Auth, async (req, res) => {
     return res.status(400).send("Invalid Organisation id");
 });
 
+router.post("/universal" ,Auth,async(req, res) => {
+    
+    let org_data = await redis.redisGet(
+        "CRM_ORGANISATIONS",
+        req.employee.organisation_id,
+        true
+    );
+    return res
+        .status(200)
+        .send({ organisation_details: org_data });
+    });
+
 module.exports = router;
