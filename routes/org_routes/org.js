@@ -173,7 +173,7 @@ router.post('/add_update_designation', Auth, async (req, res) => {
 
 
     // Retrieve organisation data from Redis
-    let org_data = await rediscon.redisGet(
+    let org_data = await redis.redisGet(
         "CRM_ORGANISATIONS",
         req.employee.organisation_id,
         true
@@ -232,7 +232,7 @@ router.post('/add_update_designation', Auth, async (req, res) => {
         }
 
         // Update Redis cache
-        await rediscon.update_redis("ORGANISATIONS", designation_up);
+        await redis.update_redis("ORGANISATIONS", designation_up);
 
         return res.status(200).send({
             success: "Designation Details Added..!",
