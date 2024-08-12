@@ -1,0 +1,86 @@
+const {EMPLOYEE} = require('../models/add_employee')
+const {ORGANISATIONS} = require('../models/add_org')
+
+
+
+module.exports = {
+    create_new_record: async (collection, data) => {
+      try {
+        var new_record = await eval(collection);
+        var new_record = await new new_record(data);
+        return await new_record.save();
+      } catch (error) {
+        throw new Error(
+          `❌❌❌❌ err in create new record mongo query \n ${error} \n ❌❌❌❌`
+        );
+      }
+    },
+    find_with_projection: async (
+      collection,
+      condition,
+      projection,
+      sort,
+      select,
+      limit,
+      skip
+    ) => {
+      return await eval(collection)
+        .find(condition, projection)
+        .select(select)
+        .sort(sort)
+        .limit(limit)
+        .skip(skip);
+    },
+    find: async (collection, condition, sort, select, limit) => {
+      return await eval(collection)
+        .find(condition)
+        .select(select)
+        .sort(sort)
+        .limit(limit);
+    },
+    find_one: async (collection, condition, select, sort) => {
+      return await eval(collection).findOne(condition).select(select).sort(sort);
+    },
+    find_one_and_update: async (collection, condition, update, options) => {
+      if (!options) {
+        options = { new: true };
+      }
+      return await eval(collection).findOneAndUpdate(condition, update, options);
+    },
+    find_one_and_delete: async (collection, condition, options) => {
+      return await eval(collection).findOneAndDelete(condition, options);
+    },
+    find_one_and_remove: async (collection, condition, options) => {
+      return await eval(collection).findOneAndRemove(condition, options);
+    },
+    find_one_and_replace: async (collection, condition, update, options) => {
+      return await eval(collection).findOneAndReplace(condition, update, options);
+    },
+    update_many: async (collection, condition, update, options) => {
+      return await eval(collection).updateMany(condition, update, options);
+    },
+    delete_many: async (collection, condition) => {
+      return await eval(collection).deleteMany(condition);
+    },
+    delete_one: async (collection, condition) => {
+      return await eval(collection).deleteOne(condition);
+    },
+    replace_one: async (collection, condition, update) => {
+      return await eval(collection).replaceOne(condition, update);
+    },
+  
+    update_one: async (collection, condition, update, options = {}) => {
+      return await eval(collection).updateOne(condition, update, options);
+    },
+    lazy_loading: async (collection, condition, select, sort, limit, skip) => {
+      return await eval(collection)
+        .find(condition)
+        .select(select)
+        .sort(sort)
+        .limit(limit)
+        .skip(skip);
+    },
+    aggregate: async (collection, pipeline) => {
+      return await eval(collection).aggregate(pipeline);
+    },
+  };
