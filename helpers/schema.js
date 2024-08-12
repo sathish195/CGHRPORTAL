@@ -96,7 +96,8 @@ function add_update_designation(data){
         organisation_id: Joi.string().min(10).max(18).required(),
         designation_name: Joi.string().trim().strip().min(5).max(20).required(),
         designation_id: Joi.string().allow(null, "").optional(),
-        leaves:Joi.array(leaves_obj).required(),
+        leaves:Joi.array().items(leaves_obj).required(),
+        leave_id:Joi.string().allow(null, "").optional()
       });
       return schema.validate(data);
 }

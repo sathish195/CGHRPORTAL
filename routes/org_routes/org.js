@@ -202,15 +202,19 @@ router.post('/add_update_designation', Auth, async (req, res) => {
                 {
                     organisation_id: org_data.organisation_id,
                     "designations.designation_id": data.designation_id,
+                    // "designations.leaves.leave_id": data.leave_id
                 },
                 {
                     $set: {
                         "designations.$[des].designation_name": data.designation_name.toLowerCase(),
+                        // ""
                     },
                 },
                 {
                     arrayFilters: [
-                        { "des.designation_id": data.designation_id },
+                        { "des.designation_id": data.designation_id,
+                            // "des.leave.leave_id": data.leave_id
+                         },
                     ],
                     new: true,
                 }
