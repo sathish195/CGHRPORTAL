@@ -2,7 +2,7 @@ const express=require('express')
 
 app=express()
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 
 port=process.env.PORT
