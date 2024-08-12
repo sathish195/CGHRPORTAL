@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 require('dotenv').config(); 
 module.exports = () => {
   var connectionString = String(process.env.CRM_DBSTRING);
-  console.log(connectionString)
+  // console.log(connectionString)
   mongoose
     .connect(connectionString, {
       autoIndex: true,
