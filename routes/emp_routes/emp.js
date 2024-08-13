@@ -223,3 +223,52 @@ router.post('/reset_password',Auth, async (req, res) =>{
     });
 
 })
+
+//update dp
+
+router.post(
+    "/update_dp",
+    Auth,(async (req, res) => {
+      if (req.employee.collection !== "EMPLOYEE")
+        return res.status(400).send("Invalid token details");
+      let data = req.body;
+      var { error } = validations.add_image(data);
+      if (error) return res.status(400).send(error.details[0].message);
+      let org_data = await redis.redisGet(
+        "CRM_ORGANISATIONS",
+        req.employee.organisation_id,
+        true
+      );
+      if (!org_data) return res.status(400).send("Access Denied..!");
+      let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+        employee_id: req.employee.employee_id,
+      });
+      if (!find_emp) return res.status(400).send("Employee Not Found..!");
+      if (!find_emp.work_info)
+        return res.status(400).send("Profile data must be filled..!");
+      if (
+        find_emp &&
+        find_emp.work_info &&
+        find_emp.work_info.employee_status !== "active"
+      )
+        return res.status(400).send("Account not in Active, Contact Admin");
+
+      if (!find_emp.images) {
+        update = { images: { dp: data.image } };
+      } else {
+        update = { "images.dp": data.image };
+      }
+      let update_emp = await mongoFunctions.find_one_and_update(
+        "EMPLOYEE",
+        { employee_id: req.employee.employee_id },
+        update,
+        { new: true }
+      );
+      //   await rediscon.update_redis("EMPLOYEE", new_emp);
+      await stats.update_emp(update_emp, true, false);
+      return res.status(200).send({
+        success: "Success",
+        data: update_emp.images.dp,
+      });
+    })
+  )

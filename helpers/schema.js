@@ -111,7 +111,115 @@ function add_update_role(data){
       });
       return schema.validate(data);
 }
+function add_employee_by_admin(data){
+    const work_experience_obj = Joi.object({
+        company_name: Joi.string().required(),
+        job_title: Joi.string().required(),
+        from_date: Joi.date().required(),
+        to_date: Joi.date().required(),
+        job_description: Joi.string().required(),
+        experience: Joi.number().positive().required(),
+      });
+      const educational_details_obj = Joi.object({
+        institute_name: Joi.string().min(5).max(30).required(),
+        degree: Joi.string().min(5).max(15).required(),
+        specialization: Joi.string().min(3).max(15).required(),
+        year_of_completion: Joi.date().required(),
+      });
+      const dependent_details_obj = Joi.object({
+        name: Joi.string(),
+        relation: Joi.string(),
+        dependent_date_of_birth: Joi.date(),
+      });
+      const schema = Joi.object({
+        organisation_id: Joi.string().min(15).max(17).required(),
+        employee_id: Joi.string().min(5).max(10).required(),
+        email: Joi.string()
+          .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+          .trim()
+          .min(10)
+          .max(55)
+          .email()
+          .messages({
+            "string.pattern.base": "Email Should be valid mail",
+          })
+          .required(),
+        first_name: Joi.string().min(3).max(15).required(),
+        last_name: Joi.string().min(3).max(15).required(),
+        nick_name: Joi.string().max(15).allow(null, "").optional(),
+        department_id: Joi.string().min(3).max(15).required(),
+        role_id: Joi.string().min(3).max(15).required(),
+        designation_id: Joi.string().min(3).max(15).required(),
+        employment_type: Joi.string().min(3).max(15).required(),
+        employee_status: Joi.string()
+          .valid("active", "disable", "terminated")
+          .min(5)
+          .max(15)
+          .required(),
+        source_of_hire: Joi.string().min(3).max(15).required(),
+        reporting_manager: Joi.object().optional(),
+        date_of_join: Joi.date().required(),
+  
+        date_of_birth: Joi.string()
+          .regex(/^\d{2}\d{2}\d{4}$/)
+          .message("Date must be in DDMMYYYY format")
+          .required()
+          .custom(validate_dob),
+        expertise: Joi.string().allow(null, "").optional(),
+        gender: Joi.string().valid("male", "female", "others").required(),
+        marital_status: Joi.string().valid("married", "unmarried").required(),
+        about_me: Joi.string().allow(null, "").optional(),
+        identity_info: Joi.object().min(2).required(),
+        work_phone_number: Joi.string().allow(null, "").optional(),
+        personal_mobile_number: Joi.string().required(),
+        personal_email_address: Joi.string()
+          .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+          .trim()
+          .min(10)
+          .max(55)
+          .email()
+          .messages({
+            "string.pattern.base": "Email Should be valid mail",
+          })
+          .required(),
+        seating_location: Joi.string().allow(null, "").optional(),
+        present_address: Joi.string().min(10).max(100).required(),
+        permanent_address: Joi.string().min(10).max(100).required(),
+        work_experience: Joi.array().items(work_experience_obj).optional(),
+        educational_details: Joi.array()
+          .items(educational_details_obj)
+          .required(),
+        dependent_details: Joi.array()
+          .items(dependent_details_obj)
+          .optional(),
+      });
+      return schema.validate(data);
+    }
+    //common validation
+    function employee_id (data){
+        const schema = Joi.object({
+          employee_id: Joi.string().min(5).max(20).required(),
+        });
+        return schema.validate(data);
+      }
+      function add_image (data) {
+        const schema = Joi.object({
+          image: Joi.string()
+            .required()
+            .messages({
+              "any.invalid": "Size should be 250kb only", // Define the custom error message
+            }),
+        });
+        return schema.validate(data);
+      }
+      
+      function skip (data){
+        const schema = Joi.object({
+          skip: Joi.number().min(0).required(),
+        });
+        return schema.validate(data);
+      }
 // Export the functions
 module.exports = { emp_login,emp_forgot_password,emp_reset_forgot_password ,emp_login_verify,emp_reset_password,add_update_org,add_update_department,add_update_designation
-    ,add_update_role 
+    ,add_update_role ,add_employee_by_admin,employee_id,skip,add_image
 };
