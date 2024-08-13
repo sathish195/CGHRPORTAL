@@ -16,12 +16,12 @@ router.post(
       let data = req.body;
       var { error } = validations.employee_id(data);
       if (error) return res.status(400).send(error.details[0].message);
-      const emp = req.employee;
-      if (emp.role_name.toLowerCase()=== "director") {
+      const emp_find = req.employee;
+      if (emp_find.role_name.toLowerCase()=== "director") {
         let emp = await mongoFunctions.find_one(
           "EMPLOYEE",
           {
-            organisation_id: emp.organisation_id,
+            organisation_id: emp_find.organisation_id,
             employee_id: data.employee_id,
           },
           { two_fa_key: 0, fcm_token: 0, browserid: 0, undatedAt: 0 }
