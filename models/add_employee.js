@@ -26,6 +26,7 @@ const EMPLOYEE_Schema=new mongoose.Schema({
       enum: ["Enable", "Disable"],
       default: "Disable",
     },
+    permissions:{type: Object, default: {} }
   },
   { timestamps: true },
 );

@@ -22,7 +22,7 @@ router.post(
         true
       );
       if (!org_data) return res.status(400).send("Access Denied..!");
-      if (req.employee.role_name.toLowerCase()!=="director"){
+      if (req.employee.role_name.toLowerCase() !== "director" && req.employee.role_name.toLowerCase() !== "manager"){
         return res.status(400).send("Only Director can add new employee..!");
       }
     
