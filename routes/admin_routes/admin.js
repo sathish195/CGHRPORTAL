@@ -176,16 +176,16 @@ router.post(
             organisation_id: org_data.organisation_id,
           },
           {
-            "personal_details.personal_email_address":
-              data.personal_email_address,
+            "basic_info.email":
+              data.email,
             organisation_id: org_data.organisation_id,
           },
         ],
       });
       if (
         find_emp &&
-        find_emp.personal_details.personal_email_address ===
-          data.personal_email_address
+        find_emp.basic_info.email ===
+          data.email
       )
         return res.status(400).send("Personal email id already exists");
       if (find_emp && find_emp.employee_id === data.employee_id.toUpperCase())

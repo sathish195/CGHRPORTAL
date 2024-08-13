@@ -134,7 +134,9 @@ function add_employee_by_admin(data){
         job_title: Joi.string().min(2).max(25).required(),
         from_date: Joi.date().required(),
         to_date: Joi.date().required(),
-        job_description: Joi.string().min(5).max(100).required(),
+        job_description: Joi.string().min(5).max(100).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').required().messages({
+            'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
+        }),
         experience: Joi.number().positive().required(),
       });
       const educational_details_obj = Joi.object({
@@ -200,8 +202,12 @@ function add_employee_by_admin(data){
           })
           .required(),
         seating_location: Joi.string().allow(null, "").optional(),
-        present_address: Joi.string().min(10).max(100).required(),
-        permanent_address: Joi.string().min(10).max(100).required(),
+        present_address: Joi.string().min(10).max(100).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').messages({
+            'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
+        }).required(),
+        permanent_address: Joi.string().min(10).max(100).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').messages({
+            'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
+        }).required(),
         work_experience: Joi.array().items(work_experience_obj).required(),
         educational_details: Joi.array()
           .items(educational_details_obj)
