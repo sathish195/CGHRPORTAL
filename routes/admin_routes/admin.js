@@ -7,8 +7,6 @@ const jwt=require('jsonwebtoken');
 const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
-const bcrypt=require('../../helpers/crypto');
-
 
 // Add new employee
 
