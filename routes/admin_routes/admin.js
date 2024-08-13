@@ -152,6 +152,14 @@ router.post(
       if (req.employee.role_name.toLowerCase() !== "director" && req.employee.role_name.toLowerCase() !== "manager"){
         return res.status(400).send("Only Director or Manager Can Update Status Of New Employee..!");
       }
+      let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+    
+        employee_id: data.employee_id.toUpperCase(),
+        organisation_id: org_data.organisation_id,
+        });
+      if (!find_emp){
+            return res.status(400).send("Employee Id Doesn't exists");
+       }
     
       let department_data = org_data.departments.find(
         (e) => e.department_id === data.department_id
@@ -169,14 +177,7 @@ router.post(
       );
       if (!designation_data)
         return res.status(400).send("Invalid Designation id..!");
-      let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
-    
-            employee_id: data.employee_id.toUpperCase(),
-            organisation_id: org_data.organisation_id,
-      });
-      if (!find_emp){
-        return res.status(400).send("Employee Id Doesn't exists");
-      }
+      
       let find_email = await mongoFunctions.find_one("EMPLOYEE", {
         $or: [
           {
@@ -184,11 +185,19 @@ router.post(
             organisation_id: org_data.organisation_id,
           },
           {
-            "personal_details.personal_email_address": data.personal_email_address.toLowerCase(),
+            "contact_details.personal_email_address": data.personal_email_address.toLowerCase(),
             organisation_id: org_data.organisation_id,
           },
         ],
       });
+      if (
+        find_email &&
+        find_email.basic_info.email ===
+          data.email
+      )
+        return res.status(400).send("Email Id Already Exists");
+      if (find_emp && find_emp.contact_details.personal_email_address === data.personal_email_address.toLowerCase())
+        return res.status(400).send("Personal Email Id Already Exists");
 
       let new_emp_data = {
         organisation_id: org_data.organisation_id,
