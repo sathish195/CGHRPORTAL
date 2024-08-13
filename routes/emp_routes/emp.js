@@ -249,7 +249,7 @@ router.post(
       if (
         find_emp &&
         find_emp.work_info &&
-        find_emp.work_info.employee_status !== "active"
+        find_emp.work_info.employee_status.toLowerCase() !== "active"
       )
         return res.status(400).send("Account not in Active, Contact Admin");
 
