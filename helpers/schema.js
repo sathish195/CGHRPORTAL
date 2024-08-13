@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const moment = require("moment");
 
 // Define schema for login employee
 function emp_login(data) {
@@ -111,6 +112,22 @@ function add_update_role(data){
       });
       return schema.validate(data);
 }
+const validate_dob = (value, helpers) => {
+    // Check if the date format is valid
+    if (!moment(value, "DDMMYYYY", true).isValid()) {
+      return helpers.message("Invalid date format");
+    }
+  
+    // Check if age is 18 years or above
+    const dob = moment(value, "DDMMYYYY");
+    const age = moment().diff(dob, "years");
+  
+    if (age < 18) {
+      return helpers.message("Employee must be 18 years old..!");
+    }
+  
+    return value; // Return the validated value
+  };
 function add_employee_by_admin(data){
     const work_experience_obj = Joi.object({
         company_name: Joi.string().min(3).max(30).required(),
