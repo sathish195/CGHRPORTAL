@@ -49,7 +49,7 @@ router.post(
         LIMIT,
         data.skip
       );
-      return res.status(200).send({ employees });
+      return res.status(200).send(employees);
     })
   )
   module.exports =router;
