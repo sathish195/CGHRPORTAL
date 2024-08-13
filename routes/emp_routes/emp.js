@@ -24,7 +24,7 @@ router.post('/login',async(req,res)=>{
     if(!validPassword) return res.status(400).send('Incorrect Password');
     if (
         // employee &&
-        employee.work_info.employee_status.toLowerCase() !== "disable" && employee.work_info.employee_status.toLowerCase() !=="terminated"
+        employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
         )
         return res
             .status(400)
@@ -61,7 +61,7 @@ router.post('/forgot_password',async(req,res) => {
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
         // employee &&
-        employee.work_info.employee_status.toLowerCase() !== "disable" && employee.work_info.employee_status.toLowerCase() !=="terminated"
+        employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
         )
         return res
             .status(400)
@@ -84,7 +84,7 @@ router.post('/reset_forgot_password',async(req,res) => {
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
         // employee &&
-        employee.work_info.employee_status.toLowerCase() !== "disable" && employee.work_info.employee_status.toLowerCase() !=="terminated"
+        employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
         )
         return res
             .status(400)
@@ -121,7 +121,7 @@ router.post('/resend_otp',async(req,res) => {
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
         // employee &&
-        employee.work_info.employee_status.toLowerCase() !== "disable" && employee.work_info.employee_status.toLowerCase() !=="terminated"
+        employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
     )
         return res
            .status(400)
@@ -147,7 +147,7 @@ router.post('/login_verify',async(req,res) => {
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
         // employee &&
-        employee.work_info.employee_status.toLowerCase() !== "disable" && employee.work_info.employee_status.toLowerCase() !=="terminated"
+        employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
     )
         return res
            .status(400)
@@ -200,7 +200,7 @@ router.post('/reset_password',Auth, async (req, res) =>{
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
         // employee &&
-        employee.work_info.employee_status.toLowerCase() !== "disable" && employee.work_info.employee_status.toLowerCase() !=="terminated"
+        employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
     )
         return res
            .status(400)
