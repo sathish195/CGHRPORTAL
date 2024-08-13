@@ -202,13 +202,13 @@ function add_employee_by_admin(data){
         seating_location: Joi.string().allow(null, "").optional(),
         present_address: Joi.string().min(10).max(100).required(),
         permanent_address: Joi.string().min(10).max(100).required(),
-        work_experience: Joi.array().items(work_experience_obj).optional(),
+        work_experience: Joi.array().items(work_experience_obj).required(),
         educational_details: Joi.array()
           .items(educational_details_obj)
           .required(),
         dependent_details: Joi.array()
           .items(dependent_details_obj)
-          .optional(),
+          .required(),
       });
       return schema.validate(data);
     }
