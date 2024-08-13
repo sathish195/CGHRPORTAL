@@ -35,7 +35,7 @@ router.post(
   .post(
     "/get_employee_list",
     Auth,(async (req, res) => {
-      const emp = req.user;
+      const emp = req.employee;
       const LIMIT = 50;
       let data = req.body;
       var { error } = validations.skip(data);
