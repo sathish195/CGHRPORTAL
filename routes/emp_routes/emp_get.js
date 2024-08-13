@@ -36,4 +36,21 @@ router.post(
       return res.status(200).send({ profile: emp });
     })
   )
+
+
+  //get universal route
+
+  router.post("/universal" ,Auth,async(req, res) => {
+    // org=await mongoFunctions.find_one("ORGANISATIONS", {
+    //     email: req.employee.email,
+    //   });
+    let org_data = await redis.redisGet(
+        "CRM_ORGANISATIONS",
+        req.employee.organisation_id,
+        true
+    );
+    return res
+        .status(200)
+        .send({ organisation_details: org_data });
+    });
   module.exports =router;

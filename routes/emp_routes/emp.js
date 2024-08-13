@@ -275,7 +275,7 @@ router.post(
 
   router.post("/edit_profile",Auth, async (req, res) =>{
     let data = req.body;
-      var { error } = validate.edit_profile(data);
+      var { error } = validations.edit_profile(data);
       if (error) return res.status(400).send(error.details[0].message);
       let org_data = await redis.redisGet(
         "CRM_ORGANISATIONS",
