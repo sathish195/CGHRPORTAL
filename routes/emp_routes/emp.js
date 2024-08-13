@@ -265,7 +265,7 @@ router.post(
         { new: true }
       );
       //   await rediscon.update_redis("EMPLOYEE", new_emp);
-      await stats.update_emp(update_emp, true, false);
+    //   await stats.update_emp(update_emp, true, false);
       return res.status(200).send({
         success: "Success",
         data: update_emp.images.dp,
