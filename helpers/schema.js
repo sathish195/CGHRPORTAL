@@ -284,11 +284,11 @@ function add_employee_by_admin(data){
                 "string.pattern.base": "Email Should be valid mail",
               })
               .required(),
-            work_experience: Joi.array().items(work_experience_obj).optional(),
+            work_experience: Joi.array().items(work_experience_obj).required(),
             educational_details: Joi.array()
               .items(educational_details_obj)
-              .optional(),
-            dependent_details: Joi.array().items(dependent_details_obj).optional(),
+              .required(),
+            dependent_details: Joi.array().items(dependent_details_obj).required(),
             last_ip: Joi.string().ip().required(),
             browserid: Joi.string().min(3).max(50).required(),
             fcm_token: Joi.string().min(3).max(50).required(),

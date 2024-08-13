@@ -305,10 +305,6 @@ router.post(
         if (existingEmployee.contact_details.personal_email_address === data.personal_email_address) {
             return res.status(400).send("Personal email address already exists for another employee.");
         }
-
-        if (existingEmployee.basic_info.email === data.email) {
-            return res.status(400).send("Email ID already exists for another employee.");
-        }
     }
       let edit_emp_data = {
         "basic_info.nick_name": data.nick_name,
@@ -331,7 +327,7 @@ router.post(
       };
       let update_emp = await mongoFunctions.find_one_and_update(
         "EMPLOYEE",
-        { employee_id: data.employee_id },
+        { employee_id: req.employee.employee_id },
         edit_emp_data,
         { new: true }
       );
