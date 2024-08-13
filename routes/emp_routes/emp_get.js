@@ -36,3 +36,4 @@ router.post(
       return res.status(200).send({ profile: emp });
     })
   )
+  module.exports =router;
