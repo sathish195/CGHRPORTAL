@@ -49,20 +49,20 @@ router.post(
             organisation_id: org_data.organisation_id,
           },
           {
-            "personal_details.personal_email_address":
-              data.personal_email_address,
+            "basic_info.email":
+              data.email,
             organisation_id: org_data.organisation_id,
           },
         ],
       });
       if (
         find_emp &&
-        find_emp.personal_details.personal_email_address ===
-          data.personal_email_address
+        find_emp.basic_info.email ===
+          data.email
       )
-        return res.status(400).send("Personal email id already exists");
+        return res.status(400).send("Email Id Already Exists");
       if (find_emp && find_emp.employee_id === data.employee_id.toUpperCase())
-        return res.status(400).send("Employee Id already exists");
+        return res.status(400).send("Employee Id Already Exists");
       const new_password="Emp@1234";
       let password_hash = await bcrypt.hash_password(new_password);
       let new_emp_data = {
