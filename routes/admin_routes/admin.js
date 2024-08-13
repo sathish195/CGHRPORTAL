@@ -1,0 +1,259 @@
+const express = require('express');
+const mongoFunctions = require('../../helpers/mongoFunctions');
+const router=express.Router();
+const validations=require('../../helpers/schema');
+const bcrypt=require('../../helpers/crypto');
+const jwt=require('jsonwebtoken');
+const { Auth } = require("../../middlewares/auth");
+const redis=require('../../helpers/redisFunctions');
+const stats=require('../../helpers/stats');
+
+
+// Add new employee
+
+router.post(
+    "/add_employee",
+    Auth,(async (req, res) => {
+      let data = req.body;
+      var { error } = validations.add_employee_by_admin(data);
+      if (error) return res.status(400).send(error.details[0].message);
+      let org_data = await redis.redisGet(
+        "CRM_ORGANISATIONS",
+        req.employee.organisation_id,
+        true
+      );
+      if (!org_data) return res.status(400).send("Access Denied..!");
+      if (req.employee.role_name.toLowerCase()!=="director"){
+        return res.status(400).send("Only Director can add new employee..!");
+      }
+    
+      let department_data = org_data.departments.find(
+        (e) => e.department_id === data.department_id
+      );
+      if (!department_data)
+        return res.status(400).send("Invalid Department id..!");
+
+      let role_data = org_data.roles.find(
+        (e) => e.role_id === data.role_id
+      );
+      if (!role_data) return res.status(400).send("Invalid Role id..!");
+
+      let designation_data = org_data.designations.find(
+        (e) => e.designation_id === data.designation_id
+      );
+      if (!designation_data)
+        return res.status(400).send("Invalid Designation id..!");
+      let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+        $or: [
+          {
+            employee_id: data.employee_id.toUpperCase(),
+            organisation_id: org_data.organisation_id,
+          },
+          {
+            "personal_details.personal_email_address":
+              data.personal_email_address,
+            organisation_id: org_data.organisation_id,
+          },
+        ],
+      });
+      if (
+        find_emp &&
+        find_emp.personal_details.personal_email_address ===
+          data.personal_email_address
+      )
+        return res.status(400).send("Personal email id already exists");
+      if (find_emp && find_emp.employee_id === data.employee_id.toUpperCase())
+        return res.status(400).send("Employee Id already exists");
+      let new_emp_data = {
+        organisation_id: org_data.organisation_id,
+        organisation_name: org_data.organisation_name,
+        employee_id: data.employee_id.toUpperCase(),
+        basic_info: {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          nick_name: data.nick_name,
+          email: data.email,
+        },
+        work_info: {
+          department_id: data.department_id,
+          department_name: department_data.department_name,
+
+          role_id: data.role_id,
+          role_name: role_data.role_name,
+
+          designation_id: data.designation_id,
+          designation_name: designation_data.designation_name,
+          employment_type: data.employment_type,
+          employee_status: data.employee_status,
+          source_of_hire: data.source_of_hire,
+          reporting_manager: data.reporting_manager,
+          date_of_join: data.date_of_join,
+        },
+
+        personal_details: {
+          date_of_birth: data.date_of_birth,
+          expertise: data.expertise,
+          gender: data.gender,
+          marital_status: data.marital_status,
+          about_me: data.about_me,
+        },
+        identity_info: data.identity_info,
+        contact_details: {
+          work_phone_number: data.work_phone_number,
+          personal_mobile_number: data.personal_mobile_number,
+          personal_email_address: data.personal_email_address,
+          seating_location: data.seating_location,
+          present_address: data.present_address,
+          permanent_address: data.permanent_address,
+        },
+        work_experience: data.work_experience,
+        educational_details: data.educational_details,
+        dependent_details: data.dependent_details,
+        leaves:
+          designation_data.leaves && designation_data.leaves.length > 0
+            ? designation_data.leaves.map((e) => ({
+                ...e,
+                used_leaves: 0,
+                remaining_leaves: e.total_leaves,
+              }))
+            : [],
+        images: {},
+        files: {},
+      };
+      let new_emp = await mongoFunctions.create_new_record(
+        "EMPLOYEE",
+        new_emp_data
+      );
+
+      //   await rediscon.update_redis("EMPLOYEE", new_emp);
+      await stats.update_emp(new_emp, true, true);
+      return res.status(200).send({
+        success: "Success",
+        // data: new_emp,
+      });
+    })
+  )
+
+  // Update employee profile
+  router.post(
+    "/update_employee_profile",
+    Auth,(async (req, res) => {
+      let data = req.body;
+      var { error } = validations.add_employee_by_admin(data);
+      if (error) return res.status(400).send(error.details[0].message);
+      let org_data = await redis.redisGet(
+        "CRM_ORGANISATIONS",
+        req.employee.organisation_id,
+        true
+      );
+      if (!org_data) return res.status(400).send("Access Denied..!");
+      if (req.employee.role_name.toLowerCase()!=="director"){
+        return res.status(400).send("Only Director can update status of new employee..!");
+      }
+    
+      let department_data = org_data.departments.find(
+        (e) => e.department_id === data.department_id
+      );
+      if (!department_data)
+        return res.status(400).send("Invalid Department id..!");
+
+      let role_data = org_data.roles.find(
+        (e) => e.role_id === data.role_id
+      );
+      if (!role_data) return res.status(400).send("Invalid Role id..!");
+
+      let designation_data = org_data.designations.find(
+        (e) => e.designation_id === data.designation_id
+      );
+      if (!designation_data)
+        return res.status(400).send("Invalid Designation id..!");
+      let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+        $or: [
+          {
+            employee_id: data.employee_id.toUpperCase(),
+            organisation_id: org_data.organisation_id,
+          },
+          {
+            "personal_details.personal_email_address":
+              data.personal_email_address,
+            organisation_id: org_data.organisation_id,
+          },
+        ],
+      });
+      if (
+        find_emp &&
+        find_emp.personal_details.personal_email_address ===
+          data.personal_email_address
+      )
+        return res.status(400).send("Personal email id already exists");
+      if (find_emp && find_emp.employee_id === data.employee_id.toUpperCase())
+        return res.status(400).send("Employee Id already exists");
+      let new_emp_data = {
+        organisation_id: org_data.organisation_id,
+        organisation_name: org_data.organisation_name,
+        employee_id: data.employee_id.toUpperCase(),
+        basic_info: {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          nick_name: data.nick_name,
+          email: data.email,
+        },
+        work_info: {
+          department_id: data.department_id,
+          department_name: department_data.department_name,
+
+          role_id: data.role_id,
+          role_name: role_data.role_name,
+
+          designation_id: data.designation_id,
+          designation_name: designation_data.designation_name,
+          employment_type: data.employment_type,
+          employee_status: data.employee_status,
+          source_of_hire: data.source_of_hire,
+          reporting_manager: data.reporting_manager,
+          date_of_join: data.date_of_join,
+        },
+
+        personal_details: {
+          date_of_birth: data.date_of_birth,
+          expertise: data.expertise,
+          gender: data.gender,
+          marital_status: data.marital_status,
+          about_me: data.about_me,
+        },
+        identity_info: data.identity_info,
+        contact_details: {
+          work_phone_number: data.work_phone_number,
+          personal_mobile_number: data.personal_mobile_number,
+          personal_email_address: data.personal_email_address,
+          seating_location: data.seating_location,
+          present_address: data.present_address,
+          permanent_address: data.permanent_address,
+        },
+        work_experience: data.work_experience,
+        educational_details: data.educational_details,
+        dependent_details: data.dependent_details,
+        leaves:
+          designation_data.leaves && designation_data.leaves.length > 0
+            ? designation_data.leaves.map((e) => ({
+                ...e,
+                used_leaves: 0,
+                remaining_leaves: e.total_leaves,
+              }))
+            : [],
+        images: {},
+        files: {},
+      };
+      let new_emp = await mongoFunctions.create_new_record(
+        "EMPLOYEE",
+        new_emp_data
+      );
+
+      //   await rediscon.update_redis("EMPLOYEE", new_emp);
+      await stats.update_emp(new_emp, true, true);
+      return res.status(200).send({
+        success: "Success",
+        // data: new_emp,
+      });
+    })
+  )

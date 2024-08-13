@@ -113,11 +113,11 @@ function add_update_role(data){
 }
 function add_employee_by_admin(data){
     const work_experience_obj = Joi.object({
-        company_name: Joi.string().required(),
-        job_title: Joi.string().required(),
+        company_name: Joi.string().min(3).max(30).required(),
+        job_title: Joi.string().min(2).max(25).required(),
         from_date: Joi.date().required(),
         to_date: Joi.date().required(),
-        job_description: Joi.string().required(),
+        job_description: Joi.string().min(5).max(100).required(),
         experience: Joi.number().positive().required(),
       });
       const educational_details_obj = Joi.object({
