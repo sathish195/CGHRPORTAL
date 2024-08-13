@@ -23,8 +23,8 @@ router.post('/login',async(req,res)=>{
     console.log(employee.password);
     if(!validPassword) return res.status(400).send('Incorrect Password');
     if (
-        employee &&
-        employee.work_info.employee_status.toLowerCase() === "disable"
+        // employee &&
+        employee.work_info.employee_status.toLowerCase() !== "disable" && employee.work_info.employee_status.toLowerCase() !=="terminated"
         )
         return res
             .status(400)
@@ -60,8 +60,8 @@ router.post('/forgot_password',async(req,res) => {
     const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
-        employee &&
-        employee.work_info.employee_status.toLowerCase() === "disable"
+        // employee &&
+        employee.work_info.employee_status.toLowerCase() !== "disable" && employee.work_info.employee_status.toLowerCase() !=="terminated"
         )
         return res
             .status(400)
@@ -83,8 +83,8 @@ router.post('/reset_forgot_password',async(req,res) => {
     const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
-        employee &&
-        employee.work_info.employee_status.toLowerCase() === "disable"
+        // employee &&
+        employee.work_info.employee_status.toLowerCase() !== "disable" && employee.work_info.employee_status.toLowerCase() !=="terminated"
         )
         return res
             .status(400)
@@ -120,9 +120,9 @@ router.post('/resend_otp',async(req,res) => {
     const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
-        employee &&
-        employee.work_info.employee_status.toLowerCase() === "disable"
-        )
+        // employee &&
+        employee.work_info.employee_status.toLowerCase() !== "disable" && employee.work_info.employee_status.toLowerCase() !=="terminated"
+    )
         return res
            .status(400)
            .send("Employee Status Disabled! Please Contact Admin.");
@@ -146,9 +146,9 @@ router.post('/login_verify',async(req,res) => {
     const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
-        employee &&
-        employee.work_info.employee_status.toLowerCase() === "disable"
-        )
+        // employee &&
+        employee.work_info.employee_status.toLowerCase() !== "disable" && employee.work_info.employee_status.toLowerCase() !=="terminated"
+    )
         return res
            .status(400)
            .send("Employee Status Disabled! Please Contact Admin.");
@@ -199,9 +199,9 @@ router.post('/reset_password',Auth, async (req, res) =>{
     const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':req.employee.email});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
-        employee &&
-        employee.work_info.employee_status.toLowerCase() === "disable"
-        )
+        // employee &&
+        employee.work_info.employee_status.toLowerCase() !== "disable" && employee.work_info.employee_status.toLowerCase() !=="terminated"
+    )
         return res
            .status(400)
            .send("Employee Status Disabled! Please Contact Admin.");
