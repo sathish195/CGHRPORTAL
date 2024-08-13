@@ -7,6 +7,7 @@ const jwt=require('jsonwebtoken');
 const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
+const bcrypt=require('../../helpers/crypto');
 
 
 // Add new employee
@@ -64,10 +65,13 @@ router.post(
         return res.status(400).send("Personal email id already exists");
       if (find_emp && find_emp.employee_id === data.employee_id.toUpperCase())
         return res.status(400).send("Employee Id already exists");
+      const new_password="Emp@1234";
+      let password_hash = await bcrypt.hash_password(new_password);
       let new_emp_data = {
         organisation_id: org_data.organisation_id,
         organisation_name: org_data.organisation_name,
         employee_id: data.employee_id.toUpperCase(),
+        password:password_hash,
         basic_info: {
           first_name: data.first_name,
           last_name: data.last_name,
