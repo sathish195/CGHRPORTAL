@@ -167,6 +167,22 @@ router.post(
       if (!find_emp){
             return res.status(400).send("Employee Id Doesn't exists");
        }
+    let existingEmployee = await mongoFunctions.find_one("EMPLOYEE", {
+        $and: [
+            { "contact_details.personal_email_address": data.personal_email_address },
+            {"basic_info.email": data.email},
+            { employee_id: { $ne: data.employee_id } }
+        ]
+    });
+    if (existingEmployee) {
+        if (existingEmployee.contact_details.personal_email_address === data.personal_email_address) {
+            return res.status(400).send("Personal email address already exists for another employee.");
+        }
+
+        if (existingEmployee.basic_info.email === data.email) {
+            return res.status(400).send("Email ID already exists for another employee.");
+        }
+    }
     
       let department_data = org_data.departments.find(
         (e) => e.department_id === data.department_id

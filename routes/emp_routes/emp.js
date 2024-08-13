@@ -295,19 +295,13 @@ router.post(
         return res.status(400).send("Educational details array must contain at least one entry.");
     }
     let existingEmployee = await mongoFunctions.find_one("EMPLOYEE", {
-        $and: [
-            { "contact_details.personal_email_address": data.personal_email_address },
-            { "basic_info.email": data.email },
+    
+             "contact_details.personal_email_address": data.personal_email_address },
             { employee_id: { $ne: data.employee_id } }
-        ]
-    });
+    );
     if (existingEmployee) {
         if (existingEmployee.contact_details.personal_email_address === data.personal_email_address) {
             return res.status(400).send("Personal email address already exists for another employee.");
-        }
-
-        if (existingEmployee.basic_info.email === data.email) {
-            return res.status(400).send("Email ID already exists for another employee.");
         }
     }
 
@@ -332,7 +326,7 @@ router.post(
       };
       let update_emp = await mongoFunctions.find_one_and_update(
         "EMPLOYEE",
-        { employee_id: req.employee.employee_id },
+        { employee_id: data.employee_id },
         edit_emp_data,
         { new: true }
       );
