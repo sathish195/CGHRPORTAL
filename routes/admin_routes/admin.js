@@ -242,9 +242,10 @@ router.post(
         images: {},
         files: {},
       };
-      let new_emp = await mongoFunctions.create_new_record(
+      let new_emp = await mongoFunctions.find_one_and_update(
         "EMPLOYEE",
-        new_emp_data
+       {employee_id: data.employee_id},
+        { $set: new_emp_data },
       );
 
       //   await rediscon.update_redis("EMPLOYEE", new_emp);
