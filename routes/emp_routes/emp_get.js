@@ -49,8 +49,15 @@ router.post(
         req.employee.organisation_id,
         true
     );
+    let filtered_org_data = { ...org_data };
+
+    // Exclude specific fields
+    delete filtered_org_data.departments;
+    delete filtered_org_data.designations;
+    delete filtered_org_data.roles;
+
     return res
         .status(200)
-        .send({ organisation_details: org_data });
+        .send({ organisation_details: filtered_org_data });
     });
   module.exports =router;
