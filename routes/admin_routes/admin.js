@@ -74,7 +74,7 @@ router.post(
           first_name: data.first_name,
           last_name: data.last_name,
           nick_name: data.nick_name,
-          email: data.email,
+          email: data.email.toLowerCase(),
         },
         work_info: {
           department_id: data.department_id,
@@ -103,7 +103,7 @@ router.post(
         contact_details: {
           work_phone_number: data.work_phone_number,
           personal_mobile_number: data.personal_mobile_number,
-          personal_email_address: data.personal_email_address,
+          personal_email_address: data.personal_email_address.toLowerCase(),
           seating_location: data.seating_location,
           present_address: data.present_address,
           permanent_address: data.permanent_address,
@@ -170,26 +170,26 @@ router.post(
       if (!designation_data)
         return res.status(400).send("Invalid Designation id..!");
       let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+    
+            employee_id: data.employee_id.toUpperCase(),
+            organisation_id: org_data.organisation_id,
+      });
+      if (!find_emp){
+        return res.status(400).send("Employee Id Doesn't exists");
+      }
+      let find_email = await mongoFunctions.find_one("EMPLOYEE", {
         $or: [
           {
-            employee_id: data.employee_id.toUpperCase(),
+            "basic_info.email": data.email.toLowerCase(),
             organisation_id: org_data.organisation_id,
           },
           {
-            "basic_info.email":
-              data.email,
+            "personal_details.personal_email_address": data.personal_email_address.toLowerCase(),
             organisation_id: org_data.organisation_id,
           },
         ],
       });
-      if (
-        find_emp &&
-        find_emp.basic_info.email ===
-          data.email
-      )
-        return res.status(400).send("Personal email id already exists");
-      if (find_emp && find_emp.employee_id === data.employee_id.toUpperCase())
-        return res.status(400).send("Employee Id already exists");
+
       let new_emp_data = {
         organisation_id: org_data.organisation_id,
         organisation_name: org_data.organisation_name,
@@ -198,7 +198,7 @@ router.post(
           first_name: data.first_name,
           last_name: data.last_name,
           nick_name: data.nick_name,
-          email: data.email,
+          email: data.email.toLowerCase(),
         },
         work_info: {
           department_id: data.department_id,
@@ -227,7 +227,7 @@ router.post(
         contact_details: {
           work_phone_number: data.work_phone_number,
           personal_mobile_number: data.personal_mobile_number,
-          personal_email_address: data.personal_email_address,
+          personal_email_address: data.personal_email_address.toLowerCase(),
           seating_location: data.seating_location,
           present_address: data.present_address,
           permanent_address: data.permanent_address,
