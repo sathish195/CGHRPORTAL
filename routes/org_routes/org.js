@@ -336,12 +336,12 @@ router.post("/add_update_role", Auth, async (req, res) => {
 });
 
 router.post("/universal" ,Auth,async(req, res) => {
-    org=await mongoFunctions.find_one("ORGANISATIONS", {
-        email: req.employee.email,
-      });
+    // org=await mongoFunctions.find_one("ORGANISATIONS", {
+    //     email: req.employee.email,
+    //   });
     let org_data = await redis.redisGet(
         "CRM_ORGANISATIONS",
-        org.organisation_id,
+        req.employee.organisation_id,
         true
     );
     return res

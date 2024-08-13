@@ -272,3 +272,44 @@ router.post(
       });
     })
   )
+
+  router.post("/edit_profile",Auth, async (req, res) =>{
+    let data = req.body;
+      var { error } = validate.edit_profile(data);
+      if (error) return res.status(400).send(error.details[0].message);
+      let org_data = await redis.redisGet(
+        "CRM_ORGANISATIONS",
+        req.employee.organisation_id,
+        true
+      );
+      if (!org_data) return res.status(400).send("Access Denied..!");
+      let edit_emp_data = {
+        "basic_info.nick_name": data.nick_name,
+        "personal_details.expertise": data.expertise,
+        "personal_details.marital_status": data.marital_status,
+        "personal_details.about_me": data.about_me,
+
+        identity_info: data.identity_info,
+        "contact_details.work_phone_number": data.work_phone_number,
+        "contact_details.personal_email_address": data.personal_email_address,
+        "contact_details.personal_mobile_number": data.personal_mobile_number,
+
+        work_experience: data.work_experience,
+        educational_details: data.educational_details,
+        dependent_details: data.dependent_details,
+        last_ip: data.last_ip,
+        browserid: data.browserid,
+        fcm_token: data.fcm_token,
+        device_id: data.device_id,
+      };
+      let update_emp = await mongoFunctions.find_one_and_update(
+        "EMPLOYEE",
+        { employee_id: req.employee.employee_id },
+        edit_emp_data,
+        { new: true }
+      );
+      return res.status(200).send({
+        success: "Success",
+        data: update_emp,
+      });
+    })
