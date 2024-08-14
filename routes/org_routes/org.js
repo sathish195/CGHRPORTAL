@@ -366,7 +366,7 @@ router.post("/universal" ,Auth,async(req, res) => {
             birthdays: birthdays && birthdays[month] ? birthdays[month] : [],
             organisation_details: org_data,
           };
-        return res.status(200).send({ dashboard: dashborad });
+        return res.status(200).send(dashborad);
         });
     //  await redis.update_redis("ORGANISATIONS",org);
     // return res

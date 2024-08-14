@@ -297,7 +297,19 @@ function add_employee_by_admin(data){
           return schema.validate(data);
         
       }
+    function add_project(data){
+        const schema = Joi.object({
+            project_name: Joi.string().min(3).max(50).required(),
+            project_description: Joi.string().min(10).max(200).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').required().messages({
+                'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
+            }),
+            project_deadline: Joi.date().required(),
+            project_status: Joi.string().valid("pending", "inprogress", "completed").required(),
+            team_members: Joi.array().min(1).required(),
+            team_incharges:Joi.array().min(1).required(),
+        });
+    }
 // Export the functions
 module.exports = { emp_login,emp_forgot_password,emp_reset_forgot_password ,emp_login_verify,emp_reset_password,add_update_org,add_update_department,add_update_designation
-    ,add_update_role ,add_employee_by_admin,employee_id,skip,add_image,edit_profile
+    ,add_update_role ,add_employee_by_admin,employee_id,skip,add_image,edit_profile,add_project,
 };

@@ -77,6 +77,6 @@ router.post(
             birthdays: birthdays && birthdays[month] ? birthdays[month] : [],
             organisation_details:filtered_org_data,
           };
-        return res.status(200).send({ dashboard: dashborad });
+        return res.status(200).send(dashborad);
         });
   module.exports =router;
