@@ -6,6 +6,8 @@ const bcrypt=require('../../helpers/crypto');
 const jwt=require('jsonwebtoken');
 const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
+const stats=require('../../helpers/stats');
+
 
 
 //get employee profile
@@ -55,9 +57,26 @@ router.post(
     delete filtered_org_data.departments;
     delete filtered_org_data.designations;
     delete filtered_org_data.roles;
-
-    return res
-        .status(200)
-        .send({ organisation_details: filtered_org_data });
-    });
+    let recent_hires = await stats.recent_hires(req.employee.organisation_id);
+        let birthdays = await redis.redisGet(
+          req.employee.organisation_id,
+          "BIRTHDAYS",
+          true
+        );
+        let today = new Date();
+        let month = today.getMonth();
+        let date = today.getDate();
+        if (birthdays && birthdays[month]) {
+          birthdays[month].filter((each) => {
+            const dob = moment(each.date_of_birth, "DDMMYYYY");
+            return date == dob.date();
+          });
+        }
+        let dashborad = {
+            recent_hires: recent_hires ? recent_hires : [],
+            birthdays: birthdays && birthdays[month] ? birthdays[month] : [],
+            organisation_details:filtered_org_data,
+          };
+        return res.status(200).send({ dashboard: dashborad });
+        });
   module.exports =router;
