@@ -55,12 +55,12 @@ router.post(
           },
         ],
       });
-    //   if (
-    //     find_emp &&
-    //     find_emp.basic_info.email ===
-    //       data.email
-    //   )
-    //     return res.status(400).send("Email Id Already Exists");
+      if (
+        find_emp &&
+        find_emp.basic_info.email ===
+          data.email
+      )
+        return res.status(400).send("Email Id Already Exists");
       if (find_emp && find_emp.employee_id === data.employee_id.toUpperCase())
         return res.status(400).send("Employee Id Already Exists");
       let find_email = await mongoFunctions.find_one("EMPLOYEE", {
