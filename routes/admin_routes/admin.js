@@ -135,7 +135,7 @@ router.post(
       );
 
       //   await rediscon.update_redis("EMPLOYEE", new_emp);
-      await stats.update_emp(new_emp, true, true);
+    //   await stats.update_emp(new_emp, true, true);
       return res.status(200).send({
         success: "Success",
         // data: new_emp,
