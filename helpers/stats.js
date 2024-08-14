@@ -115,19 +115,30 @@ module.exports = {
       return true;
     },
 };
-function recent_hires (organisation_id){
-    // let all_emps = await redis.redisGet(organisation_id, "ALL_EMPS", true);
-    all_emps=mongoFunctions.find("EMPLOYEE",{})
-    if (all_emps) {
-      const today = new Date();
-      const fifteenDaysAgo = new Date();
-      fifteenDaysAgo.setDate(today.getDate() - 15);
-      all_emps.filter((e) => {
-        const joining_date = new Date(e.date_of_join);
-        return joining_date >= fifteenDaysAgo;
-      });
+async function recent_hires(organisation_id) {
+    try {
+      // Assuming mongoFunctions.find is an async function
+      const all_emps = await mongoFunctions.find("EMPLOYEE", { organisation_id });
+      
+      if (all_emps) {
+        const today = new Date();
+        const fifteenDaysAgo = new Date();
+        fifteenDaysAgo.setDate(today.getDate() - 15);
+        
+        // Filter employees who joined in the last 15 days
+        const recentHires = all_emps.filter((e) => {
+          const joining_date = new Date(e.date_of_join);
+          return joining_date >= fifteenDaysAgo;
+        });
+  
+        return recentHires;
+      }
+  
+      return [];
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      return [];
     }
-    return false;
-  };
+  }
   module.exports={recent_hires};
 
