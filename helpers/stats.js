@@ -129,5 +129,5 @@ function recent_hires (organisation_id){
     }
     return false;
   };
-  module.exports(recent_hires);
+  module.exports{recent_hires};
 
