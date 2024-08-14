@@ -271,7 +271,7 @@ function add_employee_by_admin(data){
             expertise: Joi.string().allow(null, "").optional(),
             marital_status: Joi.string().valid("married", "unmarried").required(),
             about_me: Joi.string().allow(null, "").optional(),
-            identity_info: Joi.object().min(2).required(),
+            identity_info: Joi.object().required(),
             work_phone_number: Joi.string().allow(null, "").optional(),
             personal_mobile_number: Joi.string().required(),
             personal_email_address: Joi.string()
