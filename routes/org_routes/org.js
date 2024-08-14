@@ -336,18 +336,40 @@ router.post("/add_update_role", Auth, async (req, res) => {
 });
 
 router.post("/universal" ,Auth,async(req, res) => {
-    org=await mongoFunctions.find_one("ORGANISATIONS", {
-        email: req.employee.email,
-      });
-    // let org_data = await redis.redisGet(
-    //     "CRM_ORGANISATIONS",
-    //     req.employee.organisation_id,
-    //     true
-    // );
-     await redis.update_redis("ORGANISATIONS",org);
-    return res
-        .status(200)
-        .send({ organisation_details: org });
-    });
+    // org=await mongoFunctions.find_one("ORGANISATIONS", {
+    //     email: req.employee.email,
+    //   });
+    let org_data = await redis.redisGet(
+        "CRM_ORGANISATIONS",
+        req.employee.organisation_id,
+        true
+    );
+    let recent_hires = await stats.recent_hires(req.employee.organisation_id);
+        let birthdays = await redis.redisGet(
+          req.employee.organisation_id,
+          "BIRTHDAYS",
+          true
+        );
+        let today = new Date();
+        let month = today.getMonth();
+        let date = today.getDate();
+        if (birthdays && birthdays[month]) {
+          birthdays[month].filter((each) => {
+            const dob = moment(each.date_of_birth, "DDMMYYYY");
+            return date == dob.date();
+          });
+        }
+        let dashborad = {
+            recent_hires: recent_hires ? recent_hires : [],
+            birthdays: birthdays && birthdays[month] ? birthdays[month] : [],
+            organisation_details: org_data,
+          };
+        return res.status(200).send({ dashboard: dashborad });
+        });
+    //  await redis.update_redis("ORGANISATIONS",org);
+    // return res
+    //     .status(200)
+    //     .send({ organisation_details: org_data });
+    // });
     // await redis.update_redis("ORGANISATIONS",org);
 module.exports = router;
