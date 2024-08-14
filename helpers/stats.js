@@ -119,7 +119,7 @@ module.exports = {
 async function recent_hires(organisation_id) {
     try {
       // Assuming mongoFunctions.find is an async function
-      const all_emps = await mongoFunctions.find("EMPLOYEE", { organisation_id });
+      const all_emps = await mongoFunctions.find("EMPLOYEE", { organisation_id :organisation_id});
   
       if (all_emps) {
         const today = new Date();
@@ -130,7 +130,7 @@ async function recent_hires(organisation_id) {
         const recentHires = await mongoFunctions.find(
           "EMPLOYEE",
           {
-            organisation_id,
+            organisation_id:organisation_id,
             "work_info.date_of_join": { $gte: fifteenDaysAgo },
           }
         );
