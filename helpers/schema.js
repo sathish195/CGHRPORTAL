@@ -143,7 +143,7 @@ function add_employee_by_admin(data){
         institute_name: Joi.string().min(5).max(30).required(),
         degree: Joi.string().min(5).max(15).required(),
         specialization: Joi.string().min(3).max(15).required(),
-        year_of_completion: Joi.date().required(),
+        year_of_completion: Joi.number().required(),
       });
       const dependent_details_obj = Joi.object({
         name: Joi.string(),
@@ -257,7 +257,7 @@ function add_employee_by_admin(data){
             institute_name: Joi.string().min(5).max(30).required(),
             degree: Joi.string().min(5).max(15).required(),
             specialization: Joi.string().min(3).max(15).required(),
-            year_of_completion: Joi.date().required(),
+            year_of_completion: Joi.number().required(),
           });
           const dependent_details_obj = Joi.object({
             name: Joi.string(),
