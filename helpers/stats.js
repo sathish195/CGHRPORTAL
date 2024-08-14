@@ -134,7 +134,7 @@ async function recent_hires(organisation_id) {
             "work_info.date_of_join": { $gte: fifteenDaysAgo },
           }
         );
-        print(recentHires)
+        console.log(recentHires);
         return recentHires;
       }
   
