@@ -346,7 +346,7 @@ router.post("/universal" ,Auth,async(req, res) => {
         req.employee.organisation_id,
         true
     );
-    let recent_hires = await stats.recent_hires(req.employee.organisation_id);
+    let recent_hires = stats.recent_hires(req.employee.organisation_id);
         let birthdays = await redis.redisGet(
           req.employee.organisation_id,
           "BIRTHDAYS",

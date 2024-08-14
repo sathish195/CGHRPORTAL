@@ -116,9 +116,9 @@ module.exports = {
     }
 };
 
-async function recent_hires (organisation_id) {
+function recent_hires (organisation_id) {
     // let all_emps = await redis.redisGet(organisation_id, "ALL_EMPS", true);
-    all_emps=await mongoFunctions.find("EMPLOYEE",{})
+    all_emps=mongoFunctions.find("EMPLOYEE",{})
     if (all_emps) {
       const today = new Date();
       const fifteenDaysAgo = new Date();
