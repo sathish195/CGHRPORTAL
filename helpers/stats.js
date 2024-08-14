@@ -115,21 +115,25 @@ module.exports = {
       return true;
     },
 };
+
 async function recent_hires(organisation_id) {
     try {
       // Assuming mongoFunctions.find is an async function
       const all_emps = await mongoFunctions.find("EMPLOYEE", { organisation_id });
-      
+  
       if (all_emps) {
         const today = new Date();
-        const fifteenDaysAgo = new Date();
+        const fifteenDaysAgo = new Date(today);
         fifteenDaysAgo.setDate(today.getDate() - 15);
-        
-        // Filter employees who joined in the last 15 days
-        const recentHires = all_emps.filter((e) => {
-          const joining_date = new Date(e.date_of_join);
-          return joining_date >= fifteenDaysAgo;
-        });
+  
+        // Filter employees directly in the database query for efficiency
+        const recentHires = await mongoFunctions.find(
+          "EMPLOYEE",
+          {
+            organisation_id,
+            date_of_join: { $gte: fifteenDaysAgo },
+          }
+        );
   
         return recentHires;
       }
