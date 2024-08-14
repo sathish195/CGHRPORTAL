@@ -114,3 +114,17 @@ module.exports = {
       return true;
     }
 };
+
+recent_hires: async (organisation_id) => {
+    let all_emps = await redis.redisGet(organisation_id, "ALL_EMPS", true);
+    if (all_emps) {
+      const today = new Date();
+      const fifteenDaysAgo = new Date();
+      fifteenDaysAgo.setDate(today.getDate() - 15);
+      all_emps.filter((e) => {
+        const joining_date = new Date(e.date_of_join);
+        return joining_date >= fifteenDaysAgo;
+      });
+    }
+    return false;
+  };
