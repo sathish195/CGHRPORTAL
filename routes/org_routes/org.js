@@ -362,7 +362,7 @@ router.post("/universal" ,Auth,async(req, res) => {
           });
         }
         let dashborad = {
-            recent_hires: recent_hires ? recent_hires : [],
+            recent_hires: [],
             birthdays: birthdays && birthdays[month] ? birthdays[month] : [],
             organisation_details: org_data,
           };

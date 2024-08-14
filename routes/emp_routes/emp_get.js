@@ -73,11 +73,11 @@ router.post(
           });
         }
         let dashborad = {
-            recent_hires: recent_hires ? recent_hires : [],
+            recent_hires:  [],
             birthdays: birthdays && birthdays[month] ? birthdays[month] : [],
             organisation_details:filtered_org_data,
           };
         return res.status(200).send(dashborad);
-        
+
         });
   module.exports =router;
