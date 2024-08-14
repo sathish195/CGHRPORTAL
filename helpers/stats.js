@@ -131,7 +131,7 @@ async function recent_hires(organisation_id) {
           "EMPLOYEE",
           {
             organisation_id,
-            date_of_join: { $gte: fifteenDaysAgo },
+            "work_info.date_of_join": { $gte: fifteenDaysAgo },
           }
         );
   
