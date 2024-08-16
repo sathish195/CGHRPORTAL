@@ -302,6 +302,7 @@ router.post(
         start_date: data.start_date,
         end_date: data.end_date,
         status: data.status,
+        description:data.description,
         project_status: data.project_status,
         team: data.team,
         $push: { 
@@ -343,6 +344,7 @@ router.post(
         project_name: data.project_name,
         start_date: data.start_date,
         end_date: data.end_date,
+        description: data.description,
         status: data.status,
         project_status: data.project_status,
         team: data.team,
