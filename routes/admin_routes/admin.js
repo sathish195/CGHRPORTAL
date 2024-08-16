@@ -377,6 +377,9 @@ router.post(
     // Find the employee
     const employee = await mongoFunctions.find_one('EMPLOYEE', { employee_id: data.employee_id });
     if (!employee) return res.status(400).send('Employee not found');
+    // Find the project
+    const project = await mongoFunctions.find_one('PROJECTS', { project_id: data.project_id });
+    if (!project) return res.status(400).send('Project not found');
   
     if (data.status.toLowerCase() === 'add') {
       // Add team member
@@ -386,8 +389,8 @@ router.post(
       };
   
       await mongoFunctions.find_one_and_update(
-        'EMPLOYEE',
-        { employee_id: data.employee_id },
+        'PROJECTS',
+        { project_id: data.project_id },
         { $push: { team: new_team_member } } // Assuming 'team' is the array field where members are added
       );
   
@@ -395,8 +398,8 @@ router.post(
     } else if (data.status.toLowerCase() === 'remove') {
       // Remove team member
       await mongoFunctions.find_one_and_update(
-        'EMPLOYEE',
-        { employee_id: data.employee_id },
+        'PROJECTS',
+        { project_id: data.project_id },
         { $pull: { team: { employee_id: data.employee_id } } } // Remove from 'team' array
       );
   
