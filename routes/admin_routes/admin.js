@@ -331,7 +331,7 @@ router.post(
   
       if (!project_data_up) return res.status(400).send('Project Update Failed');
   
-      return res.status(200).send('Project updated successfully');
+      return res.status(200).send('Project Updated Successfully');
     } else {
       // Check if project name already exists
       const findProject = await mongoFunctions.find_one('PROJECTS', {
