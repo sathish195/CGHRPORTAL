@@ -176,7 +176,7 @@ function add_employee_by_admin(data){
           .max(15)
           .required(),
         source_of_hire: Joi.string().min(3).max(15).required(),
-        reporting_manager: Joi.object().optional(),
+        reporting_manager: Joi.string().required(),
         date_of_join: Joi.date().required(),
   
         date_of_birth: Joi.string()
@@ -300,13 +300,12 @@ function add_employee_by_admin(data){
     function add_project(data){
         const schema = Joi.object({
             project_name: Joi.string().min(3).max(50).required(),
-            project_description: Joi.string().min(10).max(200).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').required().messages({
+            description: Joi.string().min(10).max(200).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').required().messages({
                 'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
             }),
-            project_deadline: Joi.date().required(),
-            project_status: Joi.string().valid("pending", "inprogress", "completed").required(),
-            team_members: Joi.array().min(1).required(),
-            team_incharges:Joi.array().min(1).required(),
+            deadline: Joi.date().required(),
+            status: Joi.string().valid("pending", "inprogress", "completed").required(),
+            team: Joi.array().min(1).required(),
         });
     }
 // Export the functions

@@ -6,6 +6,7 @@ const bcrypt=require('../../helpers/crypto');
 const jwt=require('jsonwebtoken');
 const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
+const { mongo } = require('mongoose');
 
 //get employee list
 
@@ -52,4 +53,21 @@ router.post(
       return res.status(200).send({employees});
     })
   )
+  router.post("/get_project_by_id", async (req, res)=>{
+    data=req.body;
+    if (req.employee.role_name.toLowerCase()!=="direcor" || "team incharge") return res.status(400).send("Not Admin");
+    findProject=await mongoFunctions.find_one("PROJECTS",{organisation_id:req.employee.organisation_id,project_id:data.project_id});
+    if(!findProject) return res.status(400).send("Project not found")
+    return res.status(200).send(findProject)
+
+    });
+
+    router.post("/get_projects", async (req, res)=>{
+        data=req.body;
+        if (req.employee.role_name.toLowerCase()!=="direcor" || "team incharge") return res.status(400).send("Not Admin");
+        findProject=await mongoFunctions.find("PROJECTS",{organisation_id:req.employee.organisation_id});
+        if(!findProject) return res.status(400).send("Project not found")
+        return res.status(200).send(findProject)
+    
+        }); 
   module.exports =router;

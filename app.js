@@ -12,6 +12,11 @@ require("./helpers/db")();
 //process.env is pending
 //error handling is pending
 //redis is pending
+//compression is pending
+//helmet is pending
+//ratelimiter is pending
+//slowdown is pending
+
 
 require("./helpers/routeConfig")(app);
 

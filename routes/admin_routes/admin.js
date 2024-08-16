@@ -7,6 +7,7 @@ const jwt=require('jsonwebtoken');
 const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
+const { functions } = require('underscore');
 
 // Add new employee
 
@@ -273,5 +274,27 @@ router.post(
       });
     })
   )
+
+  router.post("/add_project", async (req, res) => {
+    let data = req.body;
+    var { error } = validations.add_project(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    if (req.employee.role_name.toLowerCase()!=="director")return res.status(400).send("Not Admin");
+    findProject=mongoFunctions.find_one("PROJECTS",{project_name:data.project_name})
+    if (findProject) return res.status(400).send("project Name Already Exists");
+    let new_project_data={
+        project_id: functions.get_random_string("P",12),
+        project_name: data.project_name,
+        deadline:data.deadline,
+        status:data.status,
+        team:data.team,
+        createdby:{
+            employee_id:req.employee.employee_id,
+            employee_name:req.employee.employee_name
+        }
+    }
+    await mongoFunctions.create_new_record("PROJECTS",new_project_data);
+    });
+    
 
   module.exports=router;
