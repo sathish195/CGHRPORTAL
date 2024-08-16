@@ -303,10 +303,14 @@ function add_employee_by_admin(data){
             description: Joi.string().min(10).max(200).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').required().messages({
                 'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
             }),
-            deadline: Joi.date().required(),
-            status: Joi.string().valid("pending", "inprogress", "completed").required(),
+            start_date:Joi.date().required(),
+            end_Date:Joi.date().required(),
+            status: Joi.string().valid("new", "in_progress","under_review", "completed").required(),
             team: Joi.array().min(1).required(),
+            project_status: Joi.string().required(),
+            project_id: Joi.string().optional(),
         });
+        return schema.validate(data);
     }
 // Export the functions
 module.exports = { emp_login,emp_forgot_password,emp_reset_forgot_password ,emp_login_verify,emp_reset_password,add_update_org,add_update_department,add_update_designation

@@ -8,6 +8,7 @@ const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
 const { functions } = require('underscore');
+const { date } = require('joi');
 
 // Add new employee
 
@@ -279,22 +280,56 @@ router.post(
     let data = req.body;
     var { error } = validations.add_project(data);
     if (error) return res.status(400).send(error.details[0].message);
-    if (req.employee.role_name.toLowerCase()!=="director")return res.status(400).send("Not Admin");
-    findProject=mongoFunctions.find_one("PROJECTS",{project_name:data.project_name})
+    if (req.employee.role_name.toLowerCase()!=="director" || "manager")return res.status(400).send("Not Admin");
+    if (data.project_id && data.project_id.length > 9) {
+        findId=mongoFunctions.find_one("PROJECTS",{organisation_id:req.employee.organisation_id,project_id:data.project_id})
+        if (!findId) return res.status(400).send("Project ID does not exist");
+        data_up={
+        start_date:data.start_date,
+        end_date:data.end_date,
+        status:data.status,
+        project_status:data.project_status,
+        team:data.team,
+       modifiedBy:{
+            employee_id:req.employee.employee_id,
+            employee_name:req.employee.first_name+req.employee.last_name,
+            modifiedAt:date.now(),
+            prevStatus:findId.status,
+            currentStatus:data.status
+            
+        }
+        }
+        project_data_up = await mongoFunctions.find_one_and_update(
+            "PROJECTS",
+            {
+                organisation_id: req.employee.organisation_id,
+                "project_id": data.project_id,
+            },
+            {
+                $set: {update:data_up
+
+                },
+            },
+        );
+    } else {
+    findProject=mongoFunctions.find_one("PROJECTS",{project_name:data.project_name.toLowerCase()})
     if (findProject) return res.status(400).send("project Name Already Exists");
     let new_project_data={
-        project_id: functions.get_random_string("P",12),
+        project_id: functions.get_random_string("P",9),
         project_name: data.project_name,
-        deadline:data.deadline,
+        start_date:data.start_date,
+        end_date:data.end_date,
         status:data.status,
+        project_status:data.project_status,
         team:data.team,
         createdby:{
             employee_id:req.employee.employee_id,
-            employee_name:req.employee.employee_name
+            employee_name:req.employee.first_name+req.employee.last_name,
+            createdAt:date.now()
         }
     }
     await mongoFunctions.create_new_record("PROJECTS",new_project_data);
-    });
-    
+    }});
+
 
   module.exports=router;
