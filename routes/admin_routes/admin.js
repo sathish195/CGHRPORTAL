@@ -7,7 +7,7 @@ const jwt=require('jsonwebtoken');
 const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
-const { functions } = require('underscore');
+const functions=require('../../helpers/functions');
 const { date } = require('joi');
 
 // Add new employee
@@ -339,7 +339,7 @@ router.post(
       if (findProject) return res.status(400).send('Project Name Already Exists');
   
       const new_project_data = {
-        project_id: functions.get_random_string('P', 9),
+        project_id: functions.get_random_string("R", 10, true),
         project_name: data.project_name,
         start_date: data.start_date,
         end_date: data.end_date,
