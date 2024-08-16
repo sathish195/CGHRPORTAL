@@ -10,7 +10,7 @@ const Project_schema=new mongoose.Schema({
     status: { type: String, required: true },
     team: { type: Array, required: true },
     project_status: { type: String, required: true},
-    created_by:{ type: Array, required: true },
+    created_by:{ type: Object, required: true },
     modified_by:{ type: Array, required: true },
 
 
