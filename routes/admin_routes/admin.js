@@ -298,24 +298,24 @@ router.post(
   
       if (!findId) return res.status(400).send('Project ID does not exist');
   
-      const data_up = {
-        start_date: data.start_date,
-        project_name:data.project_name.toLowerCase(),
-        end_date: data.end_date,
-        status: data.status,
-        description:data.description,
-        project_status: data.project_status,
-        team: data.team,
-        $push: { 
-          modified_by:[{
-            employee_id: req.employee.employee_id,
-            employee_email: req.employee.email ,
-            modifiedAt: new Date(),
-            prevStatus: findId.status,
-            currentStatus: data.status,
-          }],
-        },
-      };
+    //   const data_up = {
+    //     start_date: data.start_date,
+    //     project_name:data.project_name.toLowerCase(),
+    //     end_date: data.end_date,
+    //     status: data.status,
+    //     description:data.description,
+    //     project_status: data.project_status,
+    //     team: data.team,
+    //     $push: { 
+    //       modified_by:{
+    //         employee_id: req.employee.employee_id,
+    //         employee_email: req.employee.email ,
+    //         modifiedAt: new Date(),
+    //         prevStatus: findId.status,
+    //         currentStatus: data.status,
+    //       },
+    //     },
+    //   };
       //update project
       // Update project
       const project_data_up = await mongoFunctions.find_one_and_update(
@@ -324,10 +324,28 @@ router.post(
           organisation_id: req.employee.organisation_id,
           project_id: data.project_id,
         },
-        {
-          $set: data_up,
-        }
-      );
+            {
+                $set: {
+                  start_date: data.start_date,
+                  project_name: data.project_name.toLowerCase(),
+                  end_date: data.end_date,
+                  status: data.status,
+                  description: data.description,
+                  project_status: data.project_status,
+                  team: data.team,
+                },
+                $push: {
+                  modified_by: {
+                    employee_id: req.employee.employee_id,
+                    employee_email: req.employee.email,
+                    modifiedAt: new Date(),
+                    prevStatus: findId.status,
+                    currentStatus: data.status,
+                  },
+                },
+              },
+              { new: true } // Optionally return the updated document
+            );
   
       if (!project_data_up) return res.status(400).send('Project Update Failed');
   

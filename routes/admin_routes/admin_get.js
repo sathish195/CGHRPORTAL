@@ -53,9 +53,12 @@ router.post(
       return res.status(200).send({employees});
     })
   )
-  router.post("/get_project_by_id", async (req, res)=>{
+  router.post("/get_project_by_id",Auth, async (req, res)=>{
     data=req.body;
-    if (req.employee.role_name.toLowerCase()!=="direcor" || "team incharge") return res.status(400).send("Not Admin");
+    const userRole = req.employee.role_name.toLowerCase();
+    if (userRole === 'team member' ) {
+      return res.status(403).send('Access denied: Not Admin');
+    }
     findProject=await mongoFunctions.find_one("PROJECTS",{organisation_id:req.employee.organisation_id,project_id:data.project_id});
     if(!findProject) return res.status(400).send("Project not found")
     return res.status(200).send(findProject)
@@ -64,9 +67,11 @@ router.post(
 
     router.post("/get_projects", async (req, res)=>{
         data=req.body;
-        if (req.employee.role_name.toLowerCase()!=="direcor" || "team incharge") return res.status(400).send("Not Admin");
+        const userRole = req.employee.role_name.toLowerCase();
+        if (userRole === 'team member' ) {
+        return res.status(403).send('Access denied: Not Admin');
+        }
         findProject=await mongoFunctions.find("PROJECTS",{organisation_id:req.employee.organisation_id});
-        if(!findProject) return res.status(400).send("Project not found")
         return res.status(200).send(findProject)
     
         }); 
