@@ -298,6 +298,20 @@ function add_employee_by_admin(data){
         
       }
     function add_project(data){
+        const team_obj = Joi.object({
+            employee_id: Joi.string().min(5).max(10).required(),
+            email: Joi.string()
+            .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+            .trim()
+            .min(10)
+            .max(55)
+            .email()
+            .messages({
+              "string.pattern.base": "Email Should be valid mail",
+            })
+            .required(),
+           
+          });
         const schema = Joi.object({
             project_name: Joi.string().min(3).max(50).required(),
             description: Joi.string().min(10).max(200).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').required().messages({
@@ -306,8 +320,8 @@ function add_employee_by_admin(data){
             start_date:Joi.date().required(),
             end_Date:Joi.date().required(),
             status: Joi.string().valid("new", "in_progress","under_review", "completed").required(),
-            team: Joi.array().min(1).required(),
-            project_status: Joi.string().required(),
+            team: Joi.array(team_obj).min(1).required(),
+            project_status: Joi.string().valid("active","in_active","terminated").required(),
             project_id: Joi.string().optional(),
         });
         return schema.validate(data);

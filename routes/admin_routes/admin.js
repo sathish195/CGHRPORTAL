@@ -276,60 +276,88 @@ router.post(
     })
   )
 
-  router.post("/add_project", async (req, res) => {
-    let data = req.body;
-    var { error } = validations.add_project(data);
+  router.post('/add_project', async (req, res) => {
+    const data = req.body;
+  
+    // Validate request data
+    const { error } = validations.add_project(data);
     if (error) return res.status(400).send(error.details[0].message);
-    if (req.employee.role_name.toLowerCase()!=="director" || "manager")return res.status(400).send("Not Admin");
-    if (data.project_id && data.project_id.length > 9) {
-        findId=mongoFunctions.find_one("PROJECTS",{organisation_id:req.employee.organisation_id,project_id:data.project_id})
-        if (!findId) return res.status(400).send("Project ID does not exist");
-        data_up={
-        start_date:data.start_date,
-        end_date:data.end_date,
-        status:data.status,
-        project_status:data.project_status,
-        team:data.team,
-       modifiedBy:{
-            employee_id:req.employee.employee_id,
-            employee_name:req.employee.first_name+req.employee.last_name,
-            modifiedAt:date.now(),
-            prevStatus:findId.status,
-            currentStatus:data.status
-            
-        }
-        }
-        project_data_up = await mongoFunctions.find_one_and_update(
-            "PROJECTS",
-            {
-                organisation_id: req.employee.organisation_id,
-                "project_id": data.project_id,
-            },
-            {
-                $set: {update:data_up
-
-                },
-            },
-        );
-    } else {
-    findProject=mongoFunctions.find_one("PROJECTS",{project_name:data.project_name.toLowerCase()})
-    if (findProject) return res.status(400).send("project Name Already Exists");
-    let new_project_data={
-        project_id: functions.get_random_string("P",9),
-        project_name: data.project_name,
-        start_date:data.start_date,
-        end_date:data.end_date,
-        status:data.status,
-        project_status:data.project_status,
-        team:data.team,
-        createdby:{
-            employee_id:req.employee.employee_id,
-            employee_name:req.employee.first_name+req.employee.last_name,
-            createdAt:date.now()
-        }
+  
+    // Check user role
+    const userRole = req.employee.role_name.toLowerCase();
+    if (userRole !== 'director' && userRole !== 'manager') {
+      return res.status(403).send('Access denied: Not authorized');
     }
-    await mongoFunctions.create_new_record("PROJECTS",new_project_data);
-    }});
-
-
+  
+    if (data.project_id && data.project_id.length > 9) {
+      // Check if project ID exists
+      const findId = await mongoFunctions.find_one('PROJECTS', {
+        organisation_id: req.employee.organisation_id,
+        project_id: data.project_id,
+      });
+  
+      if (!findId) return res.status(400).send('Project ID does not exist');
+  
+      const data_up = {
+        start_date: data.start_date,
+        end_date: data.end_date,
+        status: data.status,
+        project_status: data.project_status,
+        team: data.team,
+        $push: { 
+          modifiedBy: {
+            employee_id: req.employee.employee_id,
+            employee_name: req.employee.first_name + ' ' + req.employee.last_name,
+            modifiedAt: new Date(), 
+            prevStatus: findId.status,
+            currentStatus: data.status,
+          },
+        },
+      };
+  
+      // Update project
+      const project_data_up = await mongoFunctions.find_one_and_update(
+        'PROJECTS',
+        {
+          organisation_id: req.employee.organisation_id,
+          project_id: data.project_id,
+        },
+        {
+          $set: data_up,
+        }
+      );
+  
+      if (!project_data_up) return res.status(400).send('Project update failed');
+  
+      return res.status(200).send('Project updated successfully');
+    } else {
+      // Check if project name already exists
+      const findProject = await mongoFunctions.find_one('PROJECTS', {
+        project_name: data.project_name.toLowerCase(),
+      });
+  
+      if (findProject) return res.status(400).send('Project Name Already Exists');
+  
+      const new_project_data = {
+        project_id: functions.get_random_string('P', 9),
+        project_name: data.project_name,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        status: data.status,
+        project_status: data.project_status,
+        team: data.team,
+        createdBy: { 
+          employee_id: req.employee.employee_id,
+          employee_name: req.employee.first_name + ' ' + req.employee.last_name,
+          createdAt: new Date(),
+        },
+      };
+  
+      // Create new project
+      await mongoFunctions.create_new_record('PROJECTS', new_project_data);
+  
+      return res.status(201).send('Project created successfully');
+    }
+  });
+  
   module.exports=router;
