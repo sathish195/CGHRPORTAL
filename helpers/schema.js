@@ -298,20 +298,6 @@ function add_employee_by_admin(data){
         
       }
     function add_project(data){
-        const team_obj = Joi.object({
-            employee_id: Joi.string().min(5).max(10).required(),
-            email: Joi.string()
-            .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
-            .trim()
-            .min(10)
-            .max(55)
-            .email()
-            .messages({
-              "string.pattern.base": "Email Should be valid mail",
-            })
-            .required(),
-           
-          });
         const schema = Joi.object({
             project_name: Joi.string().min(3).max(50).required(),
             description: Joi.string().min(10).max(200).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').required().messages({
@@ -326,7 +312,13 @@ function add_employee_by_admin(data){
         });
         return schema.validate(data);
     }
+    function get_project_by_id(data){
+        const schema = Joi.object({
+            project_id: Joi.string().min(5).max(12).required(),
+        });
+        return schema.validate(data);
+    }
 // Export the functions
 module.exports = { emp_login,emp_forgot_password,emp_reset_forgot_password ,emp_login_verify,emp_reset_password,add_update_org,add_update_department,add_update_designation
-    ,add_update_role ,add_employee_by_admin,employee_id,skip,add_image,edit_profile,add_project,
+    ,add_update_role ,add_employee_by_admin,employee_id,skip,add_image,edit_profile,add_project,get_project_by_id
 };
