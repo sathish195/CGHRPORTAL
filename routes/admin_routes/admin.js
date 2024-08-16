@@ -316,7 +316,6 @@ router.post(
           }],
         },
       };
-  
       // Update project
       const project_data_up = await mongoFunctions.find_one_and_update(
         'PROJECTS',
