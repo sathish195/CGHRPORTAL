@@ -322,7 +322,7 @@ function add_employee_by_admin(data){
             status: Joi.string().valid("new", "in_progress","under_review", "completed").required(),
             team: Joi.array().items(team_obj).min(1).required(),
             project_status: Joi.string().valid("active","in_active","terminated").required(),
-            project_id: Joi.string().optional(),
+            project_id: Joi.string().optional().allow(""),
         });
         return schema.validate(data);
     }
