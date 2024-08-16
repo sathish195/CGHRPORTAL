@@ -307,13 +307,13 @@ router.post(
         project_status: data.project_status,
         team: data.team,
         $push: { 
-          modified_by: {
+          modified_by:[{
             employee_id: req.employee.employee_id,
             employee_email: req.employee.email ,
             modifiedAt: new Date(),
             prevStatus: findId.status,
             currentStatus: data.status,
-          },
+          }],
         },
       };
   
@@ -329,7 +329,7 @@ router.post(
         }
       );
   
-      if (!project_data_up) return res.status(400).send('Project update failed');
+      if (!project_data_up) return res.status(400).send('Project Update Failed');
   
       return res.status(200).send('Project updated successfully');
     } else {
