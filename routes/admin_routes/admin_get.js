@@ -65,7 +65,7 @@ router.post(
 
     });
 
-    router.post("/get_projects", async (req, res)=>{
+    router.post("/get_projects",Auth, async (req, res)=>{
         data=req.body;
         const userRole = req.employee.role_name.toLowerCase();
         if (userRole === 'team member' ) {
