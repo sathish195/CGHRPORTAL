@@ -300,6 +300,7 @@ router.post(
   
       const data_up = {
         start_date: data.start_date,
+        project_name:data.project_name.toLowerCase(),
         end_date: data.end_date,
         status: data.status,
         description:data.description,
@@ -340,8 +341,9 @@ router.post(
       if (findProject) return res.status(400).send('Project Name Already Exists');
   
       const new_project_data = {
+        organisation_id: req.employee.organisation_id,
         project_id: functions.get_random_string("R", 10, true),
-        project_name: data.project_name,
+        project_name: data.project_name.toLowerCase(),
         start_date: data.start_date,
         end_date: data.end_date,
         description: data.description,
@@ -350,8 +352,7 @@ router.post(
         team: data.team,
         createdBy: { 
           employee_id: req.employee.employee_id,
-          employee_name: req.employee.first_name + ' ' + req.employee.last_name,
-          createdAt: new Date(),
+          employee_name: req.employee.email+ ' ' + req.employee.email,
         },
       };
   
