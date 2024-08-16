@@ -276,7 +276,7 @@ router.post(
     })
   )
 
-  router.post('/add_project', async (req, res) => {
+  router.post('/add_project',Auth, async (req, res) => {
     const data = req.body;
   
     // Validate request data
