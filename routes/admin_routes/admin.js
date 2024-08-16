@@ -286,7 +286,7 @@ router.post(
     // Check user role
     const userRole = req.employee.role_name.toLowerCase();
     if (userRole !== 'director' && userRole !== 'manager') {
-      return res.status(403).send('Access denied: Not authorized');
+      return res.status(403).send('Access denied: Not Admin');
     }
   
     if (data.project_id && data.project_id.length > 9) {
@@ -307,7 +307,7 @@ router.post(
         project_status: data.project_status,
         team: data.team,
         $push: { 
-          modifiedBy: {
+          modified_by: {
             employee_id: req.employee.employee_id,
             employee_email: req.employee.email ,
             modifiedAt: new Date(),
@@ -350,7 +350,7 @@ router.post(
         status: data.status,
         project_status: data.project_status,
         team: data.team,
-        createdBy: { 
+        created_by: { 
           employee_id: req.employee.employee_id,
           employee_name: req.employee.email+ ' ' + req.employee.email,
         },
