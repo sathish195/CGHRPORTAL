@@ -352,7 +352,7 @@ router.post(
         team: data.team,
         created_by: { 
           employee_id: req.employee.employee_id,
-          employee_name: req.employee.email+ ' ' + req.employee.email,
+          email: req.employee.email,
         },
       };
   

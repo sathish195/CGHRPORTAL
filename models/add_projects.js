@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const Project_schema=new mongoose.Schema({
+    organisation_id: { type: String, required: true },
     project_id: { type: String, required: true, unique: true },
     project_name: { type: String, required: true },
     description: { type: String, required: true },
