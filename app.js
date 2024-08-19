@@ -22,6 +22,6 @@ require("./helpers/routeConfig")(app);
 
 
 // app.listen(port,console.log("Listening on port 8080"));
-app.listen(port, () => {
-    console.log(`Listening on port http://localhost:${port}`);
+app.listen(process.env.PORT, () => {
+    console.log(`Listening on port http://localhost:${process.env.PORT}`);
   });

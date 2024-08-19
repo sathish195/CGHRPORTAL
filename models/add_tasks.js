@@ -8,13 +8,16 @@ const Task_schema=new mongoose.Schema({
     status: { type: String, required: true },
     task_name: { type: String, required: true },
     description: { type: String, required: true },
-    start_date: {type: Date,required:false},
-    end_date: { type: Date,required:false},
+    // start_date: {type: Date,required:false},
+    // end_date: { type: Date,required:false},
     status: { type: String, required: true },
     team:{ type: Array, required: true },
     task_status: { type: String, required: true },
     created_by:{ type: Object, required: true },
     modified_by:{ type: Array, required: true },
+    completed_date:{ type: Date, required: true,default: new Date()},
+    assign_track: { type: Array, required: true },
+                
 
 },
 { timestamps: true }

@@ -58,10 +58,10 @@ router.post(
     var { error } =validations.get_project_by_id(data);
       if (error) return res.status(400).send(error.details[0].message);
     
-    const userRole = req.employee.role_name.toLowerCase();
-    if (userRole === 'team member' ) {
-      return res.status(403).send('Access denied: Not Admin');
-    }
+    // const userRole = req.employee.role_name.toLowerCase();
+    // if (userRole === 'team member' ) {
+    //   return res.status(403).send('Access denied: Not Admin');
+    // }
     findProject=await mongoFunctions.find_one("PROJECTS",{organisation_id:req.employee.organisation_id,project_id:data.project_id});
     if(!findProject) return res.status(400).send("Project not found")
     return res.status(200).send(findProject)
@@ -69,13 +69,55 @@ router.post(
     });
 
     router.post("/get_projects",Auth, async (req, res)=>{
-        data=req.body;
-        const userRole = req.employee.role_name.toLowerCase();
-        if (userRole === 'team member' ) {
-        return res.status(403).send('Access denied: Not Admin');
+
+    const data = req.body;
+    const userRole = req.employee.role_name.toLowerCase();
+    const organisationId = req.employee.organisation_id;
+    const employeeId = req.employee.employee_id;
+
+    // Check user role
+    // if (userRole === 'team member') {
+    //     return res.status(403).send('Access denied: Not authorized');
+    // }
+
+    if (userRole === 'director' || userRole === 'manager') {
+        // Get all projects for director or manager
+        try {
+            const projects = await mongoFunctions.find('PROJECTS', { organisation_id: organisationId });
+            return res.status(200).send(projects);
+        } catch (err) {
+            return res.status(500).send('Server error');
         }
-        findProject=await mongoFunctions.find("PROJECTS",{organisation_id:req.employee.organisation_id});
-        return res.status(200).send(findProject)
-    
-        }); 
+    } else if (userRole === 'team incharge') {
+        // Get only the projects where the team incharge's employee ID is in the team array
+        try {
+            const projects = await mongoFunctions.find('PROJECTS', {
+                organisation_id: organisationId,
+                team: { $elemMatch: { employee_id: employeeId } }
+            });
+            return res.status(200).send(projects);
+        } catch (err) {
+            return res.status(500).send('Server error');
+        }
+    } else {
+      const projects = await mongoFunctions.find('TASKS', {
+        organisation_id: organisationId,
+        team: { $elemMatch: { employee_id: employeeId } }
+    });
+    return res.status(200).send(projects);
+    }
+});
+router.post("/get_tasks",Auth, async (req, res)=>{
+  data=req.body;
+  var { error } =validations.get_project_by_id(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+  // const userRole = req.employee.role_name.toLowerCase();
+  // if (userRole === 'team member' ) {
+  // return res.status(403).send('Access denied: Not Admin');
+  // }
+  findTask=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,project_id:data.project_id});
+  return res.status(200).send(findTask)
+
+  }); 
   module.exports =router;

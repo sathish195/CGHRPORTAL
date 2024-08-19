@@ -12,8 +12,7 @@ const Project_schema=new mongoose.Schema({
     project_status: { type: String, required: true},
     created_by:{ type: Object, required: true },
     modified_by:{ type: Array, required: true },
-    // type:{type: String, required: true},
-
+    assign_track: {type: Array, required: true}
 
 
 },
