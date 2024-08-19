@@ -550,6 +550,7 @@ router.post(
         organisation_id: req.employee.organisation_id,
         task_id: functions.get_random_string("TA", 9, true),
         project_id: data.project_id,
+        project_name:findId.project_name,
         task_name: data.task_name.toLowerCase(),
         // start_date: data.start_date,
         // end_date: data.end_date,
@@ -569,4 +570,4 @@ router.post(
     }
   });
 
-  
+
