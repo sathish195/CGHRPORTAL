@@ -1,3 +1,4 @@
+const { required } = require("joi");
 const mongoose = require("mongoose");
 
 const Task_schema=new mongoose.Schema({
@@ -7,8 +8,8 @@ const Task_schema=new mongoose.Schema({
     status: { type: String, required: true },
     task_name: { type: String, required: true },
     description: { type: String, required: true },
-    start_date: {type: Date, required: true },
-    end_date: { type: Date, required: true },
+    start_date: {type: Date,required:false},
+    end_date: { type: Date,required:false},
     status: { type: String, required: true },
     team:{ type: Array, required: true },
     task_status: { type: String, required: true },
