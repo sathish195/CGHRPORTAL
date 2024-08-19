@@ -307,7 +307,7 @@ function add_employee_by_admin(data){
             end_date:Joi.date().required(),
             status: Joi.string().valid("new", "in_progress","under_review", "completed").required(),
             // team: Joi.array().items(team_obj).min(1).required(),
-            project_status: Joi.string().valid("active","in_active","terminated").required(),
+            project_status: Joi.string().valid("active","in_active","completed").required(),
             project_id: Joi.string().optional().allow(""),
         });
         return schema.validate(data);
@@ -330,7 +330,7 @@ function add_employee_by_admin(data){
             start_date: Joi.date().required(),
             end_date: Joi.date().required(),
             status: Joi.string().valid("new", "in_progress","under_review", "completed").required(),
-            task_status: Joi.string().valid("active","in_active","terminated").required(),
+            task_status: Joi.string().valid("active","in_active","completed").required(),
             task_id: Joi.string().optional().allow(""),
           });
           return schema.validate(data);

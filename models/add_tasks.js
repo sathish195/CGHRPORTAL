@@ -20,6 +20,16 @@ const Task_schema=new mongoose.Schema({
 
 exports.TASKS= mongoose.model("TASKS", Task_schema);
 
+// {
+//     "task_name":"CG-HR" ,
+//     "description": "It is a hr Portal to track organisation details and employee working status and files",
+//     "start_date":"2024-08-01",
+//     "end_date":"2024-08-20",
+//     "status": "under_review",
+//     "task_status":"active" ,
+//     "project_id":"PR7CE7BB42" ,
+//     "task_id":""
+//  }
 
 // const mongoose = require('mongoose');
 
