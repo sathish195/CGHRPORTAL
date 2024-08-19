@@ -320,6 +320,21 @@ function add_employee_by_admin(data){
         });
         return schema.validate(data);
     }
+    function add_update_task(data){
+       const schema = Joi.object({
+            project_id: Joi.string().min(5).max(12).required(),
+            task_name: Joi.string().min(3).max(50).required(),
+            description: Joi.string().min(10).max(200).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').required().messages({
+                'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
+            }),
+            start_date: Joi.date().required(),
+            end_date: Joi.date().required(),
+            status: Joi.string().valid("new", "in_progress","under_review", "completed").required(),
+            task_status: Joi.string().valid("active","in_active","terminated").required(),
+            task_id: Joi.string().optional().allow(""),
+          });
+          return schema.validate(data);
+    }
     
     function get_project_by_id(data){
         const schema = Joi.object({
@@ -327,7 +342,13 @@ function add_employee_by_admin(data){
         });
         return schema.validate(data);
     }
+    function get_task_by_id(data){
+      const schema = Joi.object({
+          task_id: Joi.string().min(5).max(12).required(),
+      });
+      return schema.validate(data);
+  }
 // Export the functions
 module.exports = { emp_login,emp_forgot_password,emp_reset_forgot_password ,emp_login_verify,emp_reset_password,add_update_org,add_update_department,add_update_designation
-    ,add_update_role ,add_employee_by_admin,employee_id,skip,add_image,edit_profile,add_project,get_project_by_id,add_remove_team,
+    ,add_update_role ,add_employee_by_admin,employee_id,skip,add_image,edit_profile,add_project,get_project_by_id,add_remove_team,add_update_task,get_task_by_id
 };

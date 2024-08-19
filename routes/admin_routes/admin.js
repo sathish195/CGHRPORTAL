@@ -410,3 +410,97 @@ router.post(
   });
   
   module.exports=router;
+
+
+  router.post('/add_update_task',Auth, async (req, res) => {
+    const data = req.body;
+  
+    // Validate request data
+    const { error } = validations.add_update_task(data);
+    if (error) return res.status(400).send(error.details[0].message);
+  
+    // Check user role
+    const userRole = req.employee.role_name.toLowerCase();
+    if (userRole !== 'team incharge') {
+      return res.status(403).send('Access denied: Not Team Incharge');
+    }
+    const findId = await mongoFunctions.find_one('PROJECTS', {
+      organisation_id: req.employee.organisation_id,
+      project_id: data.project_id,
+    });
+
+    if (!findId) return res.status(400).send('Project ID does not exist');
+
+  
+    if (data.task_id && data.task_id.length > 9) {
+      // Check if task ID exists
+      const findId = await mongoFunctions.find_one('TASKS', {
+        organisation_id: req.employee.organisation_id,
+        task_id: data.task_id,
+      });
+  
+      if (!findId) return res.status(400).send('Task ID does not exist');
+  
+   
+      // Update task
+      const task_data_up = await mongoFunctions.find_one_and_update(
+        'TASKS',
+        {
+          organisation_id: req.employee.organisation_id,
+          task_id: data.task_id,
+        },
+            {
+                $set: {
+                  start_date: data.start_date,
+                  task_name: data.task_name.toLowerCase(),
+                  end_date: data.end_date,
+                  status: data.status,
+                  description: data.description,
+                  task_status: data.task_status,
+                },
+                $push: {
+                  modified_by: {
+                    employee_id: req.employee.employee_id,
+                    employee_email: req.employee.email,
+                    modifiedAt: new Date(),
+                    prevStatus: findId.status,
+                    currentStatus: data.status,
+                  },
+                },
+              },
+              { new: true } // Optionally return the updated document
+            );
+  
+      if (!task_data_up) return res.status(400).send('Task Update Failed');
+  
+      return res.status(200).send('Task Updated Successfully');
+    } else {
+      // Check if task name already exists
+      const findTask = await mongoFunctions.find_one('TASKS', {
+        task_name: data.task_name.toLowerCase(),
+      });
+  
+      if (findTask) return res.status(400).send('Task Name Already Exists');
+  
+      const new_task_data = {
+        organisation_id: req.employee.organisation_id,
+        task_id: functions.get_random_string("TA", 9, true),
+        project_id: data.project_id,
+        task_name: data.task_name.toLowerCase(),
+        start_date: data.start_date,
+        end_date: data.end_date,
+        description: data.description,
+        status: data.status,
+        task_status: data.task_status,
+        created_by: { 
+          employee_id: req.employee.employee_id,
+          email: req.employee.email,
+        },
+      };
+  
+      // Create new project
+      await mongoFunctions.create_new_record('TASKS', new_task_data);
+  
+      return res.status(201).send('Task Created successfully');
+    }
+  });
