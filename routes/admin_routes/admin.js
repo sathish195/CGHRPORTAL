@@ -376,17 +376,27 @@ router.post(
     // Check user role based on task_id or project_id
     const userRole = req.employee.role_name.toLowerCase();
 
+    // Check if task_id is provided
     if (data.task_id) {
-        if (data.task_id.length === 0) {
-            if (userRole !== 'director' && userRole !== 'manager') {
-                return res.status(403).send('Access denied: Not authorized');
-            }
-        } else if (data.task_id.length > 9) {
-            if (userRole === 'team member') {
-                return res.status(403).send('Access denied: Not authorized');
-            }
-        }
-    } 
+      if (data.task_id.length === 0) {
+          // If task_id is empty, only directors and managers can modify project team
+          if (userRole !== 'director' && userRole !== 'manager') {
+              return res.status(403).send('Access denied: Not authorized');
+          }
+      } else if (data.task_id.length > 9) {
+          // If task_id is provided and length > 9, only team incharges can modify task team
+          if (userRole !== 'team incharge') {
+              return res.status(403).send('Access denied: Not authorized');
+          }
+      } else {
+          return res.status(400).send('Invalid task_id length');
+      }
+  } else {
+      // If no task_id is provided, ensure team incharges are denied access
+      if (userRole === 'team incharge') {
+          return res.status(403).send('Access denied: Not authorized');
+      }
+  }
 
     // Find the employee
     const employee = await mongoFunctions.find_one('EMPLOYEE', { employee_id: data.employee_id });
