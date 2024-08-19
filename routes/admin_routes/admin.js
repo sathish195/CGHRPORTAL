@@ -451,9 +451,7 @@ router.post(
         },
             {
                 $set: {
-                  start_date: data.start_date,
                   task_name: data.task_name.toLowerCase(),
-                  end_date: data.end_date,
                   status: data.status,
                   description: data.description,
                   task_status: data.task_status,
