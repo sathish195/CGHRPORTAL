@@ -9,7 +9,16 @@ const ORGANISATION_Schema = new mongoose.Schema(
 
     departments: { type: Array, default: [] },
     roles: { type: Array, default: [] },
-    designations: { type: Array, default: [] },
+    // designations: {, default: [] },
+    designations: [{
+      designation_id: { type: String, required: true },
+      designation_name: { type: String, required: true },
+      leaves: [{
+        leave_id: { type: String, required: true },
+        leave_name: { type: String },
+        total_leaves: { type: String }
+      }]
+    }],
 
     organisation_details: { type: Object, default: {} },
     images: { type: Object, default: {} },

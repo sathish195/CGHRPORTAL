@@ -366,24 +366,80 @@ router.post("/universal" ,Auth,async(req, res) => {
             birthdays: birthdays && birthdays[month] ? birthdays[month] : [],
             organisation_details: org_data,
           };
+        // await redis.update_redis("ORGANISATIONS",org_data);
         return res.status(200).send(dashborad);
         });
-    //  await redis.update_redis("ORGANISATIONS",org);
+     
     // return res
     //     .status(200)
     //     .send({ organisation_details: org_data });
     // });
     // await redis.update_redis("ORGANISATIONS",org);
 
-//add update leaves in a designation
-router.post("/add_update_leaves",Auth,async(req, res) => {
+//update leaves in a designation
+router.post("/update_leaves",Auth,async(req, res) => {
     let data = req.body;
 
     // Validate data
-    const { error } = validations.add_update_role(data);
+    const { error } = validations.update_leaves(data);
     if (error) return res.status(400).send(error.details[0].message);
+    if (req.employee.role_name.toLowerCase() !== "director") 
+        return res.status(403).send("Only Director can access this endpoint");
 
+    // Retrieve organisation data from Redis
+    let org_data = await redis.redisGet(
+        "CRM_ORGANISATIONS",
+        req.employee.organisation_id,
+        true
+    );
+    // console.log(org_data);
 
+    if (org_data ) {
+        // Check if designation already exists
+        let designation_exists = org_data.designations.find(
+            (e) => e.designation_id.toLowerCase() === data.designation_id.toLowerCase()
+        );
 
+        if (!designation_exists) {
+            return res.status(400).send("Designation Id Doesn't Exists..!");
+        }
+        console.log(designation_exists);
+        let leave_exists = designation_exists.leaves.find(
+            (e) => e.leave_id.toLowerCase() === data.leave_id.toLowerCase()
+        );
+        console.log(leave_exists);
+
+        if (!leave_exists) {
+            return res.status(400).send("Leave Id Doesn't Exists..!");
+        }
+
+        leave_up = await mongoFunctions.find_one_and_update(
+            "ORGANISATIONS",
+            {
+                organisation_id: org_data.organisation_id,
+                "designations.designation_id": data.designation_id,
+                "designations.leaves.leave_id": data.leave_id
+            },
+            {
+                $set: {
+                    "designations.$[des].leaves.$[leave].leave_name": data.leave_name,
+                    "designations.$[des].leaves.$[leave].total_leaves": data.total_leaves
+                }
+            },
+            {
+                arrayFilters: [
+                    { "des.designation_id": data.designation_id },
+                    { "leave.leave_id": data.leave_id }
+                ],
+            }
+        );
+        await redis.update_redis("ORGANISATIONS", leave_up);
+        return res.status(200).send({
+            success: "Leave Updated Successfully..!",
+            data: leave_up,
+        });
+    }
+    return res.status(400).send("Invalid Organisation id");
+    
 });
 module.exports = router;
