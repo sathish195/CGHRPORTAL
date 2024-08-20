@@ -331,6 +331,7 @@ function add_employee_by_admin(data){
             status: Joi.string().valid("new", "in_progress","under_review", "completed").required(),
             task_status: Joi.string().valid("active","in_active","completed").required(),
             task_id: Joi.string().optional().allow(""),
+            completed_date: Joi.date().optional().allow(""),
           });
           return schema.validate(data);
     }
