@@ -378,12 +378,12 @@ router.post(
 
     // Check if task_id is provided
     if (data.task_id) {
-      if (data.task_id.length === 0) {
+      if (data.task_id&& data.task_id.length === 0) {
           // If task_id is empty, only directors and managers can modify project team
           if (userRole !== 'director' && userRole !== 'manager') {
               return res.status(403).send('Access denied: Not authorized');
           }
-      } else if (data.task_id.length > 9) {
+      } else if (data.task_id&& data.task_id.length > 9) {
           // If task_id is provided and length > 9, only team incharges can modify task team
           if (userRole !== 'team incharge') {
               return res.status(403).send('Access denied: Not authorized');
@@ -408,7 +408,7 @@ router.post(
 
     // Check if task_id is provided and belongs to the project
     const task = await mongoFunctions.find_one('TASKS', { task_id: data.task_id, project_id: data.project_id });
-    if (data.task_id.length>9) {
+    if (data.task_id&&data.task_id.length>9) {
         // const task = await mongoFunctions.find_one('TASKS', { task_id: data.task_id, project_id: data.project_id });
         if (!task) return res.status(400).send('Task does not belong to the project');
     }
@@ -435,7 +435,7 @@ router.post(
    
     
     if (data.status.toLowerCase() === 'add') {
-        if (data.task_id.length>9) {
+        if (data.task_id&&data.task_id.length>9) {
             // Add team member to task
             // if (task && task.length>0){
             const isEmployeeInTeam = task.team.some(member => member.employee_id === data.employee_id);
@@ -463,7 +463,7 @@ router.post(
             return res.status(200).send('Team member added to project successfully');
         }
     } else if (data.status.toLowerCase() === 'remove') {
-        if (data.task_id.length>9) {
+        if (data.task_id&&data.task_id.length>9) {
             // Remove team member from task
             await mongoFunctions.find_one_and_update(
                 'TASKS',
