@@ -374,4 +374,16 @@ router.post("/universal" ,Auth,async(req, res) => {
     //     .send({ organisation_details: org_data });
     // });
     // await redis.update_redis("ORGANISATIONS",org);
+
+//add update leaves in a designation
+router.post("/add_update_leaves",Auth,async(req, res) => {
+    let data = req.body;
+
+    // Validate data
+    const { error } = validations.add_update_role(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+
+
+});
 module.exports = router;

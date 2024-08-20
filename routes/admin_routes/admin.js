@@ -531,7 +531,7 @@ router.post(
                   status: data.status,
                   description: data.description,
                   task_status: data.task_status,
-                  completed_date: data.completed_date,
+                  completed_date: data.completed_date ? data.completed_date : new Date() ,
                 },
                 $push: {
                   modified_by: {
