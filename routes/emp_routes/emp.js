@@ -16,7 +16,7 @@ router.post('/login',async(req,res)=>{
     //validate data
     var {error}=validations.emp_login(data);
     if(error) return res.status(400).send(error.details[0].message);
-    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email});
+    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     const validPassword=await bcrypt.compare_password(data.password,employee.password);
     console.log(validPassword);
@@ -57,7 +57,7 @@ router.post('/forgot_password',async(req,res) => {
     //validate data
     var {error}=validations.emp_forgot_password(data);
     if(error) return res.status(400).send(error.details[0].message);
-    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email});
+    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
         // employee &&
@@ -80,7 +80,7 @@ router.post('/reset_forgot_password',async(req,res) => {
     //validate data
     var {error}=validations.emp_reset_forgot_password(data);
     if(error) return res.status(400).send(error.details[0].message);
-    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email});
+    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
         // employee &&
@@ -117,7 +117,7 @@ router.post('/resend_otp',async(req,res) => {
     //validate data
     var {error}=validations.emp_forgot_password(data);
     if(error) return res.status(400).send(error.details[0].message);
-    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email});
+    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
         // employee &&
@@ -143,7 +143,7 @@ router.post('/login_verify',async(req,res) => {
     //validate data
     var {error}=validations.emp_login_verify(data);
     if(error) return res.status(400).send(error.details[0].message);
-    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email});
+    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (
         // employee &&
