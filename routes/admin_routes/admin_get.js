@@ -112,22 +112,22 @@ router.post(
         },
         {
             $project: {
-                _id: 0, // Exclude the _id field
-                project_id: 1, // Include project_id field
-                project_name: 1 // Include project_name field (adjust if needed)
+                _id: 0, 
+                project_id: 1, 
+                project_name: 1 
             }
         },
         {
             $group: {
-                _id: "$project_id", // Group by project_id
-                project_name: { $first: "$project_name" } // Get the project name for each unique project_id
+                _id: "$project_id", 
+                project_name: { $first: "$project_name" } 
             }
         },
         {
             $project: {
-                _id: 0, // Exclude the _id field in the output
-                project_id: "$_id", // Include project_id in the output
-                project_name: 1 // Include project_name in the output
+                _id: 0, 
+                project_id: "$_id", 
+                project_name: 1 
             }
         }
     ]);
