@@ -42,7 +42,7 @@ router.post('/login',async(req,res)=>{
     // otp=OTP(true)
     var OTP="654321";
     var otp=OTP;
-    await redis.genOtp( employee.employee_id, otp, 180);
+    await redis.genOtp( employee.employee_id, otp, 120);
     //send otp
     return res.status(200).send({
     success: "OTP Sent Successfully",
@@ -68,7 +68,7 @@ router.post('/forgot_password',async(req,res) => {
             .send("Employee Status Disabled! Please Contact Admin.");
     var OTP="654321";
     var otp=OTP;
-    await redis.genOtp(employee.employee_id, otp, 180);
+    await redis.genOtp(employee.employee_id, otp, 120);
 
     //send otp
     return res.status(200).send({
@@ -129,7 +129,7 @@ router.post('/resend_otp',async(req,res) => {
     // otp='654321'
     var OTP="654321";
     var otp=OTP;
-    await redis.genOtp(employee.employee_id, otp, 180);
+    await redis.genOtp(employee.employee_id, otp, 120);
     //send otp
     return res.status(200).send({
     success: "OTP Sent Successfully",
@@ -336,4 +336,46 @@ router.post(
         success: "Success",
         data: update_emp,
       });
-    })
+    });
+    router.post("/update_task",Auth,async(req, res)=>{
+      const data = req.body;
+      const { error } = validations.update_task(data);
+      if(error) return res.status(400).send(error.details[0].message);
+      const userRole = req.employee.role_name.toLowerCase();
+      if(userRole!=='team member'){
+        return res.status(403).send('Access denied: Not Team Member');
+      }
+      const findId = await mongoFunctions.find_one('TASKS',{
+        organisation_id: req.employee.organisation_id,
+        task_id: data.task_id
+      });
+      if(!findId) return res.status(400).send('Task ID does not exist');
+      const task_data_up = await mongoFunctions.find_one_and_update(
+        'TASKS',
+        {
+          organisation_id: req.employee.organisation_id,
+          task_id: data.task_id,
+        },
+            {
+                $set: {
+                  status: data.status,
+                },
+                $push: {
+                  modified_by: {
+                    employee_id: req.employee.employee_id,
+                    employee_email: req.employee.email,
+                    modifiedAt: new Date(),
+                    prevStatus: findId.status,
+                    currentStatus: data.status,
+                  },
+                },
+              },
+              { new: true } // Optionally return the updated document
+            );
+            if(!task_data_up) return res.status(400).send('Task Update Failed');
+            return res.status(200).send('Task Updated Successfully');
+    });
+  
+  
+  
+  

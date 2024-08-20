@@ -580,4 +580,44 @@ router.post(
     }
   });
 
+  router.post("/update_project",Auth,async(req, res)=>{
+    const data = req.body;
+    const { error } = validations.update_project(data);
+    if(error) return res.status(400).send(error.details[0].message);
+    const userRole = req.employee.role_name.toLowerCase();
+    if(userRole!=='team incharge'){
+      return res.status(403).send('Access denied: Not Team Incharge');
+    }
+    const findId = await mongoFunctions.find_one('PROJECTS',{
+      organisation_id: req.employee.organisation_id,
+      project_id: data.project_id
+    });
+    if(!findId) return res.status(400).send('Project ID does not exist');
+    const project_data_up = await mongoFunctions.find_one_and_update(
+      'PROJECTS',
+      {
+        organisation_id: req.employee.organisation_id,
+        project_id: data.project_id,
+      },
+          {
+              $set: {
+                status: data.status,
+              },
+              $push: {
+                modified_by: {
+                  employee_id: req.employee.employee_id,
+                  employee_email: req.employee.email,
+                  modifiedAt: new Date(),
+                  prevStatus: findId.status,
+                  currentStatus: data.status,
+                },
+              },
+            },
+            { new: true } // Optionally return the updated document
+          );
+          if(!project_data_up) return res.status(400).send('Project Update Failed');
+          return res.status(200).send('Project Updated Successfully');
+  });
+
+
 
