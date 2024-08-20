@@ -16,6 +16,7 @@ require("./helpers/db")();
 //helmet is pending
 //ratelimiter is pending
 //slowdown is pending
+//rate cutter is pending
 
 
 require("./helpers/routeConfig")(app);

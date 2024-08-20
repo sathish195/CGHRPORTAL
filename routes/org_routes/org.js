@@ -377,13 +377,13 @@ router.post("/universal" ,Auth,async(req, res) => {
     // await redis.update_redis("ORGANISATIONS",org);
 
 //update leaves in a designation
-router.post("/update_leaves",Auth,async(req, res) => {
+router.post("/update_leave",Auth,async(req, res) => {
     let data = req.body;
 
     // Validate data
     const { error } = validations.update_leaves(data);
     if (error) return res.status(400).send(error.details[0].message);
-    if (req.employee.role_name.toLowerCase() !== "director") 
+    if (req.employee.role_name.toLowerCase() !== "director")
         return res.status(403).send("Only Director can access this endpoint");
 
     // Retrieve organisation data from Redis

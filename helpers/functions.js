@@ -22,4 +22,6 @@ module.exports = {
         .toString("hex")
         .toUpperCase() + str
     );
-  }};
+  }
+
+};

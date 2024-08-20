@@ -107,17 +107,5 @@ router.post(
     return res.status(200).send(projects);
     }
 });
-router.post("/get_tasks",Auth, async (req, res)=>{
-  data=req.body;
-  var { error } =validations.get_project_by_id(data);
-    if (error) return res.status(400).send(error.details[0].message);
 
-  // const userRole = req.employee.role_name.toLowerCase();
-  // if (userRole === 'team member' ) {
-  // return res.status(403).send('Access denied: Not Admin');
-  // }
-  findTask=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,project_id:data.project_id});
-  return res.status(200).send(findTask)
-
-  }); 
   module.exports =router;
