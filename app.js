@@ -5,13 +5,11 @@ app=express()
 app.use(express.json({ limit: "10mb" }));
 
 
-port=process.env.PORT
-
 require("./helpers/cors")(app);
 require("./helpers/db")();
 //process.env is pending
-//error handling is pending
 //redis is pending
+//error handling is pending
 //compression is pending
 //helmet is pending
 //ratelimiter is pending
