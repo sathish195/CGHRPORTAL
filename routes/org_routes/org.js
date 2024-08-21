@@ -222,14 +222,14 @@ router.post('/add_update_designation', Auth, async (req, res) => {
                 }
             );
         } else {
-            const processedLeaves = data.leaves.map(leave => ({
-                ...leave,
-                leave_id: functions.get_random_string("L",8,true) // Generate a unique ID for each leave
-            }));
+            // const processedLeaves = data.leaves.map(leave => ({
+            //     ...leave,
+            //     leave_id: functions.get_random_string("L",8,true) // Generate a unique ID for each leave
+            // }));
             let new_designation_data = {
                 designation_id: functions.get_random_string("D", 10, true),
                 designation_name: data.designation_name.toLowerCase(),
-                leaves:processedLeaves,
+                // leaves:processedLeaves,
 
             };
 
@@ -377,43 +377,60 @@ router.post("/universal" ,Auth,async(req, res) => {
     // await redis.update_redis("ORGANISATIONS",org);
 
 //update leaves in a designation
-router.post("/update_leave",Auth,async(req, res) => {
-    let data = req.body;
+router.post("/add_update_leave", Auth, async (req, res) => {
+    const data = req.body;
 
     // Validate data
     const { error } = validations.update_leaves(data);
     if (error) return res.status(400).send(error.details[0].message);
-    if (req.employee.role_name.toLowerCase() !== "director")
+
+    if (req.employee.role_name.toLowerCase() !== "director") {
         return res.status(403).send("Only Director can access this endpoint");
+    }
 
     // Retrieve organisation data from Redis
-    let org_data = await redis.redisGet(
-        "CRM_ORGANISATIONS",
-        req.employee.organisation_id,
-        true
+    const org_data = await redis.redisGet("CRM_ORGANISATIONS", req.employee.organisation_id, true);
+    if (!org_data) {
+        return res.status(400).send("Invalid Organisation id");
+    }
+
+    console.log("Retrieved org_data:", org_data);
+
+    // Check if designation exists
+    const designation = org_data.designations.find(
+        (e) => e.designation_id.toLowerCase() === data.designation_id.toLowerCase()
     );
-    // console.log(org_data);
 
-    if (org_data ) {
-        // Check if designation already exists
-        let designation_exists = org_data.designations.find(
-            (e) => e.designation_id.toLowerCase() === data.designation_id.toLowerCase()
+    if (!designation) {
+        return res.status(400).send("Designation ID doesn't exist.");
+    }
+
+    console.log("Found designation:", designation);
+
+    // Check if leave exists
+    const leave = designation.leaves.find(
+        (e) => e.leave_id.toLowerCase() === data.leave_id.toLowerCase()
+    );
+
+    console.log("Found leave:", leave);
+
+    if (data.leave_id && data.leave_id.length>1) {
+        // If leave_id is provided and valid, update the existing leave
+        if (!leave) {
+            return res.status(400).send("Leave ID doesn't exist.");
+        }
+        const leaveNameConflict = designation.leaves.some(
+            (e) =>
+                e.leave_name.toLowerCase() === data.leave_name.toLowerCase() &&
+                e.leave_id.toLowerCase() !== data.leave_id.toLowerCase()
         );
 
-        if (!designation_exists) {
-            return res.status(400).send("Designation Id Doesn't Exists..!");
-        }
-        console.log(designation_exists);
-        let leave_exists = designation_exists.leaves.find(
-            (e) => e.leave_id.toLowerCase() === data.leave_id.toLowerCase()
-        );
-        console.log(leave_exists);
-
-        if (!leave_exists) {
-            return res.status(400).send("Leave Id Doesn't Exists..!");
+        if (leaveNameConflict) {
+            return res.status(400).send("Leave Name already exists for another leave ID.");
         }
 
-        leave_up = await mongoFunctions.find_one_and_update(
+        // Update leave
+        const updatedLeave = await mongoFunctions.find_one_and_update(
             "ORGANISATIONS",
             {
                 organisation_id: org_data.organisation_id,
@@ -431,15 +448,64 @@ router.post("/update_leave",Auth,async(req, res) => {
                     { "des.designation_id": data.designation_id },
                     { "leave.leave_id": data.leave_id }
                 ],
+                new: true
             }
         );
-        await redis.update_redis("ORGANISATIONS", leave_up);
+
+        console.log("Updated leave:", updatedLeave);
+
+        if (!updatedLeave) {
+            return res.status(404).send("Failed to update leave.");
+        }
+
+        await redis.update_redis("ORGANISATIONS", updatedLeave);
         return res.status(200).send({
-            success: "Leave Updated Successfully..!",
-            data: leave_up,
+            success: "Leave updated successfully.",
+            data: updatedLeave
+        });
+
+    } else {
+        // Check if leave with the same name already exists
+        const leaveExists = designation.leaves.find(
+            (e) => e.leave_name.toLowerCase() === data.leave_name.toLowerCase()
+        );
+
+        if (leaveExists) {
+            return res.status(400).send("Leave Name already exists.");
+        }
+
+        // Add new leave
+        const newLeave = {
+            leave_id: functions.get_random_string("L", 9, true),
+            leave_name: data.leave_name,
+            total_leaves: data.total_leaves
+        };
+
+        const updatedOrg = await mongoFunctions.find_one_and_update(
+            "ORGANISATIONS",
+            {
+                organisation_id: org_data.organisation_id,
+                "designations.designation_id": data.designation_id
+            },
+            {
+                $push: {
+                    "designations.$.leaves": newLeave
+                }
+            },
+            { new: true }
+        );
+
+        console.log("Updated organisation:", updatedOrg);
+
+        if (!updatedOrg) {
+            return res.status(404).send("Failed to add new leave.");
+        }
+
+        await redis.update_redis("ORGANISATIONS", updatedOrg);
+        return res.status(200).send({
+            success: "Leave added successfully.",
+            data: updatedOrg
         });
     }
-    return res.status(400).send("Invalid Organisation id");
-    
 });
 module.exports = router;

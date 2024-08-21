@@ -89,15 +89,15 @@ function add_update_department(data){
       return schema.validate(data);
 }
 function add_update_designation(data){
-    const leaves_obj = Joi.object({
-        leave_name: Joi.string().required().min(4).max(15),
-        total_leaves: Joi.number().required().min(1).max(10),
-      });
+    // const leaves_obj = Joi.object({
+    //     leave_name: Joi.string().required().min(4).max(15),
+    //     total_leaves: Joi.number().required().min(1).max(10),
+    //   });
     const schema = Joi.object({
         organisation_id: Joi.string().min(10).max(18).required(),
         designation_name: Joi.string().trim().strip().min(5).max(20).required(),
         designation_id: Joi.string().allow(null, "").optional(),
-        leaves:Joi.array().items(leaves_obj).required(),
+        // leaves:Joi.array().items(leaves_obj).required(),
         // leave_id:Joi.string().allow(null, "").optional(),
         // leave_name: Joi.string().trim().strip().allow(null, "").optional(),
         // max_leaves:Joi.number().allow(null, "").optional().optional(),
@@ -371,7 +371,7 @@ function add_employee_by_admin(data){
       designation_id: Joi.string().min(5).max(12).required(),
       leave_name: Joi.string().required().min(4).max(15),
       total_leaves: Joi.number().required().min(1).max(10),
-      leave_id: Joi.string().min(5).max(12).required(),
+      leave_id: Joi.string().optional().allow(""),
      
     });
     return schema.validate(data);
