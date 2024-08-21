@@ -95,7 +95,7 @@ router.post("/get_tasks",Auth, async (req, res)=>{
   }else{
     const today = new Date(); // Get the current date
     today.setHours(0, 0, 0, 0); 
-    findT=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,team: { $elemMatch: { employee_id:req.employee.employee_id }},due_date: { $lt: today }});
+    findT=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,status: { $nin: [/^completed$/i, /^under_review$/i] },team: { $elemMatch: { employee_id:req.employee.employee_id }}});
     return res.status(200).send(findT)
   }
 
