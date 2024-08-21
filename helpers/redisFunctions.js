@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 var RedisClient = require("redis");
 const mongofunctions = require("./mongoFunctions");
 let client;

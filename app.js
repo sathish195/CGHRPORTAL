@@ -1,14 +1,17 @@
 const express=require('express')
 
+
 app=express()
 
 app.use(express.json({ limit: "10mb" }));
+require("dotenv").config();
 
 
 require("./helpers/cors")(app);
 require("./helpers/db")();
-//process.env is pending
-//redis is pending
+require("./helpers/redisFunctions");
+
+
 //error handling is pending
 //compression is pending
 //helmet is pending
@@ -20,7 +23,6 @@ require("./helpers/db")();
 require("./helpers/routeConfig")(app);
 
 
-// app.listen(port,console.log("Listening on port 8080"));
 app.listen(process.env.PORT, () => {
     console.log(`Listening on port http://localhost:${process.env.PORT}`);
   });
