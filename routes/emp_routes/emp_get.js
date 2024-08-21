@@ -82,16 +82,23 @@ router.post(
         });
 
 router.post("/get_tasks",Auth, async (req, res)=>{
-  data=req.body;
-  var { error } =validations.get_project_by_id(data);
-    if (error) return res.status(400).send(error.details[0].message);
+  // data=req.body;
+  // var { error } =validations.get_project_by_id(data);
+  //   if (error) return res.status(400).send(error.details[0].message);
 
-  // const userRole = req.employee.role_name.toLowerCase();
-  // if (userRole === 'team member' ) {
+  const userRole = req.employee.role_name.toLowerCase();
+  if (userRole === 'team incharge' ) {
   // return res.status(403).send('Access denied: Not Admin');
   // }
-  findTask=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,project_id:data.project_id});
+  findTask=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,"created_by.employee_id":req.employee.employee_id});
   return res.status(200).send(findTask)
+  }else{
+    const today = new Date(); // Get the current date
+    today.setHours(0, 0, 0, 0); 
+    findT=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,team: { $elemMatch: { employee_id:req.employee.employee_id }},due_date: { $lt: today }});
+    return res.status(200).send(findT)
+  }
+
 
   }); 
 router.post("/get_task_by_id",Auth, async (req, res)=>{
