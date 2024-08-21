@@ -93,9 +93,14 @@ router.post("/get_tasks",Auth, async (req, res)=>{
   findTask=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,"created_by.employee_id":req.employee.employee_id});
   return res.status(200).send(findTask)
   }else{
-    const today = new Date(); // Get the current date
-    today.setHours(0, 0, 0, 0); 
-    findT=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,status: { $nin: [/^completed$/i, /^under_review$/i] },team: { $elemMatch: { employee_id:req.employee.employee_id }}});
+    const now = new Date();
+    const start_day = new Date(now.setHours(0, 0, 0, 0));
+    const end_day = new Date(now.setHours(23, 59, 59, 999));
+    findT=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,status: { $nin: [/^completed$/i, /^under_review$/i] },team: { $elemMatch: { employee_id:req.employee.employee_id }}
+    ,createdAt: { 
+      $gte: start_day,// Greater than or equal to the start of today
+    $lt: end_day//
+    }});
     return res.status(200).send(findT)
   }
 
