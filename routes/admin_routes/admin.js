@@ -531,6 +531,8 @@ router.post(
                   status: data.status,
                   description: data.description,
                   task_status: data.task_status,
+                  due_date: data.due_date,
+                  priority: data.priority,
                   completed_date: data.completed_date ? data.completed_date : new Date() ,
                 },
                 $push: {
@@ -566,6 +568,8 @@ router.post(
         // start_date: data.start_date,
         // end_date: data.end_date,
         description: data.description,
+        due_date: data.due_date,
+        priority: data.priority,
         status: data.status,
         task_status: data.task_status,
         created_by: { 

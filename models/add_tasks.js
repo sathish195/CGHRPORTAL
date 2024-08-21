@@ -11,6 +11,8 @@ const Task_schema=new mongoose.Schema({
     description: { type: String, required: true },
     // start_date: {type: Date,required:false},
     // end_date: { type: Date,required:false},
+    due_date:{ type: Date, required: true},
+    priority: { type: String, required: true },
     status: { type: String, required: true },
     team:{ type: Array, required: true },
     task_status: { type: String, required: true },

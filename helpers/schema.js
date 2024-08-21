@@ -329,6 +329,8 @@ function add_employee_by_admin(data){
                 'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
             }),
             status: Joi.string().valid("new", "in_progress","under_review", "completed").required(),
+            due_date:Joi.date().required(),
+            priority:Joi.string().valid("high","medium","low").required(),
             task_status: Joi.string().valid("active","in_active","completed").required(),
             task_id: Joi.string().optional().allow(""),
             completed_date: Joi.date().optional().allow(""),
