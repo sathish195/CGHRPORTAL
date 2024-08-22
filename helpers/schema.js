@@ -314,7 +314,7 @@ function add_employee_by_admin(data){
     }
     function add_remove_team(data){
         const schema = Joi.object({
-            status: Joi.string().valid("remove","add").required(),
+            action: Joi.string().valid("remove","add").required(),
             employee_id:Joi.string().min(5).max(12).required(),
             project_id: Joi.string().min(5).max(12).required(),
             task_id: Joi.string().optional().allow(""),

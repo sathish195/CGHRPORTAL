@@ -434,7 +434,7 @@ router.post(
     };
    
     
-    if (data.status.toLowerCase() === 'add') {
+    if (data.action.toLowerCase() === 'add') {
         if (data.task_id&&data.task_id.length>9) {
             // Add team member to task
             // if (task && task.length>0){
@@ -462,7 +462,7 @@ router.post(
             );
             return res.status(200).send('Team member added to project successfully');
         }
-    } else if (data.status.toLowerCase() === 'remove') {
+    } else if (data.action.toLowerCase() === 'remove') {
         if (data.task_id&&data.task_id.length>9) {
             // Remove team member from task
             await mongoFunctions.find_one_and_update(
@@ -481,7 +481,7 @@ router.post(
             return res.status(200).send('Team member removed from project successfully');
         }
     } else {
-        return res.status(400).send('Invalid status');
+        return res.status(400).send('Invalid action');
     }
 });
   

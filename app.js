@@ -12,6 +12,7 @@ require("dotenv").config();
 require("./helpers/cors")(app);
 require("./helpers/db")();
 require("./helpers/redisFunctions");
+// require("./middlewares/rate_limiter")
 
 
 //error handling is pending
