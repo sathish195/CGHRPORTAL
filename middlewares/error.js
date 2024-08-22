@@ -17,3 +17,5 @@ async function handle500Errors(err, req, res, next) {
             next(err);
         }
     }
+
+module.exports={handle500Errors}

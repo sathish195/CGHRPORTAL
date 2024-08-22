@@ -1,5 +1,5 @@
 const express=require('express')
-// const error_handler=require("../middlewares/error")
+const error_handler=require("./middlewares/error")
 
 
 app=express()
@@ -12,8 +12,7 @@ require("dotenv").config();
 require("./helpers/cors")(app);
 require("./helpers/db")();
 require("./helpers/redisFunctions");
-// require("./middlewares/rate_limiter")
-
+// app.use(error_handler.handle500Errors());
 
 //error handling is pending
 //compression is pending

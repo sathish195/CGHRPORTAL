@@ -7,6 +7,7 @@ const jwt=require('jsonwebtoken');
 const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
+// const rateLimiter=require('../../middlewares/rate_limiter');
 
 
 
@@ -97,10 +98,16 @@ router.post("/get_tasks",Auth, async (req, res)=>{
     const start_day = new Date(now.setHours(0, 0, 0, 0));
     const end_day = new Date(now.setHours(23, 59, 59, 999));
     findT=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,status: { $nin: [/^completed$/i, /^under_review$/i] },team: { $elemMatch: { employee_id:req.employee.employee_id }}
-    ,createdAt: { 
-      $gte: start_day,// Greater than or equal to the start of today
-    $lt: end_day//
-    }});
+    ,assign_track: { 
+      $elemMatch: { 
+        "assigned_to.employee_id": req.employee.employee_id,
+        "assigned_to.date_time": { 
+          $gte: start_day, // Greater than or equal to the start of today
+          $lt: end_day // Less than the end of today
+        }
+      }
+    }
+  });
     return res.status(200).send(findT)
   }
 
