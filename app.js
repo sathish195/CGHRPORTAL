@@ -1,9 +1,11 @@
 const express=require('express')
+// const error_handler=require("../middlewares/error")
 
 
 app=express()
 
 app.use(express.json({ limit: "10mb" }));
+// app.use(error_handler);
 require("dotenv").config();
 
 

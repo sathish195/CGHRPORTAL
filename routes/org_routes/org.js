@@ -508,4 +508,45 @@ router.post("/add_update_leave", Auth, async (req, res) => {
         });
     }
 });
+
+router.post("/get_employees_by_department", Auth, async (req, res) => {
+    const data = req.body;
+
+    // Validate data
+
+    // if (req.employee.role_name.toLowerCase() === "team member") {
+    //     return res.status(403).send("You Do Not Have Access To This Endpoint");
+    // }
+    // Find employees by department
+    const find_employees = await mongoFunctions.aggregate(
+        "EMPLOYEE",
+        [
+            // Stage 1: Match documents based on organisation_id and department_name
+            {
+                $match: {
+                    organisation_id: req.employee.organisation_id,
+                    employee_id: { $ne: req.employee.employee_id },
+                    "work_info.department_id": req.employee.department_id,
+                }
+            },
+            // Stage 2: Project only the required fields
+            {
+                $project: {
+                    employee_id: 1,
+                    "basic_info.first_name": 1,
+                    "basic_info.last_name": 1,
+                    "work_info.department_name": 1,
+                    "work_info.department_id": 1,
+                    _id: 0 // Exclude _id field
+                }
+            }
+        ]
+    );
+
+    if (!find_employees || find_employees.length === 0) {
+        return res.status(400).send("No Employees Found in the Given Department");
+    }
+
+    return res.status(200).send(find_employees);
+});
 module.exports = router;

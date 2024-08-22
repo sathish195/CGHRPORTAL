@@ -116,6 +116,66 @@ router.post("/get_task_by_id",Auth, async (req, res)=>{
   return res.status(200).send(findTask)
 
 });
-      
-  
+
+//get all tasks with filters
+
+router.post("/get_all_tasks", Auth, async (req, res) => {
+  const data = req.body;
+  const { error } = validations.get_all_tasks(data);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const limit = 50; // Fixed limit value
+  const userRole = req.employee.role_name.toLowerCase();
+
+  let query = {
+    organisation_id: req.employee.organisation_id
+  };
+
+  if (userRole === 'team incharge') {
+    query["created_by.employee_id"] = req.employee.employee_id;
+
+    if (data.status) {
+      query.status = data.status;
+    }
+
+    if (data.date) {
+      const date = new Date(data.date);
+      const start_day = new Date(date.setHours(0, 0, 0, 0));
+      const end_day = new Date(date.setHours(23, 59, 59, 999));
+      query.createdAt = {
+        $gte: start_day, // Greater than or equal to start of the day
+        $lt: end_day    // Less than end of the day
+      };
+    }
+
+  } else {
+    query.status = { $nin: [/^completed$/i, /^under_review$/i] };
+    query.team = { $elemMatch: { employee_id: req.employee.employee_id } };
+
+    if (data.status) {
+      query.status = data.status;
+    }
+
+    if (data.date) {
+      const date = new Date(data.date);
+      const start_day = new Date(date.setHours(0, 0, 0, 0));
+      const end_day = new Date(date.setHours(23, 59, 59, 999));
+      query.createdAt = {
+        $gte: start_day, // Greater than or equal to start of the day
+        $lt: end_day    // Less than end of the day
+      };
+    }
+  }
+
+  // Find tasks using the query object
+  const findTask = await mongoFunctions.lazy_loading(
+    "TASKS",
+    query,
+    { _id: 0, __v: 0 },       // Projection: exclude _id and __v fields
+    { createdAt: -1 },         // Sort by creation date in descending order
+    limit                     // Limit for pagination
+  );
+
+  return res.status(200).send(findTask);
+});
 module.exports =router;
