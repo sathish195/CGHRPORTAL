@@ -124,7 +124,8 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
   const { error } = validations.get_all_tasks(data);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const limit = 50; // Fixed limit value
+  const limit = 40;
+  const skip=data.skip // Fixed limit value
   const userRole = req.employee.role_name.toLowerCase();
 
   let query = {
@@ -173,7 +174,8 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
     query,
     { _id: 0, __v: 0 },       // Projection: exclude _id and __v fields
     { createdAt: -1 },         // Sort by creation date in descending order
-    limit                     // Limit for pagination
+    limit ,
+    skip                   // Limit for pagination
   );
 
   return res.status(200).send(findTask);

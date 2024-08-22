@@ -367,6 +367,7 @@ function add_employee_by_admin(data){
   }
   function get_all_tasks(data){
     const schema = Joi.object({
+      skip:Joi.number().integer().min(0).required(),
       status: Joi.string().optional().allow("").valid("new", "in_progress","under_review", "completed"),
       date: Joi.date().optional().allow(""),
     });
