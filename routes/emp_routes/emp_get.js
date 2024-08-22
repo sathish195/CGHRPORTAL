@@ -168,11 +168,15 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
       const date = new Date(data.date);
       const start_day = new Date(date.setHours(0, 0, 0, 0));
       const end_day = new Date(date.setHours(23, 59, 59, 999));
-      query.createdAt = {
-        $gte: start_day, // Greater than or equal to start of the day
-        $lt: end_day    // Less than end of the day
-      };
-    }
+      query.assign_track= { 
+        $elemMatch: { 
+          "assigned_to.employee_id": req.employee.employee_id,
+          "assigned_to.date_time": { 
+            $gte: start_day, // Greater than or equal to the start of today
+            $lt: end_day // Less than the end of today
+          }
+        }
+      }}
   }
 
   // Find tasks using the query object
