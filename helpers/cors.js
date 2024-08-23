@@ -4,7 +4,7 @@ const compression=require('compression');
 const rateLimit=require('express-rate-limit');
 
 const limiter = rateLimit({ 
-  max: 100, 
+  max: 10, 
   windowMs: 1 * 60 * 1000, 
 }); 
 

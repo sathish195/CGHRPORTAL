@@ -101,10 +101,10 @@ router.post("/get_tasks",Auth, async (req, res)=>{
     ,assign_track: { 
       $elemMatch: { 
         "assigned_to.employee_id": req.employee.employee_id,
-        "assigned_to.date_time": { 
-          $gte: start_day, // Greater than or equal to the start of today
-          $lt: end_day // Less than the end of today
-        }
+        // "assigned_to.date_time": {
+        //   $gte: start_day, // Greater than or equal to the start of today
+        //   $lt: end_day // Less than the end of today
+        // }
       }
     }
   });
@@ -157,7 +157,7 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
     }
 
   } else {
-    query.status = { $nin: [/^completed$/i, /^under_review$/i] };
+    // query.status = { $nin: [/^completed$/i, /^under_review$/i] };
     query.team = { $elemMatch: { employee_id: req.employee.employee_id } };
 
     if (data.status) {
@@ -192,3 +192,30 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
   return res.status(200).send(findTask);
 });
 module.exports =router;
+
+// router.post("/get_all_task", Auth, async (req, res) => {
+//   const pipeline = [
+//     {
+//       $sort: { createdAt:-1 } // Optional: Sort by project_id for grouping efficiency
+//     },
+//     {
+//       $group: {
+//         _id: "$project_id", // Group by project_id
+//         doc: { $first: "$$ROOT" } // Get the first document for each project_id
+//       }
+//     },
+//     {
+//       $replaceRoot: { newRoot: "$doc" } // Replace the root with the document
+//     },
+//     {
+//       $limit: 100 // Limit the result to 100 documents
+//     }
+//   ];
+//   findUser=await mongoFunctions.aggregate(
+//     "TASKS",pipeline
+    
+//   );
+//   return res.status(200).send(findUser);
+
+
+// });

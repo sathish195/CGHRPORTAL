@@ -82,7 +82,22 @@ module.exports = {
         .limit(limit)
         .skip(skip);
     },
-    aggregate: async (collection, pipeline) => {
-      return await eval(collection).aggregate(pipeline);
-    },
+    aggregate: async (collection_name, pipeline) => {
+      // return await eval(collection).aggregate(pipeline);
+      if (!Array.isArray(pipeline) || pipeline.length === 0) {
+        throw new Error('Pipeline must be a non-empty array');
+      }
+    
+      try {
+    
+        // Perform the aggregation
+        const results = await TASKS.aggregate(pipeline); // Convert cursor to array
+        
+        return results; // Return the results
+      } catch (error) {
+        console.error("Error performing aggregation:", error);
+        throw error; // Rethrow error to be handled by the caller
+      }
+    }
+    ,
   };
