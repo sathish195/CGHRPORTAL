@@ -84,10 +84,8 @@ module.exports = {
     },
     aggregate: async (collection, pipeline) => {
       return await eval(collection).aggregate(pipeline);
-    //   if (!Array.isArray(pipeline) || pipeline.length === 0) {
-    //     throw new Error('Pipeline must be a non-empty array');
-    //   }
     
+      
     //   try {
     
     //     // Perform the aggregation
