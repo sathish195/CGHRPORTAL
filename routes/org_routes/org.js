@@ -543,7 +543,7 @@ router.post("/get_employees_by_department", Auth, async (req, res) => {
         ]
     );
 
-    if (!find_employees || find_employees.length === 0) {
+    if (!find_employees ) {
         return res.status(400).send("No Employees Found in the Given Department");
     }
 
