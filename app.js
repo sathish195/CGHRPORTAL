@@ -12,7 +12,7 @@ require("./helpers/cors")(app);
 require("./helpers/db")();
 require("./helpers/redisFunctions");
 // app.use(error_handler.handle500Errors());
-require("./middlewares/error")
+// require("./middlewares/error")
 
 //error handling is pending
 //compression is pending
