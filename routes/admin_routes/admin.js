@@ -500,13 +500,18 @@ router.post(
     if (userRole !== 'team incharge' && userRole !== 'manager') {
       return res.status(403).send('Access denied: Not Team Incharge');
     }
-    if (userRole === 'team incharge') {
     const findId = await mongoFunctions.find_one('PROJECTS', {
       organisation_id: req.employee.organisation_id,
       project_id: data.project_id,
-      team: { $elemMatch: { employee_id: req.employee.employee_id } }
+      // team: { $elemMatch: { employee_id: req.employee.employee_id } }
     });
   
+    if (userRole === 'team incharge') {
+      const findId = await mongoFunctions.find_one('PROJECTS', {
+        organisation_id: req.employee.organisation_id,
+        project_id: data.project_id,
+        team: { $elemMatch: { employee_id: req.employee.employee_id } }
+      });
 
     if (!findId) return res.status(400).send('Project ID does not exist');
   }
@@ -584,6 +589,7 @@ router.post(
   
       // Create new project
       await mongoFunctions.create_new_record('TASKS', new_task_data);
+      // await stats.add_stats(req.employee.employee_id, req.employee.organisation_id);
   
       return res.status(201).send('Task Created successfully');
     }

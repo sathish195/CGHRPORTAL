@@ -144,5 +144,35 @@ async function recent_hires(organisation_id) {
       return [];
     }
   }
-  module.exports={recent_hires};
+  async function add_stats(employee_id,organisation_id){
+    const stat=await mongoFunctions.find_one("STATS",{"organisation_id":organisation_id});
+      if (stat.length === 0){
+        await mongoFunctions.create_new_record("STATS",{employee_id:employee_id,organisation_id:organisation_id});
+      }else{
+      const statss = await mongoFunctions.find_one_and_update(
+        "STATS",
+        {
+          employee_id: employee_id,
+          createdAt: {
+            $gte: new Date().setHours(0, 0, 0, 0),
+            $lt: new Date().setHours(24, 0, 0, 0)
+          },
+          "status_track.status": new_task_data.status
+        },
+        {
+          $inc: {
+            "status_track.$[elem].count": 1  // Increment the count field by 1
+          }
+        },
+        {
+          arrayFilters: [
+            { "elem.status": new_task_data.status }  // Match status in the array
+          ],
+          upsert: true,
+          // returnDocument: "after"  // Optional: return the updated document
+        }
+      );
+      
+  }}
+  module.exports={recent_hires,add_stats};
 
