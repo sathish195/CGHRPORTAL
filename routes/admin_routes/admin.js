@@ -589,7 +589,7 @@ router.post(
   
       // Create new project
       await mongoFunctions.create_new_record('TASKS', new_task_data);
-      await stats.add_stats(req.employee.employee_id, req.employee.organisation_id,new_task_data.statusa);
+      // await stats.add_stats(req.employee.employee_id, req.employee.organisation_id,new_task_data.statusa);
   
       return res.status(201).send('Task Created successfully');
     }
