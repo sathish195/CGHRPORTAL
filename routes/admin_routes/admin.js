@@ -385,7 +385,7 @@ router.post(
           }
       } else if (data.task_id&& data.task_id.length > 9) {
           // If task_id is provided and length > 9, only team incharges can modify task team
-          if (userRole !== 'team incharge') {
+          if (userRole !== 'team incharge' || userRole !== 'manager') {
               return res.status(403).send('Access denied: Not authorized');
           }
       } else {
@@ -497,16 +497,19 @@ router.post(
   
     // Check user role
     const userRole = req.employee.role_name.toLowerCase();
-    if (userRole !== 'team incharge') {
+    if (userRole !== 'team incharge' && userRole !== 'manager') {
       return res.status(403).send('Access denied: Not Team Incharge');
     }
+    if (userRole === 'team incharge') {
     const findId = await mongoFunctions.find_one('PROJECTS', {
       organisation_id: req.employee.organisation_id,
       project_id: data.project_id,
       team: { $elemMatch: { employee_id: req.employee.employee_id } }
     });
+  
 
     if (!findId) return res.status(400).send('Project ID does not exist');
+  }
 
   
     if (data.task_id && data.task_id.length > 9) {
@@ -585,7 +588,6 @@ router.post(
       return res.status(201).send('Task Created successfully');
     }
   });
-
   router.post("/update_project",Auth,async(req, res)=>{
     const data = req.body;
     const { error } = validations.update_project(data);

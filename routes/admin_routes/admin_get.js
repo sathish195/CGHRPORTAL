@@ -72,6 +72,7 @@ router.post(
 
     const data = req.body;
     const userRole = req.employee.role_name.toLowerCase();
+    console.log(userRole);
     const organisationId = req.employee.organisation_id;
     const employeeId = req.employee.employee_id;
 
@@ -84,6 +85,7 @@ router.post(
         // Get all projects for director or manager
         try {
             const projects = await mongoFunctions.find('PROJECTS', { organisation_id: organisationId });
+            console.log(projects);
             return res.status(200).send(projects);
         } catch (err) {
             return res.status(500).send('Server error');

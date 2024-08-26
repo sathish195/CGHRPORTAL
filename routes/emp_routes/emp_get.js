@@ -138,8 +138,22 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
   let query = {
     organisation_id: req.employee.organisation_id
   };
+  if (userRole==='manager'){
+    if (data.status) {
+      query.status = data.status;
+    }
 
-  if (userRole === 'team incharge') {
+    if (data.date) {
+      const date = new Date(data.date);
+      const start_day = new Date(date.setHours(0, 0, 0, 0));
+      const end_day = new Date(date.setHours(23, 59, 59, 999));
+      query.createdAt = {
+        $gte: start_day, // Greater than or equal to start of the day
+        $lt: end_day    // Less than end of the day
+      };
+    }
+
+  } else if (userRole === 'team incharge') {
     query["created_by.employee_id"] = req.employee.employee_id;
 
     if (data.status) {
@@ -188,6 +202,7 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
     limit ,
     skip                   // Limit for pagination
   );
+  console.log(query);
 
   return res.status(200).send(findTask);
 });
