@@ -385,7 +385,7 @@ router.post(
           }
       } else if (data.task_id&& data.task_id.length > 9) {
           // If task_id is provided and length > 9, only team incharges can modify task team
-          if (userRole !== 'team incharge' || userRole !== 'manager') {
+          if (userRole !== 'team incharge' && userRole !== 'manager') {
               return res.status(403).send('Access denied: Not authorized');
           }
       } else {
@@ -589,7 +589,7 @@ router.post(
   
       // Create new project
       await mongoFunctions.create_new_record('TASKS', new_task_data);
-      // await stats.add_stats(req.employee.employee_id, req.employee.organisation_id);
+      await stats.add_stats(req.employee.employee_id, req.employee.organisation_id,new_task_data.statusa);
   
       return res.status(201).send('Task Created successfully');
     }

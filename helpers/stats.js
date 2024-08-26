@@ -144,9 +144,9 @@ async function recent_hires(organisation_id) {
       return [];
     }
   }
-  async function add_stats(employee_id,organisation_id){
+  async function add_stats(employee_id,organisation_id,status){
     const stat=await mongoFunctions.find_one("STATS",{"organisation_id":organisation_id});
-      if (stat.length === 0){
+      if (!stat){
         await mongoFunctions.create_new_record("STATS",{employee_id:employee_id,organisation_id:organisation_id});
       }else{
       const statss = await mongoFunctions.find_one_and_update(
@@ -157,7 +157,7 @@ async function recent_hires(organisation_id) {
             $gte: new Date().setHours(0, 0, 0, 0),
             $lt: new Date().setHours(24, 0, 0, 0)
           },
-          "status_track.status": new_task_data.status
+          "status_track.status": status
         },
         {
           $inc: {
@@ -166,7 +166,7 @@ async function recent_hires(organisation_id) {
         },
         {
           arrayFilters: [
-            { "elem.status": new_task_data.status }  // Match status in the array
+            { "elem.status": status }  // Match status in the array
           ],
           upsert: true,
           // returnDocument: "after"  // Optional: return the updated document
