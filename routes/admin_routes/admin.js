@@ -173,7 +173,8 @@ router.post(
         $and: [
             { "contact_details.personal_email_address": data.personal_email_address },
             {"basic_info.email": data.email},
-            { employee_id: { $ne: data.employee_id } }
+            { employee_id: { $ne: data.employee_id }, 
+            organisation_id: org_data.organisation_id}
         ]
     });
     if (existingEmployee) {
