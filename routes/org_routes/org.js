@@ -268,6 +268,9 @@ router.post("/add_update_role", Auth, async (req, res) => {
     org=await mongoFunctions.find_one("ORGANISATIONS", {
         email: req.employee.email,
       });
+    if (!org){
+        return res.status(400).send("Admin Email Not Found In The Given Organisation");
+    }
 
     // Fetch organization data from Redis
     let org_data = await redis.redisGet(
