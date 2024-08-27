@@ -268,9 +268,9 @@ router.post("/add_update_role", Auth, async (req, res) => {
     org=await mongoFunctions.find_one("ORGANISATIONS", {
         email: req.employee.email,
       });
-    if (!org){
-        return res.status(400).send("Admin Email Not Found In The Given Organisation");
-    }
+    // if (!org){
+    //     return res.status(400).send("Admin Email Not Found In The Given Organisation");
+    // }
 
     // Fetch organization data from Redis
     let org_data = await redis.redisGet(
@@ -341,12 +341,22 @@ router.post("/add_update_role", Auth, async (req, res) => {
 });
 
 router.post("/universal" ,Auth,async(req, res) => {
-    // org=await mongoFunctions.find_one("ORGANISATIONS", {
-    //     email: req.employee.email,
-    //   });
+    org=await mongoFunctions.find_one("ORGANISATIONS", {
+        email: req.employee.email,
+      });
+    if (!org){
+        let dashborad = {
+            recent_hires: [],
+            birthdays: [],
+            organisation_details: [],
+          };
+        // await redis.update_redis("ORGANISATIONS",org_data);
+        return res.status(200).send(dashborad);
+    }
+
     let org_data = await redis.redisGet(
         "CRM_ORGANISATIONS",
-        req.employee.organisation_id,
+        org.organisation_id,
         true
     );
     let recent_hires = stats.recent_hires(req.employee.organisation_id);
