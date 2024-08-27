@@ -562,7 +562,7 @@ router.post(
   
       if (!task_data_up) return res.status(400).send('Task Update Failed');
       if (findId.status !== data.status) {
-        const s = await stats.add_stats(req.employee.employee_id, req.employee.organisation_id, task_data_up.status);
+        const s = await stats.update_stats(req.employee.employee_id, req.employee.organisation_id,findId.status, task_data_up.status);
         console.log(s);
       }
   

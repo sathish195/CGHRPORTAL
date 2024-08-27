@@ -201,7 +201,67 @@ async function recent_hires(organisation_id) {
     }
 }
 
+async function update_stats(employee_id, organisation_id, prevStatus,currentStatus){
+  const defaultStatusTrack = [
+    { status: "new", count: 0 },
+    { status: "in_progress", count: 0 },
+    { status: "completed", count: 0 },
+    { status: "under_review", count: 0 }
+];
+
+// Check if the document exists
+const stat = await mongoFunctions.find_one("STATS", { 
+    employee_id: employee_id,
+    organisation_id: organisation_id,
+    createdAt: {
+        $gte: new Date().setHours(0, 0, 0, 0),
+        $lt: new Date().setHours(24, 0, 0, 0)
+    }
+});
+
+if (!stat) {
+    // Create a new record if the document was not found
+    const statusTrack = defaultStatusTrack.map(st => ({
+        status: st.status,
+        count: st.status === currentStatus ? 1 : 0  // Set count to 1 for the given status, 0 for others
+    }));
+
+    await mongoFunctions.create_new_record("STATS", {
+        employee_id: employee_id,
+        organisation_id: organisation_id,  // Add createdAt to the new record
+        status_track: statusTrack
+    });
+
+    return { status: 200, message: "Status added as new record" };
+} else {
+const result = await mongoFunctions.find_one_and_update(
+  "STATS",
+  {
+      employee_id: employee_id,
+      organisation_id: organisation_id,
+      createdAt: {
+        $gte: new Date().setHours(0, 0, 0, 0),
+        $lt: new Date().setHours(24, 0, 0, 0)
+    }
+  },
+  {
+      $inc: {
+          "status_track.$[prev].count": 0, // Decrement previous status count
+          "status_track.$[curr].count": 1   // Increment current status count
+      }
+  },
+  {
+      arrayFilters: [
+          { "prev.status": prevStatus },  // Filter for the previous status
+          { "curr.status": currentStatus } // Filter for the current status
+      ],
+      upsert: true,  // Create a new document if no match is found
+      returnDocument: "after"  // Return the updated document
+  }
+);
+}};
 
 
-  module.exports={recent_hires,add_stats};
+
+  module.exports={recent_hires,add_stats,update_stats};
 
