@@ -6,6 +6,7 @@ const bcrypt=require('../../helpers/crypto');
 const jwt=require('jsonwebtoken');
 const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
+const stats=require('../../helpers/stats');
 // const bcrypt=require('bcrypt');
 
 router.post('/login',async(req,res)=>{
@@ -371,6 +372,11 @@ router.post(
               { new: true } // Optionally return the updated document
             );
             if(!task_data_up) return res.status(400).send('Task Update Failed');
+            if (findId.status !== data.status) {
+              const s = await stats.add_stats(req.employee.employee_id, req.employee.organisation_id, data.status);
+              console.log("done adding");
+            }
+            console.log("Sending");
             return res.status(200).send('Task Updated Successfully');
     });
   

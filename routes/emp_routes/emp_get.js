@@ -73,10 +73,19 @@ router.post(
             return date == dob.date();
           });
         }
+        let statss=await mongoFunctions.find_one("STATS",
+            {
+                employee_id: req.employee.employee_id,
+                createdAt: {
+                    $gte: new Date().setHours(0, 0, 0, 0),
+                    $lt: new Date().setHours(24, 0, 0, 0)
+                },
+            });
         let dashborad = {
             recent_hires:  [],
             birthdays: birthdays && birthdays[month] ? birthdays[month] : [],
             organisation_details:filtered_org_data,
+            stats:statss,
           };
         return res.status(200).send(dashborad);
 

@@ -145,66 +145,63 @@ async function recent_hires(organisation_id) {
     }
   }
   async function add_stats(employee_id, organisation_id, status) {
-    // Check if the document exists
-    const stat = await mongoFunctions.find_one("STATS", { "organisation_id": organisation_id });
+    // Define default status track
     const defaultStatusTrack = [
-      { status: "new", count: 0 },
-      { status: "in_progress", count: 0 },
-      { status: "completed", count: 0 },
-      { status: "under_review", count: 0 }
-  ];
-  
-    if (!stat) {
-      // Create a new record if the document was not found
-      await mongoFunctions.create_new_record("STATS", {
+        { status: "new", count: 0 },
+        { status: "in_progress", count: 0 },
+        { status: "completed", count: 0 },
+        { status: "under_review", count: 0 }
+    ];
+
+    // Check if the document exists
+    const stat = await mongoFunctions.find_one("STATS", { 
         employee_id: employee_id,
         organisation_id: organisation_id,
-        status_track: defaultStatusTrack.map(st => ({
-          status: st,
-          count: st === status ? 1 : 0  // Initialize the count to 1 for the provided status, 0 for others
-        }))
-      });
-      return { status: 200, message: "Status added as new record" };
-    }
-  
-    // Attempt to update the document
-    const result = await mongoFunctions.find_one_and_update(
-      "STATS",
-      {
-        employee_id: employee_id,
         createdAt: {
-          $gte: new Date().setHours(0, 0, 0, 0),
-          $lt: new Date().setHours(24, 0, 0, 0)
-        },
-        "status_track.status": status
-      },
-      {
-        $inc: { "status_track.$[elem].count": 1 }  // Increment the count field by 1
-      },
-      {
-        arrayFilters: [{ "elem.status": status }],  // Match status in the array
-        // upsert: true,  // Create the document if it doesn’t exist
-        // returnDocument: "after"  // Return the updated document
-      }
-    );
-  
-    // Check if the document was updated or not
-    if (!result) {
-      // Create a new record if the document was not found or not updated
-      await mongoFunctions.create_new_record("STATS", {
-        employee_id: employee_id,
-        organisation_id: organisation_id,
-        status_track: defaultStatusTrack.map(st => ({
-          status: st,
-          count: st === status ? 1 : 0  // Initialize the count to 1 for the provided status, 0 for others
-        })) // Initialize with the status and count
-      });
-      return { status: 200, message: "Status added as new record" };
+            $gte: new Date().setHours(0, 0, 0, 0),
+            $lt: new Date().setHours(24, 0, 0, 0)
+        }
+    });
+
+    if (!stat) {
+        // Create a new record if the document was not found
+        const statusTrack = defaultStatusTrack.map(st => ({
+            status: st.status,
+            count: st.status === status ? 1 : 0  // Set count to 1 for the given status, 0 for others
+        }));
+
+        await mongoFunctions.create_new_record("STATS", {
+            employee_id: employee_id,
+            organisation_id: organisation_id,  // Add createdAt to the new record
+            status_track: statusTrack
+        });
+
+        return { status: 200, message: "Status added as new record" };
+    } else {
+        // Document exists, attempt to update
+        const result = await mongoFunctions.find_one_and_update(
+            "STATS",
+            {
+                employee_id: employee_id,
+                createdAt: {
+                    $gte: new Date().setHours(0, 0, 0, 0),
+                    $lt: new Date().setHours(24, 0, 0, 0)
+                },
+                "status_track.status": status
+            },
+            {
+                $inc:{ "status_track.$[elem].count": 1 }   // Increment the count field by 1 for the matched status
+            },
+            {
+                arrayFilters: [{ "elem.status": status }],  // Match status in the array
+                returnDocument: "after"  // Return the updated document
+            }
+        );
+
     }
-  
-    // Return the updated document
-    // return { status: 200, data: result.value };
-  }
-      
+}
+
+
+
   module.exports={recent_hires,add_stats};
 

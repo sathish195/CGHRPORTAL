@@ -443,11 +443,14 @@ router.post(
               return res.status(400).send('Employee is already added to the task team');
             }
             // };
-            await mongoFunctions.find_one_and_update(
+           a=await mongoFunctions.find_one_and_update(
                 'TASKS',
                 { project_id: data.project_id, task_id: data.task_id },
                 { $push: { team: new_team_member, assign_track: assign_track } }
             );
+            const s = await stats.add_stats(data.employee_id, req.employee.organisation_id, a.status);
+            console.log(s);
+
             return res.status(200).send('Team member added to task successfully');
         } else {
             // Add team member to project
@@ -558,8 +561,10 @@ router.post(
             );
   
       if (!task_data_up) return res.status(400).send('Task Update Failed');
-      s=await stats.add_stats(req.employee.employee_id,req.employee.organisation_id,task_data_up.status);
-      console.log(s);
+      if (findId.status !== data.status) {
+        const s = await stats.add_stats(req.employee.employee_id, req.employee.organisation_id, task_data_up.status);
+        console.log(s);
+      }
   
   
       return res.status(200).send('Task Updated Successfully');
