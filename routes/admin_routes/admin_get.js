@@ -41,7 +41,7 @@ router.post(
       let data = req.body;
       var { error } = validations.skip(data);
       if (error) return res.status(400).send(error.details[0].message);
-      if (emp.role_name.toLowerCase() !== "director" || emp.role_name.toLowerCase() !== "manager" ) return res.status(400).send("Not Admin");
+      if (emp.role_name.toLowerCase() !== "director" && emp.role_name.toLowerCase() !== "manager" ) return res.status(400).send("Not Admin");
       let employees = await mongoFunctions.lazy_loading(
         "EMPLOYEE",
         { organisation_id: emp.organisation_id },
