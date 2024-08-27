@@ -558,6 +558,9 @@ router.post(
             );
   
       if (!task_data_up) return res.status(400).send('Task Update Failed');
+      s=await stats.add_stats(req.employee.employee_id,req.employee.organisation_id,task_data_up.status);
+      console.log(s);
+  
   
       return res.status(200).send('Task Updated Successfully');
     } else {
@@ -589,7 +592,7 @@ router.post(
   
       // Create new project
       await mongoFunctions.create_new_record('TASKS', new_task_data);
-      // await stats.add_stats(req.employee.employee_id, req.employee.organisation_id,new_task_data.statusa);
+      await stats.add_stats(req.employee.employee_id, req.employee.organisation_id,new_task_data.status);
   
       return res.status(201).send('Task Created successfully');
     }
