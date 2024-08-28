@@ -249,6 +249,12 @@ const result = await mongoFunctions.find_one_and_update(
           "status_track.$[prev].count": prevStatus ? -1 : 0, // Decrement previous status count if it exists
           "status_track.$[curr].count": currentStatus ? 1 : 0  // In
       }
+      
+        // $inc: {
+        //   "status_track.$[prev].count": prevStatus && prevStatus.count === 1 ? -1 : 0,
+        //   "status_track.$[curr].count": currentStatus ? 1 : 0
+        // }
+      
   },
   {
       arrayFilters: [
