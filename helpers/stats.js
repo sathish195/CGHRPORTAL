@@ -144,7 +144,7 @@ async function recent_hires(organisation_id) {
                   $lte: todayString
               }
           },
-          { _id: 1 },
+          { _id: -1 },
           {
             employee_id:1,
             "basic_info.first_name": 1,
