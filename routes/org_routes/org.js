@@ -360,10 +360,12 @@ router.post("/universal" ,Auth,async(req, res) => {
         true
     );
     let recent_hires = await stats.recent_hires(req.employee.organisation_id);
+    const birthdays=await stats.employees_with_birthday_today(req.employee.organisation_id)
+    console.log(birthdays);
        
         let dashborad = {
             recent_hires: recent_hires,
-            birthdays: [],
+            birthdays: birthdays,
             organisation_details: org_data,
           };
         // await redis.update_redis("ORGANISATIONS",org_data);
