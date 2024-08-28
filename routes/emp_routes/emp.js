@@ -297,7 +297,9 @@ router.post(
     let existingEmployee = await mongoFunctions.find_one("EMPLOYEE", {
         $and: [
             { "contact_details.personal_email_address": data.personal_email_address },
-            {"organisation_id": data.organisation_id},
+            // {
+            //   // "organisation_id": data.organisation_id
+            // },
             { employee_id: { $ne: data.employee_id } }
         ]
     });

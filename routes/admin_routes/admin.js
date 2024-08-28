@@ -48,12 +48,12 @@ router.post(
         $or: [
           {
             employee_id: data.employee_id.toUpperCase(),
-            organisation_id: org_data.organisation_id,
+            // organisation_id: org_data.organisation_id,
           },
           {
             "basic_info.email":
               data.email,
-            organisation_id: org_data.organisation_id,
+            // organisation_id: org_data.organisation_id,
           },
         ],
       });
@@ -68,7 +68,7 @@ router.post(
       let find_email = await mongoFunctions.find_one("EMPLOYEE", {
 
             "contact_details.personal_email_address": data.personal_email_address.toLowerCase(),
-            organisation_id: org_data.organisation_id,
+            // organisation_id: org_data.organisation_id,
       });
       if (find_email)
         return res.status(400).send("Personal Email Id Already Exists");
@@ -164,7 +164,7 @@ router.post(
       let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
     
         employee_id: data.employee_id.toUpperCase(),
-        organisation_id: org_data.organisation_id,
+        // organisation_id: org_data.organisation_id,
         });
       if (!find_emp){
             return res.status(400).send("Employee Id Doesn't exists");
@@ -174,7 +174,8 @@ router.post(
             { "contact_details.personal_email_address": data.personal_email_address },
             {"basic_info.email": data.email},
             { employee_id: { $ne: data.employee_id }, 
-            organisation_id: org_data.organisation_id}
+            // organisation_id: org_data.organisation_id
+            }
         ]
     });
     if (existingEmployee) {
