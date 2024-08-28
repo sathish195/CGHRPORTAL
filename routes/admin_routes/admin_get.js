@@ -46,7 +46,7 @@ router.post(
       // org=await mongoFunctions.find_one("ORGANISATIONS", {
       //   email: req.employee.email,
       // });
-      // if (!org) {
+      // if (!org)
       //   return res.status(400).send("Invalid Organisation..!");
       // }
       let employees = await mongoFunctions.lazy_loading(

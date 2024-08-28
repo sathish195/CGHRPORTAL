@@ -98,13 +98,13 @@ router.post("/get_tasks",Auth, async (req, res)=>{
 
   const userRole = req.employee.role_name.toLowerCase();
   if (userRole === 'manager') {
-    findTask=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id});
+    findTask=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,status: { $nin: [/^completed$/i] }});
     return res.status(200).send(findTask)
   }
   if (userRole === 'team incharge' ) {
   // return res.status(403).send('Access denied: Not Admin');
   // }
-  findTask=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,"created_by.employee_id":req.employee.employee_id});
+  findTask=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,status: { $nin: [/^completed$/i, /^manager$/i] },"created_by.employee_id":req.employee.employee_id});
   return res.status(200).send(findTask)
   }else{
     const now = new Date();
