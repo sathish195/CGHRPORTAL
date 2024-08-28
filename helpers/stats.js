@@ -2,6 +2,7 @@ const mongoFunctions = require("./mongoFunctions");
 const mongofunctions = require("./mongoFunctions");
 const redis = require("./redisFunctions");
 const moment = require("moment");
+const { employee_id } = require("./schema");
 
 module.exports = {
     update_emp: async (obj, add = true, new_emp = true) => {
@@ -142,6 +143,15 @@ async function recent_hires(organisation_id) {
                   $gte: fifteenDaysAgoString,
                   $lte: todayString
               }
+          },
+          { _id: 1 },
+          {
+            employee_id:1,
+            "basic_info.first_name": 1,
+            "basic_info.last_name":1,
+            "basic_info.email": 1,
+            "work_info.date_of_join":1
+
           }
       );
       return recentHires;
@@ -150,6 +160,33 @@ async function recent_hires(organisation_id) {
       return [];
   }
 }
+async function employees_with_birthday_today(organisation_id) {
+  try {
+      const today = new Date();
+      const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+      const currentDay = String(today.getDate()).padStart(2, '0');
+      const todayString = currentDay + currentMonth;
+      console.log(todayString) // "DDMM" format for comparison
+
+      // Find employees whose birthday is today
+      const employeesWithBirthday = await mongoFunctions.find(
+          "EMPLOYEE",
+          {
+              organisation_id: organisation_id,
+              "personal_details.date_of_birth": {
+                  $regex: `^${todayString}`  // Matches "DDMM" at the beginning of the date string
+              }
+          }
+      );
+
+      console.log(employeesWithBirthday);
+      return employeesWithBirthday;
+  } catch (error) {
+      console.error("Error fetching employees:", error);
+      return [];
+  }
+}
+
 async function add_stats(employee_id, organisation_id, status) {
     // Define default status track
     const defaultStatusTrack = [
@@ -275,5 +312,5 @@ const result = await mongoFunctions.find_one_and_update(
 
 
 
-  module.exports={recent_hires,add_stats,update_stats};
+  module.exports={recent_hires,add_stats,update_stats,employees_with_birthday_today};
 

@@ -59,7 +59,8 @@ router.post(
     delete filtered_org_data.designations;
     delete filtered_org_data.roles;
     const recent_hires = await stats.recent_hires(req.employee.organisation_id);
-    console.log(recent_hires);
+    const birthdays=await stats.employees_with_birthday_today(req.employee.organisation_id)
+    console.log(birthdays);
         
         let statss=await mongoFunctions.find_one("STATS",
             {
@@ -71,7 +72,7 @@ router.post(
             });
         let dashborad = {
             recent_hires: recent_hires,
-            birthdays:  [],
+            birthdays:  birthdays,
             organisation_details:filtered_org_data,
             stats:statss,
           };
