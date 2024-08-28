@@ -117,34 +117,40 @@ module.exports = {
 };
 
 async function recent_hires(organisation_id) {
-    try {
-      // Assuming mongoFunctions.find is an async function
-      const all_emps = await mongoFunctions.find("EMPLOYEE", { organisation_id :organisation_id});
-  
-      if (all_emps) {
-        const today = new Date();
-        const fifteenDaysAgo = new Date(today);
-        fifteenDaysAgo.setDate(today.getDate() - 15);
-  
-        // Filter employees directly in the database query for efficiency
-        const recentHires = await mongoFunctions.find(
+  try {
+      const today = new Date();
+      const fifteenDaysAgo = new Date(today);
+      fifteenDaysAgo.setDate(today.getDate() - 15);
+      
+      // Format dates to "YYYY-MM-DD"
+      const formatDateToString = date => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+      };
+
+      const fifteenDaysAgoString = formatDateToString(fifteenDaysAgo);
+      const todayString = formatDateToString(today);
+
+      // Find employees who joined exactly 15 days ago
+      const recentHires = await mongoFunctions.find(
           "EMPLOYEE",
           {
-            organisation_id:organisation_id,
-            "work_info.date_of_join": { $gte: fifteenDaysAgo },
+              organisation_id: organisation_id,
+              "work_info.date_of_join": {
+                  $gte: fifteenDaysAgoString,
+                  $lte: todayString
+              }
           }
-        );
-        console.log(recentHires);
-        return recentHires;
-      }
-  
-      return [];
-    } catch (error) {
+      );
+      return recentHires;
+  } catch (error) {
       console.error("Error fetching employees:", error);
       return [];
-    }
   }
-  async function add_stats(employee_id, organisation_id, status) {
+}
+async function add_stats(employee_id, organisation_id, status) {
     // Define default status track
     const defaultStatusTrack = [
         { status: "new", count: 0 },

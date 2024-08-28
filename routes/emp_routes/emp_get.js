@@ -58,21 +58,9 @@ router.post(
     delete filtered_org_data.departments;
     delete filtered_org_data.designations;
     delete filtered_org_data.roles;
-    let recent_hires = stats.recent_hires(req.employee.organisation_id);
-        let birthdays = await redis.redisGet(
-          req.employee.organisation_id,
-          "BIRTHDAYS",
-          true
-        );
-        let today = new Date();
-        let month = today.getMonth();
-        let date = today.getDate();
-        if (birthdays && birthdays[month]) {
-          birthdays[month].filter((each) => {
-            const dob = moment(each.date_of_birth, "DDMMYYYY");
-            return date == dob.date();
-          });
-        }
+    const recent_hires = await stats.recent_hires(req.employee.organisation_id);
+    console.log(recent_hires);
+        
         let statss=await mongoFunctions.find_one("STATS",
             {
                 employee_id: req.employee.employee_id,
@@ -82,8 +70,8 @@ router.post(
                 },
             });
         let dashborad = {
-            recent_hires:  [],
-            birthdays: birthdays && birthdays[month] ? birthdays[month] : [],
+            recent_hires: recent_hires,
+            birthdays:  [],
             organisation_details:filtered_org_data,
             stats:statss,
           };

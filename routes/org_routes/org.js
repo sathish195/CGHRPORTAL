@@ -359,24 +359,11 @@ router.post("/universal" ,Auth,async(req, res) => {
         org.organisation_id,
         true
     );
-    let recent_hires = stats.recent_hires(req.employee.organisation_id);
-        let birthdays = await redis.redisGet(
-          req.employee.organisation_id,
-          "BIRTHDAYS",
-          true
-        );
-        let today = new Date();
-        let month = today.getMonth();
-        let date = today.getDate();
-        if (birthdays && birthdays[month]) {
-          birthdays[month].filter((each) => {
-            const dob = moment(each.date_of_birth, "DDMMYYYY");
-            return date == dob.date();
-          });
-        }
+    let recent_hires = await stats.recent_hires(req.employee.organisation_id);
+       
         let dashborad = {
-            recent_hires: [],
-            birthdays: birthdays && birthdays[month] ? birthdays[month] : [],
+            recent_hires: recent_hires,
+            birthdays: [],
             organisation_details: org_data,
           };
         // await redis.update_redis("ORGANISATIONS",org_data);
