@@ -172,10 +172,19 @@ async function employees_with_birthday_today(organisation_id) {
       const employeesWithBirthday = await mongoFunctions.find(
           "EMPLOYEE",
           {
-              organisation_id: organisation_id,
-              "personal_details.date_of_birth": {
-                  $regex: `^${todayString}`  // Matches "DDMM" at the beginning of the date string
-              }
+            organisation_id: organisation_id,
+            "personal_details.date_of_birth": {
+                $regex: `^${todayString}`  // Matches "DDMM" at the beginning of the date string
+            }
+        },
+        { _id: -1 },
+          {
+            employee_id:1,
+            "basic_info.first_name": 1,
+            "basic_info.last_name":1,
+            "basic_info.email": 1,
+            "personal_details.date_of_birth":1
+
           }
       );
 
