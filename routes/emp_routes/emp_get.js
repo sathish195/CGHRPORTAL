@@ -84,6 +84,7 @@ router.post("/get_tasks",Auth, async (req, res)=>{
   // data=req.body;
   // var { error } =validations.get_project_by_id(data);
   //   if (error) return res.status(400).send(error.details[0].message);
+  
 
   const userRole = req.employee.role_name.toLowerCase();
   if (userRole === 'manager') {
