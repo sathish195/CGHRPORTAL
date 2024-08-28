@@ -343,7 +343,7 @@ router.post(
       const { error } = validations.update_task(data);
       if(error) return res.status(400).send(error.details[0].message);
       const userRole = req.employee.role_name.toLowerCase();
-      if(userRole!=='team member'){
+      if(userRole==='director'){
         return res.status(403).send('Access denied: Not Team Member');
       }
       const findId = await mongoFunctions.find_one('TASKS',{
