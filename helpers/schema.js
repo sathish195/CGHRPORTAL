@@ -5,7 +5,7 @@ const moment = require("moment");
 function emp_login(data) {
     const schema = Joi.object({
         email: Joi.string().required().email().max(55),
-        password: Joi.string().required().min(8).max(10),
+        password: Joi.string().required().min(8).max(15),
         last_ip: Joi.string().required(),
         fcm_token: Joi.string().required(),
         device_id: Joi.string().required(),
@@ -23,7 +23,7 @@ function emp_reset_forgot_password(data) {
     const schema = Joi.object({
         email: Joi.string().required().email().max(55),
         otp: Joi.string().required().min(6).max(6),
-        new_password: Joi.string().required().min(8).max(10)
+        new_password: Joi.string().required().min(8).max(15)
         .pattern(/(?=.*[A-Z])/,'uppercase')  // At least one uppercase letter
         .pattern(/(?=.*[@$!%*?&])/,'special') //atleast one special character
     });
@@ -43,8 +43,8 @@ function emp_login_verify(data){
 }
 function emp_reset_password(data){
     const schema = Joi.object({
-        old_password: Joi.string().required().min(8).max(10),
-        new_password: Joi.string().required().min(8).max(10)
+        old_password: Joi.string().required().min(8).max(15),
+        new_password: Joi.string().required().min(8).max(15)
         .pattern(/(?=.*[A-Z])/,'uppercase')  // At least one uppercase letter
         .pattern(/(?=.*[@$!%*?&])/,'special') //atleast one special character
     });
