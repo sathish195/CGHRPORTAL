@@ -429,6 +429,7 @@ router.post("/apply_leave",Auth,async(req,res) => {
     leave_application_id: functions.get_random_string("L", 15, true),
     organisation_id: find_emp.organisation_id,
     employee_id: find_emp.employee_id,
+    department_id:find_emp.work_info.department_id,
     leave_type_id: emp_leave_obj.leave_id,
     leave_type: emp_leave_obj.leave_name,
     employee_name:

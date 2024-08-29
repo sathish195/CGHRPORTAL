@@ -145,27 +145,43 @@ router.post(
     return res.status(200).send(projects);
     }
 });
-router.post("/all_leave_applications",Auth, async(req, res) => {
+router.post("/all_leave_applications", Auth, async (req, res) => {
   const data = req.body;
   const { error } = validations.skip(data);
-  if (error) return res.status(400).send(error.details[0].message);
-  if (req.employee.role_name.toLowerCase()==="team member"){
-    return res.status(400).send("Access denied: Not Admin");
-  }
-  let leaveApplications = await mongoFunctions.lazy_loading("LEAVE", {
-    organisation_id: req.employee.organisation_id,
-    employee_id:{"$ne":req.employee.employee_id},
-  },
-    {
-      __v:0
-  
-    },
-    {_id:-1},
-    {limit:40},
-    {skip:data.skip},
-  );
-  return res.status(200).send(leaveApplications);
 
+  if (error) {
+      return res.status(400).send(error.details[0].message);
+  }
+
+  const roleName = req.employee.role_name.toLowerCase();
+  const query = {
+      organisation_id: req.employee.organisation_id,
+      employee_id: { $ne: req.employee.employee_id }
+  };
+
+  if (roleName === 'team member') {
+      return res.status(400).send("Access denied: Not Admin");
+  } 
+
+  if (roleName === 'director') {
+  } else if (roleName === 'manager') {
+      query.reporting_manager = req.employee.email;
+  } else if (roleName === 'team incharge') {
+      query.department_id = req.employee.department_id;
+  } else {
+      return res.status(403).send("Access denied: Invalid role");
+  }
+
+  const leaveApplications = await mongoFunctions.lazy_loading(
+      "LEAVE",            
+      query,              
+      { __v: 0 },         
+      { _id: -1 },        
+      { limit: 40 },      
+      { skip: data.skip } 
+  );
+
+  return res.status(200).send(leaveApplications);
 });
 
   module.exports =router;

@@ -5,6 +5,7 @@ const leave_Schema = new mongoose.Schema(
     leave_application_id: { type: String, required: true, unique: true },
     organisation_id: { type: String, required: true },
     employee_id: { type: String, required: true },
+    department_id:{ type:String, required: true},
     leave_type_id: { type: String, required: true },
     leave_type: { type: String, required: true },
     employee_name: { type: String, required: true },
