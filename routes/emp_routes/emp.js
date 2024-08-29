@@ -440,6 +440,7 @@ router.post("/apply_leave",Auth,async(req,res) => {
     reason: data.reason,
     team_mail_id: data.team_mail_id,
     approved_by:{},
+    reporting_manager:find_emp.work_info.reporting_manager,
     leave_status: "Pending",
   };
   await mongoFunctions.create_new_record("LEAVE", leave_record_obj);

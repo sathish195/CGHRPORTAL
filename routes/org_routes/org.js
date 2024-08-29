@@ -551,4 +551,42 @@ router.post("/get_employees_by_department", Auth, async (req, res) => {
 
     return res.status(200).send(find_employees);
 });
+
+router.post("/get_teamHead_mail", Auth, async (req, res) => {
+    const roleName = req.employee.role_name.toLowerCase();
+    let query = {};
+    let projection = {
+        employee_id: 1,
+        "basic_info.first_name": 1,
+        "basic_info.last_name": 1,
+        "basic_info.email": 1
+    };
+
+    if (roleName === 'team member') {
+        // Search for team incharge roles for team members
+        query = {
+            "work_info.designation_id": req.employee.designation_id,
+            "work_info.role_name": { $regex: new RegExp('^team incharge$', 'i') } // Case-insensitive match
+        };
+    } else if (roleName === 'team incharge') {
+        // Search for managers and directors for team incharges
+        query = {
+            "work_info.role_name": 
+                { $regex: new RegExp('^manager$', 'i') },
+        };
+    } else if (roleName === 'manager') {
+        // Search for directors for managers
+        query = {
+            "work_info.role_name": { $regex: new RegExp('^director$', 'i') }
+        };
+    } else {
+        // Role not recognized
+        return res.status(403).send("Access denied: Invalid role");
+    }
+
+    // Execute the query
+    const data = await mongoFunctions.find("EMPLOYEE", query, { _id: -1 }, projection);
+    return res.status(200).send(data);
+});
+
 module.exports = router;
