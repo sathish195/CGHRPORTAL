@@ -19,7 +19,7 @@ const leave_Schema = new mongoose.Schema(
       enum: ["Pending", "Approved", "Rejected"],
       required: true,
     },
-    approved_by: { type: Array, default: [] },
+    approved_by: { type: Object, default:{}},
   },
   { timestamps: true }
 );
