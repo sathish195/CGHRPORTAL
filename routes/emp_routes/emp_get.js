@@ -217,29 +217,22 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
 });
 module.exports =router;
 
-// router.post("/get_all_task", Auth, async (req, res) => {
-//   const pipeline = [
-//     {
-//       $sort: { createdAt:-1 } // Optional: Sort by project_id for grouping efficiency
-//     },
-//     {
-//       $group: {
-//         _id: "$project_id", // Group by project_id
-//         doc: { $first: "$$ROOT" } // Get the first document for each project_id
-//       }
-//     },
-//     {
-//       $replaceRoot: { newRoot: "$doc" } // Replace the root with the document
-//     },
-//     {
-//       $limit: 100 // Limit the result to 100 documents
-//     }
-//   ];
-//   findUser=await mongoFunctions.aggregate(
-//     "TASKS",pipeline
-    
-//   );
-//   return res.status(200).send(findUser);
+router.post("/leave_applications",Auth, async(req, res) => {
+  const data = req.body;
+  const { error } = validations.skip(data);
+  if (error) return res.status(400).send(error.details[0].message);
+  let leaveApplications = await mongoFunctions.lazy_loading("LEAVE", {
+    employee_id: req.employee.employee_id,
+    organisation_id: req.employee.organisation_id
+  },
+  {
+    __v:0
 
+  },
+  {_id:-1},
+  {limit:40},
+  {skip:data.skip},
+  );
+  return res.status(200).send(leaveApplications);
 
-// });
+});

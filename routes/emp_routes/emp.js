@@ -7,6 +7,7 @@ const jwt=require('jsonwebtoken');
 const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
+const functions=require('../../helpers/functions');
 // const bcrypt=require('bcrypt');
 
 router.post('/login',async(req,res)=>{
@@ -172,6 +173,8 @@ router.post('/login_verify',async(req,res) => {
     const token=jwt.sign({
         organisation_id: up_emp.organisation_id,
         employee_id: up_emp.employee_id,
+        first_name: up_emp.basic_info.first_name,
+        last_name: up_emp.basic_info.last_name,
         email: up_emp.basic_info.email,
         department_id: up_emp.work_info.department_id,
         designation_id: up_emp.work_info.designation_id,
@@ -381,6 +384,68 @@ router.post(
             console.log("Sending");
             return res.status(200).send('Task Updated Successfully');
     });
+
+router.post("/apply_leave",Auth,async(req,res) => {
+  if (req.employee.role_name ==="director"){
+    return res.status(400).send('Access denied: Director Do Not Apply Leave');
+  }
+  let data = req.body;
+  var { error } = validations.apply_leave(data);
+  if (error) return res.status(400).send(error.details[0].message);
+  let org_data = await redis.redisGet(
+    "CRM_ORGANISATIONS",
+    req.employee.organisation_id,
+    true
+  );
+  if (!org_data) return res.status(400).send("Access Denied..!..No Organization Found For The Given Employee..!!");
+  let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+    employee_id: req.employee.employee_id,
+  });
+  if (!find_emp) return res.status(400).send("Employee Not Found..!");
+
+  const emp_leave_obj = find_emp.leaves.find(
+    (e) => e.leave_id === data.leave_type
+  );
+  if (!emp_leave_obj)
+    return res.status(400).send("Leave Type Not Found..!");
+  const over_lapping_leaves = await mongoFunctions.find("LEAVE", {
+    organisation_id: find_emp.organisation_id,
+    employee_id: find_emp.employee_id,
+    from_date: { $lte: new Date(data.from_date) },
+    to_date: { $gte: new Date(data.to_date )},
+  });
+
+  if (over_lapping_leaves.length > 0)
+    return res
+      .status(400)
+      .send("Leave Already Applied On Selected Dates");
+  let leaves_count = await functions.calculate_leave_days(
+    data.from_date,
+    data.to_date
+  );
+  if (leaves_count > emp_leave_obj.remaining_leaves)
+    return res.status(400).send("Leaves Limit Exceeded..!");
+  let leave_record_obj = {
+    leave_application_id: functions.get_random_string("L", 15, true),
+    organisation_id: find_emp.organisation_id,
+    employee_id: find_emp.employee_id,
+    leave_type_id: emp_leave_obj.leave_id,
+    leave_type: emp_leave_obj.leave_name,
+    employee_name:
+      find_emp.basic_info.first_name + "" + find_emp.basic_info.last_name,
+    email: find_emp.basic_info.email,
+    days_taken: leaves_count,
+    from_date: data.from_date,
+    to_date: data.to_date,
+    reason: data.reason,
+    team_mail_id: data.team_mail_id,
+    leave_status: "Pending",
+  };
+  await mongoFunctions.create_new_record("LEAVE", leave_record_obj);
+  return res.status(200).send({
+    success: "Leave Applied Successfully...!",
+  });
+});
   
   
   

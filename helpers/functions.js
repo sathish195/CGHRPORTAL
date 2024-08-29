@@ -22,6 +22,20 @@ module.exports = {
         .toString("hex")
         .toUpperCase() + str
     );
+  },
+  calculate_leave_days:(from_date,to_date) => {
+      // Parse the date strings into Date objects
+      const date1 = new Date(from_date);
+      const date2 = new Date(to_date);
+  
+      // Calculate the difference in time
+      const timeDifference = Math.abs(date2 - date1);
+  
+      // Convert time difference from milliseconds to days
+      const dayDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+  
+      return dayDifference;
   }
+  
 
 };

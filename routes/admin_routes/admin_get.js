@@ -145,5 +145,27 @@ router.post(
     return res.status(200).send(projects);
     }
 });
+router.post("/all_leave_applications",Auth, async(req, res) => {
+  const data = req.body;
+  const { error } = validations.skip(data);
+  if (error) return res.status(400).send(error.details[0].message);
+  if (req.employee.role_name.toLowerCase()==="team member"){
+    return res.status(400).send("Access denied: Not Admin");
+  }
+  let leaveApplications = await mongoFunctions.lazy_loading("LEAVE", {
+    organisation_id: req.employee.organisation_id,
+    employee_id:{"$ne":req.employee.employee_id},
+  },
+    {
+      __v:0
+  
+    },
+    {_id:-1},
+    {limit:40},
+    {skip:data.skip},
+  );
+  return res.status(200).send(leaveApplications);
+
+});
 
   module.exports =router;

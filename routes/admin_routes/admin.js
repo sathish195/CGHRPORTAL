@@ -643,5 +643,37 @@ router.post(
           return res.status(200).send('Project Updated Successfully');
   });
 
+  router.post("/update_leave",async(req, res) => {
+    const data = req.body;
+    const { error } = validations.update_leave(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    const userRole = req.employee.role_name.toLowerCase();
+    if (userRole=== 'team member' || userRole==='director') {
+      return res.status(400).send('Access denied: Not Team Incharge or Manager');
+    };
+    const findId = await mongoFunctions.find_one('LEAVES', {
+      leave_application_id: data.leave_application_id,
+    });
+    if (!findId) return res.status(400).send('Leave Application ID does not exist');
+    
+    const leave_data_up = await mongoFunctions.find_one_and_update(
+      'LEAVES',
+      {
+        leave_application_id: data.leave_application_id,
+      },
+      {
+        $push: {
+          approved_by: {
+            employee_id: req.employee.employee_id,
+            employee_name: req.employee.first_name + ' '+req.employee.last_name,
+            approvedAt: new Date(),
+            leave_status: data.leave_status,
+          },
+        },
+
+
+    });
+
+  })
 
 
