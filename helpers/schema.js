@@ -142,7 +142,7 @@ function add_employee_by_admin(data){
       const educational_details_obj = Joi.object({
         institute_name: Joi.string().min(5).max(30).required(),
         degree: Joi.string().min(5).max(15).required(),
-        specialization: Joi.string().min(3).max(15).required(),
+        specialization: Joi.string().min(2).max(15).required(),
         year_of_completion: Joi.number().required(),
       });
       const dependent_details_obj = Joi.object({
@@ -428,5 +428,5 @@ function add_employee_by_admin(data){
 // Export the functions
 module.exports = {emp_login,emp_forgot_password,emp_reset_forgot_password ,emp_login_verify,emp_reset_password,add_update_org,add_update_department,add_update_designation
     ,add_update_role ,add_employee_by_admin,employee_id,skip,add_image,edit_profile,add_project,get_project_by_id,add_remove_team,add_update_task,get_task_by_id,update_project,update_task,
-    update_leaves,get_all_tasks,apply_leave
+    update_leaves,get_all_tasks,apply_leave,update_leave
 };

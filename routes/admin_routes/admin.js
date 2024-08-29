@@ -643,7 +643,7 @@ router.post(
           return res.status(200).send('Project Updated Successfully');
   });
 
-  router.post("/update_leave",async(req, res) => {
+  router.post("/update_leave_application",async(req, res) => {
     const data = req.body;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -653,8 +653,34 @@ router.post(
     };
     const findId = await mongoFunctions.find_one('LEAVES', {
       leave_application_id: data.leave_application_id,
+      leave_status: data.leave_status
     });
-    if (!findId) return res.status(400).send('Leave Application ID does not exist');
+    if (!findId) return res.status(400).send('No Leave Application Found');
+    query={}
+    if (req.employee.role_name==="team incharge"){
+      query.team_incharge={
+        employee_id: req.employee.employee_id,
+        employee_name: req.employee.first_name + ' '+req.employee.last_name,
+        approvedAt: new Date(),
+        leave_status: data.leave_status,
+        }
+    }
+    if (req.employee.role_name==="manager"){
+      query.manager={
+        employee_id: req.employee.employee_id,
+        employee_name: req.employee.first_name + ' '+req.employee.last_name,
+        approvedAt: new Date(),
+        leave_status: data.leave_status,
+        }
+    }
+    if (req.employee.role_name==="manager" && req.employee.designation_name.lower()==="hr manager"){
+      query.hr={
+        employee_id: req.employee.employee_id,
+        employee_name: req.employee.first_name +' '+req.employee.last_name,
+        approvedAt: new Date(),
+        leave_status: data.leave_status,
+        }
+    }
     
     const leave_data_up = await mongoFunctions.find_one_and_update(
       'LEAVES',
@@ -662,18 +688,14 @@ router.post(
         leave_application_id: data.leave_application_id,
       },
       {
-        $push: {
+        $set: {
           approved_by: {
-            employee_id: req.employee.employee_id,
-            employee_name: req.employee.first_name + ' '+req.employee.last_name,
-            approvedAt: new Date(),
-            leave_status: data.leave_status,
-          },
+            query
         },
-
-
-    });
-    
+      }
+      })
+      
+      
 
   })
 

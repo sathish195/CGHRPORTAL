@@ -402,6 +402,43 @@ router.post("/apply_leave",Auth,async(req,res) => {
     employee_id: req.employee.employee_id,
   });
   if (!find_emp) return res.status(400).send("Employee Not Found..!");
+  find_hr=await mongoFunctions.find_one("EMPLOYEE", {
+    "work_info.role_name": { $regex: new RegExp('^manager$', 'i') },
+    "work_info.designation_name": { $regex: new RegExp('^hr manager$', 'i') }
+  });
+  
+  find_tl=await mongoFunctions.find_one("EMPLOYEE", {
+    "work_info.role_name": { $regex: new RegExp('^team incharge$', 'i') },
+    "work_info.department_id": req.employee.department_id, 
+  });
+  let approved_by = {}
+    approved_by.manager= {
+      email: find_emp.work_info.reporting_manager,
+      leave_status: "Pending",
+    }
+  
+  if (req.employee.role_name === "team member") {
+    approved_by.team_incharge = {
+      employee_id: find_tl ? find_tl.employee_id : "",
+      email: find_tl ? find_tl.basic_info.email : "",
+      leave_status: "Pending",
+    };
+    approved_by.hr = {
+      employee_id: find_hr ? find_hr.employee_id : "",
+      email: find_hr ? find_hr.basic_info.email : "",
+      leave_status: "Pending",
+    };
+  }
+  
+  if (req.employee.role_name === "team incharge") {
+    approved_by.hr = {
+      employee_id: find_hr ? find_hr.employee_id : "",
+      email: find_hr ? find_hr.basic_info.email : "",
+      leave_status: "Pending",
+    };
+  }
+
+
 
   const emp_leave_obj = find_emp.leaves.find(
     (e) => e.leave_id === data.leave_type
@@ -440,7 +477,7 @@ router.post("/apply_leave",Auth,async(req,res) => {
     to_date: data.to_date,
     reason: data.reason,
     team_mail_id: data.team_mail_id,
-    approved_by:{},
+    approved_by:approved_by,
     reporting_manager:find_emp.work_info.reporting_manager,
     leave_status: "Pending",
   };
