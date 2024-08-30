@@ -178,6 +178,7 @@ router.post('/login_verify',async(req,res) => {
         email: up_emp.basic_info.email,
         department_id: up_emp.work_info.department_id,
         designation_id: up_emp.work_info.designation_id,
+        designation_name:up_emp.work_info.designation_name,
         role_id: up_emp.work_info.role_id,
         role_name: up_emp.work_info.role_name,
         two_fa_status: up_emp.two_fa_status,
@@ -417,7 +418,7 @@ router.post("/apply_leave",Auth,async(req,res) => {
       leave_status: "Pending",
     }
   
-  if (req.employee.role_name === "team member") {
+  if (req.employee.role_name.toLowerCase() === "team member") {
     approved_by.team_incharge = {
       employee_id: find_tl ? find_tl.employee_id : "",
       email: find_tl ? find_tl.basic_info.email : "",
@@ -430,7 +431,7 @@ router.post("/apply_leave",Auth,async(req,res) => {
     };
   }
   
-  if (req.employee.role_name === "team incharge") {
+  if (req.employee.role_name.toLowerCase() === "team incharge") {
     approved_by.hr = {
       employee_id: find_hr ? find_hr.employee_id : "",
       email: find_hr ? find_hr.basic_info.email : "",

@@ -40,6 +40,10 @@ module.exports = {
     const dayDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)) + 1;
 
     return dayDifference;
+},
+update_status:(leave_status_up)=>{
+
+  
 }
   
 

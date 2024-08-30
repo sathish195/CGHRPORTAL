@@ -643,7 +643,7 @@ router.post(
           return res.status(200).send('Project Updated Successfully');
   });
 
-  router.post("/update_leave_application",async(req, res) => {
+  router.post("/update_leave_application",Auth,async(req, res) => {
     const data = req.body;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -651,50 +651,74 @@ router.post(
     if (userRole=== 'team member' || userRole==='director') {
       return res.status(400).send('Access denied: Not Team Incharge or Manager');
     };
-    const findId = await mongoFunctions.find_one('LEAVES', {
+    const findId = await mongoFunctions.find_one('LEAVE', {
       leave_application_id: data.leave_application_id,
-      leave_status: data.leave_status
+      // leave_status: data.leave_status
     });
     if (!findId) return res.status(400).send('No Leave Application Found');
-    query={}
-    if (req.employee.role_name==="team incharge"){
-      query.team_incharge={
+    let approved_by=findId.approved_by;
+    if (req.employee.role_name.toLowerCase()==="team incharge"){
+      approved_by.team_incharge={
         employee_id: req.employee.employee_id,
-        employee_name: req.employee.first_name + ' '+req.employee.last_name,
+        email: req.employee.email,
         approvedAt: new Date(),
         leave_status: data.leave_status,
         }
     }
-    if (req.employee.role_name==="manager"){
-      query.manager={
+    if (req.employee.role_name.toLowerCase()==="manager"&& req.employee.designation_name.toLowerCase()!=="hr manager"){
+      approved_by.manager={
         employee_id: req.employee.employee_id,
-        employee_name: req.employee.first_name + ' '+req.employee.last_name,
+       email:req.employee.email,
         approvedAt: new Date(),
         leave_status: data.leave_status,
         }
     }
-    if (req.employee.role_name==="manager" && req.employee.designation_name.lower()==="hr manager"){
-      query.hr={
+    if (req.employee.role_name.toLowerCase()==="manager" && req.employee.designation_name.toLowerCase()==="hr manager"){
+      approved_by.hr={
         employee_id: req.employee.employee_id,
-        employee_name: req.employee.first_name +' '+req.employee.last_name,
+        email:req.employee.email,
         approvedAt: new Date(),
         leave_status: data.leave_status,
         }
     }
     
     const leave_data_up = await mongoFunctions.find_one_and_update(
-      'LEAVES',
+      'LEAVE',
       {
         leave_application_id: data.leave_application_id,
       },
       {
         $set: {
-          approved_by: {
-            query
-        },
+          "approved_by":approved_by
       }
-      })
-      
+      });
+      let overallStatus="Pending"
+      const statuses = [
+        leave_data_up.approved_by.manager.leave_status,
+        leave_data_up.approved_by.team_incharge.leave_status,
+        leave_data_up.approved_by.hr.leave_status
+      ];
+    
+      // Determine the overall status based on the statuses array
+      for (const status of statuses) {
+        if (status === 'Rejected') {
+          overallStatus = 'Rejected';
+          break; 
+        } else if (status === 'Pending') {
+          overallStatus = 'Pending';
+        } else if (status === 'Approved') {
+          
+            overallStatus = 'Approved'; 
+        }
+      };
+      console.log(overallStatus);
+    
+      // Set the determined overall status in the query object
+      updated_leave_data = await mongoFunctions.find_one_and_update("LEAVE",{"organisation_id":req.employee.organisation_id,"leave_application_id":data.leave_application_id},{$set:{"leave_status":overallStatus}});
+      // console.log(h);
+    
+    return res.status(200).send(updated_leave_data);
+
       
 
   })
