@@ -713,9 +713,7 @@ router.post(
       };
       console.log(overallStatus);
     
-      // Set the determined overall status in the query object
       updated_leave_data = await mongoFunctions.find_one_and_update("LEAVE",{"organisation_id":req.employee.organisation_id,"leave_application_id":data.leave_application_id},{$set:{"leave_status":overallStatus}});
-      // console.log(h);
     
     return res.status(200).send(updated_leave_data);
 
