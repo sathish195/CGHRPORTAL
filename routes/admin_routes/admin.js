@@ -694,9 +694,9 @@ router.post(
       });
       let overallStatus="Pending"
       const statuses = [
-        leave_data_up.approved_by.manager.leave_status,
-        leave_data_up.approved_by.team_incharge.leave_status,
-        leave_data_up.approved_by.hr.leave_status
+        leave_data_up.approved_by.manager?.leave_status,
+        leave_data_up.approved_by.team_incharge?.leave_status,
+        leave_data_up.approved_by.hr?.leave_status
       ];
     
       // Determine the overall status based on the statuses array
