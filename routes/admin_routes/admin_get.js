@@ -177,66 +177,88 @@ router.post(
     }
 });
 router.post("/all_leave_applications", Auth, async (req, res) => {
-  const data = req.body;
-  const { error } = validations.get_all_leave_applications(data);
+  try {
+    const data = req.body;
+    const { error } = validations.get_all_leave_applications(data);
 
-  if (error) {
+    if (error) {
       return res.status(400).send(error.details[0].message);
-  }
+    }
 
-  const roleName = req.employee.role_name.toLowerCase();
-  const query = {
+    const roleName = req.employee.role_name.toLowerCase();
+    const status = "Pending";
+    const query = {
       organisation_id: req.employee.organisation_id,
-      employee_id: { $ne: req.employee.employee_id }
-  };
+      employee_id: { $ne: req.employee.employee_id },
+      "approved_by.team_incharge.leave_status": status
+    };
 
-  if (roleName === 'team member') {
-      return res.status(400).send("Access denied: Not Admin");
-  } 
+    // Role-based access control
+    if (roleName === 'team member') {
+      return res.status(403).send("Access denied: Not Admin");
+    } 
 
-  if (roleName === 'director') {
-  } else if (roleName === 'manager') {
+    if (roleName === 'director') {
+      // No additional conditions for 'director'
+    } else if (roleName === 'manager') {
       query.reporting_manager = req.employee.email;
-      query["approved_by.manager.leave_status"] ="Pending";
-  } else if (roleName === 'team incharge') {
-      query.department_id = req.employee.department_id;
-      query["approved_by.team_incharge.leave_status"] ="Pending";
-  } else {
+    } else if (roleName === 'team incharge') {
+      // Optionally add conditions specific to 'team incharge'
+    } else {
       return res.status(403).send("Access denied: Invalid role");
+    }
+
+    // Add optional fields to the query
+    if (data.employee_id && data.employee_id.length > 5) {
+      query.employee_id = data.employee_id;
+    }
+
+    if (data.from_date && data.to_date) {
+      const fromDate = new Date(data.from_date);
+      const toDate = new Date(data.to_date);
+
+      // Validate date formats
+      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+        return res.status(400).send("Invalid date format");
+      }
+
+      // Ensure toDate is inclusive of the end of the day
+      // toDate.setUTCHours(23, 59, 59, 999);
+
+      query.createdAt = {
+        $gte: fromDate,
+        $lte: toDate
+      };
+    }
+
+    if (data.leave_status && data.leave_status.length > 5) {
+      if (roleName === 'manager') {
+        query["approved_by.manager.leave_status"] = data.leave_status;
+      } else if (roleName === 'team incharge') {
+        query["approved_by.team_incharge.leave_status"] = data.leave_status;
+      }
+    }
+
+    // Fetch leave applications with pagination
+    const leaveApplications = await mongoFunctions.lazy_loading(
+      "LEAVE",
+      query,
+      { __v: 0 },
+      { _id: -1 },
+      { limit: 40 },
+      { skip: data.skip || 0 } // Default skip to 0 if not provided
+    );
+    console.log(query);
+
+    return res.status(200).send(leaveApplications);
+
+  } catch (err) {
+    console.error("Error fetching leave applications:", err);
+    return res.status(500).send("Internal server error");
   }
-  // Optional fields
-if (data.employee_id && data.employee_id.length > 5) {
-  query.employee_id = data.employee_id;
-}
-
-if (data.from_date && data.to_date) {
-  // Ensure both dates are valid
-  const fromDate = new Date(data.from_date);
-  const toDate = new Date(data.to_date);
-
-  query.createdAt = { $gte: fromDate, $lte: toDate };
-}
-if (data.leave_status && data.leave_status.length > 0 ){
-  if (roleName === 'manager') {
-    query["approved_by.manager.leave_status"] =data.leave_status;
-} else if (roleName === 'team incharge') {
-    query["approved_by.team_incharge.leave_status"] =data.leave_status;
-} else {
-    return res.status(403).send("Access denied: Invalid role");
-}
-}
-console.log(query);
-
-  const leaveApplications = await mongoFunctions.lazy_loading(
-      "LEAVE",            
-      query,              
-      { __v: 0 },         
-      { _id: -1 },        
-      { limit: 40 },      
-      { skip: data.skip } 
-  );
-
-  return res.status(200).send(leaveApplications);
 });
+
+
+
 
   module.exports =router;
