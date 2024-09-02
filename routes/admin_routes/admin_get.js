@@ -190,7 +190,7 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
     const query = {
       organisation_id: req.employee.organisation_id,
       employee_id: { $ne: req.employee.employee_id },
-      "approved_by.team_incharge.leave_status": status
+      // "approved_by.team_incharge.leave_status": status
     };
 
     // Role-based access control
@@ -202,8 +202,11 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
       // No additional conditions for 'director'
     } else if (roleName === 'manager') {
       query.reporting_manager = req.employee.email;
+      query["approved_by.manager.leave_status"] = status;
     } else if (roleName === 'team incharge') {
+      query.department_id=req.employee.department_id;
       // Optionally add conditions specific to 'team incharge'
+      query["approved_by.team_incharge.leave_status"] = status;
     } else {
       return res.status(403).send("Access denied: Invalid role");
     }
