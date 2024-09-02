@@ -449,9 +449,14 @@ router.post("/apply_leave",Auth,async(req,res) => {
   const over_lapping_leaves = await mongoFunctions.find("LEAVE", {
     organisation_id: find_emp.organisation_id,
     employee_id: find_emp.employee_id,
-    from_date: { $lte: new Date(data.from_date) },
-    to_date: { $gte: new Date(data.to_date )},
+    // from_date: { $gte: new Date(data.from_date) },
+    // to_date: { $lte: new Date(data.to_date )},
+    from_date: { $lte: data.to_date},  
+    to_date: { $gte:data.from_date },
   });
+  console.log(new Date(data.from_date));
+
+  console.log(over_lapping_leaves);
 
   if (over_lapping_leaves.length > 0)
     return res

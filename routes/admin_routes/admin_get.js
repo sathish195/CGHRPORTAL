@@ -147,7 +147,7 @@ router.post(
 });
 router.post("/all_leave_applications", Auth, async (req, res) => {
   const data = req.body;
-  const { error } = validations.skip(data);
+  const { error } = validations.get_all_leave_applications(data);
 
   if (error) {
       return res.status(400).send(error.details[0].message);
@@ -171,6 +171,23 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
   } else {
       return res.status(403).send("Access denied: Invalid role");
   }
+  // Optional fields
+if (data.employee_id && data.employee_id.length > 5) {
+  query.employee_id = data.employee_id;
+}
+
+if (data.leave_status && data.leave_status.length > 4) {
+  query.leave_status = data.leave_status;
+}
+
+if (data.from_date && data.to_date) {
+  // Ensure both dates are valid
+  const fromDate = new Date(data.from_date);
+  const toDate = new Date(data.to_date);
+
+  query.createdAt = { $gte: fromDate, $lte: toDate };
+}
+console.log(query);
 
   const leaveApplications = await mongoFunctions.lazy_loading(
       "LEAVE",            

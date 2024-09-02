@@ -219,12 +219,30 @@ module.exports =router;
 
 router.post("/leave_applications",Auth, async(req, res) => {
   const data = req.body;
-  const { error } = validations.skip(data);
+  const { error } = validations.get_employee_leave_applications(data);
   if (error) return res.status(400).send(error.details[0].message);
-  let leaveApplications = await mongoFunctions.lazy_loading("LEAVE", {
+  let query={
     employee_id: req.employee.employee_id,
     organisation_id: req.employee.organisation_id
-  },
+  };
+    // Optional fields
+  if (data.leave_status && data.leave_status.length > 4) {
+    query.leave_status = data.leave_status;
+  }
+
+  if (data.year) {
+    const year = parseInt(data.year, 10);
+    if (!isNaN(year)) {
+        const startOfYear = new Date(year, 0, 1); // January 1st of the given year
+        const endOfYear = new Date(year + 1, 0, 0, 23, 59, 59, 999); // December 31st of the given year
+
+        query.createdAt = { $gte: startOfYear, $lte: endOfYear };
+    } else {
+        return res.status(400).send("Invalid year format.");
+    }
+}
+  console.log(query);
+  let leaveApplications = await mongoFunctions.lazy_loading("LEAVE", query,
   {
     __v:0
 

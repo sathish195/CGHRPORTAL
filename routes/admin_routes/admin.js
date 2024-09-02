@@ -572,11 +572,11 @@ router.post(
       return res.status(200).send('Task Updated Successfully');
     } else {
       // Check if task name already exists
-      const findTask = await mongoFunctions.find_one('TASKS', {
-        task_name: data.task_name.toLowerCase(),
-      });
+      // const findTask = await mongoFunctions.find_one('TASKS', {
+      //   task_name: data.task_name.toLowerCase(),
+      // });
   
-      if (findTask) return res.status(400).send('Task Name Already Exists');
+      // if (findTask) return res.status(400).send('Task Name Already Exists');
   
       const new_task_data = {
         organisation_id: req.employee.organisation_id,
@@ -714,6 +714,38 @@ router.post(
       console.log(overallStatus);
     
       updated_leave_data = await mongoFunctions.find_one_and_update("LEAVE",{"organisation_id":req.employee.organisation_id,"leave_application_id":data.leave_application_id},{$set:{"leave_status":overallStatus}});
+      if (updated_leave_data.leave_status === "Approved") {
+        const h = await mongoFunctions.find_one_and_update(
+          "EMPLOYEE",
+          {
+            organisation_id: req.employee.organisation_id,
+            employee_id: findId.employee_id,
+            "leaves.leave_id": findId.leave_type_id
+          },
+          {
+            $inc: { "leaves.$.remaining_leaves": -findId.days_taken }  
+          }
+        );
+        console.log(h);
+      }
+      
+      if (updated_leave_data.leave_status === "Rejected") {
+        const l = await mongoFunctions.find_one_and_update(
+          "LEAVE",
+          {
+            organisation_id: req.employee.organisation_id,
+            employee_id: findId.employee_id
+          },
+          {
+            $set: { lop_leaves: findId.days_taken }  // Set the LOP leaves
+          }
+        );
+        console.log(l);
+      }
+      
+      
+      
+
     
     return res.status(200).send(updated_leave_data);
 

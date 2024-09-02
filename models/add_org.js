@@ -16,7 +16,7 @@ const ORGANISATION_Schema = new mongoose.Schema(
       leaves: [{
         leave_id: { type: String, required: true },
         leave_name: { type: String },
-        total_leaves: { type: String }
+        total_leaves: { type: Number }
       }]
     }],
 
