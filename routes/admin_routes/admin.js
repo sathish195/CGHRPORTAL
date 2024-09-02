@@ -747,7 +747,7 @@ router.post(
       
 
     
-    return res.status(200).send(updated_leave_data);
+    return res.status(200).send("Leave Status Updated Successfully");
 
       
 
