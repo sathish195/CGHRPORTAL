@@ -461,6 +461,21 @@ router.post("/add_update_leave", Auth, async (req, res) => {
         }
 
         await redis.update_redis("ORGANISATIONS", updatedLeave);
+        // await mongoFunctions.update_many(
+        //     "EMPLOYEES",
+        //     {
+        //         organisation_id: org_data.organisation_id,
+        //         designation_id: data.designation_id,
+        //         "leaves.leave_id": data.leave_id
+        //     },
+        //     {
+        //         $set: {
+        //             "leaves.$.leave_name": data.leave_name,
+        //             "leaves.$.total_leaves": data.total_leaves,
+        //             "remaining_leaves": +data.total_leaves,
+        //         }
+        //     }
+        // );
         return res.status(200).send({
             success: "Leave updated successfully.",
             data: updatedLeave
@@ -502,6 +517,18 @@ router.post("/add_update_leave", Auth, async (req, res) => {
         if (!updatedOrg) {
             return res.status(404).send("Failed to add new leave.");
         }
+        // await mongoFunctions.update_many(
+        //     "EMPLOYEES",
+        //     {
+        //         organisation_id: org_data.organisation_id,
+        //         designation_id: data.designation_id
+        //     },
+        //     {
+        //         $push: {
+        //             "leaves": newLeave
+        //         }
+        //     }
+        // );
 
         await redis.update_redis("ORGANISATIONS", updatedOrg);
         return res.status(200).send({

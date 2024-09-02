@@ -33,33 +33,64 @@ router.post(
     })
   )
   //-----------------get emp by lazy loading--------
-  .post(
+  router.post(
     "/get_employee_list",
-    Auth,(async (req, res) => {
-      const emp = req.employee;
-      const LIMIT = 50;
-      let data = req.body;
-      var { error } = validations.skip(data);
-      if (error) return res.status(400).send(error.details[0].message);
+    Auth,
+    async (req, res) => {
+        const emp = req.employee;
+        const LIMIT = 50;
+        const data = req.body;
+        const { error } = validations.skip(data);
 
-      if (emp.role_name.toLowerCase() !== "director" && emp.role_name.toLowerCase() !== "manager" ) return res.status(400).send("Not Admin");
-      // org=await mongoFunctions.find_one("ORGANISATIONS", {
-      //   email: req.employee.email,
-      // });
-      // if (!org)
-      //   return res.status(400).send("Invalid Organisation..!");
-      // }
-      let employees = await mongoFunctions.lazy_loading(
-        "EMPLOYEE",
-        { organisation_id: emp.organisation_id },
-        { two_fa_key: 0, fcm_token: 0, browserid: 0, others: 0 },
-        { _id: -1 },
-        LIMIT,
-        data.skip
-      );
-      return res.status(200).send({employees});
-    })
-  )
+        if (error) return res.status(400).send(error.details[0].message);
+
+        if (emp.role_name.toLowerCase() === "director" || emp.role_name.toLowerCase() === "manager") {
+            // Logic for director or manager
+            let employees = await mongoFunctions.lazy_loading(
+                "EMPLOYEE",
+                { organisation_id: emp.organisation_id },
+                { two_fa_key: 0, fcm_token: 0, browserid: 0, others: 0 },
+                { _id: -1 },
+                LIMIT,
+                data.skip
+            );
+            return res.status(200).send({ employees });
+        } else if (emp.role_name.toLowerCase() === "team incharge") {
+            // Logic for team incharge
+            const find_employees = await mongoFunctions.aggregate(
+                "EMPLOYEE",
+                [
+                    {
+                        $match: {
+                            organisation_id: emp.organisation_id,
+                            employee_id: { $ne: emp.employee_id },
+                            "work_info.department_id": emp.department_id,
+                        }
+                    },
+                    {
+                        $project: {
+                            employee_id: 1,
+                            "basic_info.first_name": 1,
+                            "basic_info.last_name": 1,
+                            "work_info.department_name": 1,
+                            "work_info.department_id": 1,
+                            _id: 0 // Exclude _id field
+                        }
+                    }
+                ]
+            );
+
+            if (!find_employees || find_employees.length === 0) {
+                return res.status(400).send("No Employees Found in the Given Department");
+            }
+
+            return res.status(200).send(find_employees);
+        } else {
+            return res.status(403).send("Forbidden: Not Administrator");
+        }
+    }
+);
+
   router.post("/get_project_by_id",Auth, async (req, res)=>{
     data=req.body;
     var { error } =validations.get_project_by_id(data);
@@ -166,8 +197,10 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
   if (roleName === 'director') {
   } else if (roleName === 'manager') {
       query.reporting_manager = req.employee.email;
+      query["approved_by.manager.leave_status"] ="Pending";
   } else if (roleName === 'team incharge') {
       query.department_id = req.employee.department_id;
+      query["approved_by.team_incharge.leave_status"] ="Pending";
   } else {
       return res.status(403).send("Access denied: Invalid role");
   }
@@ -176,16 +209,21 @@ if (data.employee_id && data.employee_id.length > 5) {
   query.employee_id = data.employee_id;
 }
 
-if (data.leave_status && data.leave_status.length > 4) {
-  query.leave_status = data.leave_status;
-}
-
 if (data.from_date && data.to_date) {
   // Ensure both dates are valid
   const fromDate = new Date(data.from_date);
   const toDate = new Date(data.to_date);
 
   query.createdAt = { $gte: fromDate, $lte: toDate };
+}
+if (data.leave_status && data.leave_status.length > 0 ){
+  if (roleName === 'manager') {
+    query["approved_by.manager.leave_status"] =data.leave_status;
+} else if (roleName === 'team incharge') {
+    query["approved_by.team_incharge.leave_status"] =data.leave_status;
+} else {
+    return res.status(403).send("Access denied: Invalid role");
+}
 }
 console.log(query);
 
