@@ -226,7 +226,7 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
       }
 
       // Ensure toDate is inclusive of the end of the day
-      // toDate.setUTCHours(23, 59, 59, 999);
+      toDate.setUTCHours(23, 59, 59, 999);
 
       query.createdAt = {
         $gte: fromDate,
@@ -239,6 +239,10 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
         query["approved_by.manager.leave_status"] = data.leave_status;
       } else if (roleName === 'team incharge') {
         query["approved_by.team_incharge.leave_status"] = data.leave_status;
+      }
+      else{
+        query.leave_status = data.leave_status;
+
       }
     }
 
