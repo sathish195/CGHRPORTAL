@@ -370,127 +370,138 @@ router.post(
     const { error } = validations.add_remove_team(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // Ensure project_id is provided
-    // if (!data.project_id) {
-    //     return res.status(400).send('Project ID is required');
-    // }
-
-    // Check user role based on task_id or project_id
+    if (!data.project_id) {
+        return res.status(400).send('Project ID is required');
+    }
     const userRole = req.employee.role_name.toLowerCase();
 
-    // Check if task_id is provided
     if (data.task_id) {
-      if (data.task_id&& data.task_id.length === 0) {
-          // If task_id is empty, only directors and managers can modify project team
-          if (userRole !== 'director' && userRole !== 'manager') {
-              return res.status(403).send('Access denied: Not authorized');
-          }
-      } else if (data.task_id&& data.task_id.length > 9) {
-          // If task_id is provided and length > 9, only team incharges can modify task team
-          if (userRole !== 'team incharge' && userRole !== 'manager') {
-              return res.status(403).send('Access denied: Not authorized');
-          }
-      } else {
-          return res.status(400).send('Invalid task_id length');
-      }
-  } else {
-      // If no task_id is provided, ensure team incharges are denied access
-      if (userRole === 'team incharge') {
-          return res.status(403).send('Access denied: Not authorized');
-      }
-  }
-
-    // Find the employee
-    const employee = await mongoFunctions.find_one('EMPLOYEE', { employee_id: data.employee_id });
-    if (!employee) return res.status(400).send('Employee not found');
+        if (data.task_id.length === 0) {
+            // If task_id is empty, only directors and managers can modify project team
+            if (userRole !== 'director' && userRole !== 'manager') {
+                return res.status(403).send('Access denied: Not authorized');
+            }
+        } else if (data.task_id.length > 9) {
+            // If task_id is provided and length > 9, only team incharges can modify task team
+            if (userRole !== 'team incharge' && userRole !== 'manager') {
+                return res.status(403).send('Access denied: Not authorized');
+            }
+        } else {
+            return res.status(400).send('Invalid task_id length');
+        }
+    } else {
+        if (userRole === 'team incharge') {
+            return res.status(403).send('Access denied: Not authorized');
+        }
+    }
 
     // Find the project
     const project = await mongoFunctions.find_one('PROJECTS', { project_id: data.project_id });
     if (!project) return res.status(400).send('Project not found');
 
     // Check if task_id is provided and belongs to the project
-    const task = await mongoFunctions.find_one('TASKS', { task_id: data.task_id, project_id: data.project_id });
-    if (data.task_id&&data.task_id.length>9) {
-        // const task = await mongoFunctions.find_one('TASKS', { task_id: data.task_id, project_id: data.project_id });
+    if (data.task_id && data.task_id.length > 9) {
+        const task = await mongoFunctions.find_one('TASKS', { task_id: data.task_id, project_id: data.project_id });
         if (!task) return res.status(400).send('Task does not belong to the project');
     }
 
+    const employeeIds = Array.isArray(data.employee_id) ? data.employee_id : [data.employee_id];
+    console.log(employeeIds);
 
-    // Prepare the new team member and assign track objects
-    const new_team_member = {
-        employee_id: data.employee_id,
-        employee_name: `${employee.basic_info.first_name} ${employee.basic_info.last_name}`,
-    };
-
-    const assign_track = {
-        assigned_by: {
-            employee_id: req.employee.employee_id,
-            employee_email: req.employee.email,
-            date_time: new Date(),
-        },
-        assigned_to: {
-            employee_id: data.employee_id,
-            employee_name: `${employee.basic_info.first_name} ${employee.basic_info.last_name}`,
-            date_time: new Date(),
-        },
-    };
-   
-    
     if (data.action.toLowerCase() === 'add') {
-        if (data.task_id&&data.task_id.length>9) {
-            // Add team member to task
-            // if (task && task.length>0){
-            const isEmployeeInTeam = task.team.some(member => member.employee_id === data.employee_id);
-            if (isEmployeeInTeam) {
-              return res.status(400).send('Employee is already added to the task team');
-            }
-            // };
-           a=await mongoFunctions.find_one_and_update(
-                'TASKS',
-                { project_id: data.project_id, task_id: data.task_id },
-                { $push: { team: new_team_member, assign_track: assign_track } }
-            );
-            const s = await stats.add_stats(data.employee_id, req.employee.organisation_id, a.status);
-            console.log(s);
+        for (const employeeId of employeeIds) {
+          const employee=await mongoFunctions.find_one('EMPLOYEE', { employee_id: employeeId });
+          if (!employee) return res.status(400).send(`Employee with ID ${employeeId} not found`);
+            if (data.task_id && data.task_id.length > 9) {
+                // Add team member to task
+                const task = await mongoFunctions.find_one('TASKS', { project_id: data.project_id, task_id: data.task_id });
+                if (task.team.includes(employeeId)) {
+                    return res.status(400).send(`Employee ${employeeId} is already added to the task team`);
+                }
+                
 
-            return res.status(200).send('Team member added to task successfully');
-        } else {
-            // Add team member to project
-            const isEmployeeInProject = project.team.some(member => member.employee_id === data.employee_id);
-            if (isEmployeeInProject) {
-              return res.status(400).send('Employee is already added to the project team');
+                const newAssignTrack = {
+                    assigned_by: {
+                        employee_id: req.employee.employee_id,
+                        employee_email: req.employee.email,
+                        date_time: new Date(),
+                    },
+                    assigned_to: {
+                        employee_id: employeeId,
+                        employee_name:employee.basic_info.first_name + ' '+employee.basic_info.last_name,
+                        date_time: new Date(),
+                    },
+                };
+
+                await mongoFunctions.find_one_and_update(
+                    'TASKS',
+                    { project_id: data.project_id, task_id: data.task_id },
+                    { 
+                        $push: { 
+                            team: employeeId,
+                            assign_track: newAssignTrack 
+                        }
+                    }
+                );
+            } else {
+                // Add team member to project
+                if (project.team.includes(employeeId)) {
+                    return res.status(400).send(`Employee ${employeeId} is already added to the project team`);
+                }
+
+                const newAssignTrack = {
+                    assigned_by: {
+                        employee_id: req.employee.employee_id,
+                        employee_email: req.employee.email,
+                        date_time: new Date(),
+                    },
+                    assigned_to: {
+                        employee_id: employeeId,
+                        date_time: new Date(),
+                    },
+                };
+
+                await mongoFunctions.find_one_and_update(
+                    'PROJECTS',
+                    { project_id: data.project_id },
+                    { 
+                        $push: { 
+                            team: employeeId,
+                            assign_track: newAssignTrack 
+                        }
+                    }
+                );
             }
-            await mongoFunctions.find_one_and_update(
-                'PROJECTS',
-                { project_id: data.project_id },
-                { $push: { team: new_team_member, assign_track: assign_track } }
-            );
-            return res.status(200).send('Team member added to project successfully');
         }
+
+        return res.status(200).send('Team added successfully');
     } else if (data.action.toLowerCase() === 'remove') {
-        if (data.task_id&&data.task_id.length>9) {
-            // Remove team member from task
-            await mongoFunctions.find_one_and_update(
-                'TASKS',
-                { project_id: data.project_id, task_id: data.task_id },
-                { $pull: { team: { employee_id: data.employee_id } } }
-            );
-            return res.status(200).send('Team member removed from task successfully');
-        } else {
-            // Remove team member from project
-            await mongoFunctions.find_one_and_update(
-                'PROJECTS',
-                { project_id: data.project_id },
-                { $pull: { team: { employee_id: data.employee_id } } }
-            );
-            return res.status(200).send('Team member removed from project successfully');
+        for (const employeeId of employeeIds) {
+            if (data.task_id && data.task_id.length > 9) {
+                // Remove team member from task
+                await mongoFunctions.find_one_and_update(
+                    'TASKS',
+                    { project_id: data.project_id, task_id: data.task_id },
+                    { $pull: { team: employeeId } }
+                );
+            } else {
+                // Remove team member from project
+                await mongoFunctions.find_one_and_update(
+                    'PROJECTS',
+                    { project_id: data.project_id },
+                    { $pull: { team: employeeId } }
+                );
+            }
         }
+
+        return res.status(200).send('Team member removed successfully');
     } else {
         return res.status(400).send('Invalid action');
     }
 });
+
   
-  module.exports=router;
+module.exports=router;
 
 
   router.post('/add_update_task',Auth, async (req, res) => {

@@ -307,7 +307,9 @@ router.post(
             { employee_id: { $ne: data.employee_id } }
         ]
     });
+    
     if (existingEmployee) {
+      console.log("not found employee");
         if (existingEmployee.contact_details.personal_email_address === data.personal_email_address) {
             return res.status(400).send("Personal email address already exists for another employee.");
         }
