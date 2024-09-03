@@ -187,7 +187,7 @@ function add_employee_by_admin(data){
         expertise: Joi.string().allow(null, "").optional(),
         gender: Joi.string().valid("male", "female", "others").required(),
         marital_status: Joi.string().valid("married", "unmarried").required(),
-        about_me: Joi.string().allow(null, "").optional(),
+        about_me: Joi.string().allow(null, "").optional().trim(),
         identity_info: Joi.object().min(2).required(),
         work_phone_number: Joi.string().allow(null, "").optional(),
         personal_mobile_number: Joi.string().required(),
@@ -204,10 +204,10 @@ function add_employee_by_admin(data){
         seating_location: Joi.string().allow(null, "").optional(),
         present_address: Joi.string().min(10).max(100).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').messages({
             'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
-        }).required(),
+        }).required().trim(),
         permanent_address: Joi.string().min(10).max(100).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').messages({
             'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
-        }).required(),
+        }).required().trim(),
         work_experience: Joi.array().items(work_experience_obj).required(),
         educational_details: Joi.array()
           .items(educational_details_obj)
