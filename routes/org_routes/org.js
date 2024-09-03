@@ -133,6 +133,19 @@ router.post('/add_update_department', Auth, async (req, res) => {
                     new: true,
                 }
             );
+            employee_data_up = await mongoFunctions.update_many(
+                "EMPLOYEE",
+                {
+                    organisation_id: org_data.organisation_id,
+                    "work_info.department_id": data.department_id,
+                },
+                {
+                    $set: {
+                        "work_info.department_name": data.department_name.toLowerCase(),
+                    },
+                },
+            );
+
         } else {
             let new_department_data = {
                 department_id: functions.get_random_string("D", 10, true),
@@ -221,6 +234,19 @@ router.post('/add_update_designation', Auth, async (req, res) => {
                     new: true,
                 }
             );
+            employee_data_up = await mongoFunctions.update_many(
+                "EMPLOYEE",
+                {
+                    organisation_id: org_data.organisation_id,
+                    "work_info.designation_id": data.designation_id,
+                },
+                {
+                    $set: {
+                        "work_info.designation_name": data.designation_name.toLowerCase(),
+                    },
+                },
+            );
+
         } else {
             // const processedLeaves = data.leaves.map(leave => ({
             //     ...leave,
@@ -308,6 +334,19 @@ router.post("/add_update_role", Auth, async (req, res) => {
                     new: true,
                 }
             );
+            employee_data_up = await mongoFunctions.update_many(
+                "EMPLOYEE",
+                {
+                    organisation_id: org_data.organisation_id,
+                    "work_info.role_id": data.role_id,
+                },
+                {
+                    $set: {
+                        "work_info.role_name": data.role_name.toLowerCase(),
+                    },
+                },
+            );
+
         } else {
             // Add new role
             let new_role_data = {
@@ -461,21 +500,41 @@ router.post("/add_update_leave", Auth, async (req, res) => {
         }
 
         await redis.update_redis("ORGANISATIONS", updatedLeave);
-        // await mongoFunctions.update_many(
-        //     "EMPLOYEES",
-        //     {
-        //         organisation_id: org_data.organisation_id,
-        //         designation_id: data.designation_id,
-        //         "leaves.leave_id": data.leave_id
-        //     },
-        //     {
-        //         $set: {
-        //             "leaves.$.leave_name": data.leave_name,
-        //             "leaves.$.total_leaves": data.total_leaves,
-        //             "remaining_leaves": +data.total_leaves,
-        //         }
-        //     }
-        // );
+        const leave_new = await mongoFunctions.find_one(
+            "EMPLOYEE",
+            {
+                organisation_id: org_data.organisation_id,
+                "work_info.designation_id": data.designation_id,
+                "leaves.leave_id": data.leave_id
+            },
+            {
+                "leaves.$": 1 
+            }
+        );
+        
+        const currentRemainingLeaves = leave_new.leaves[0].remaining_leaves;
+        const totalLeaves = data.total_leaves;
+        
+        // Calculate the new value
+        const newRemainingLeaves = totalLeaves-currentRemainingLeaves ;
+        console.log(newRemainingLeaves);
+        await mongoFunctions.update_many(
+            "EMPLOYEE",
+            {
+                organisation_id: org_data.organisation_id,
+                "work_info.designation_id": data.designation_id,
+                "leaves.leave_id": data.leave_id
+            },
+            {
+                $set: {
+                    "leaves.$.leave_name": data.leave_name,
+                    "leaves.$.total_leaves": data.total_leaves,
+                },
+                $inc: {
+                    "leaves.$.remaining_leaves": newRemainingLeaves // Increment the remaining_leaves
+                }
+            }
+        );
         return res.status(200).send({
             success: "Leave updated successfully.",
             data: updatedLeave
@@ -517,18 +576,23 @@ router.post("/add_update_leave", Auth, async (req, res) => {
         if (!updatedOrg) {
             return res.status(404).send("Failed to add new leave.");
         }
-        // await mongoFunctions.update_many(
-        //     "EMPLOYEES",
-        //     {
-        //         organisation_id: org_data.organisation_id,
-        //         designation_id: data.designation_id
-        //     },
-        //     {
-        //         $push: {
-        //             "leaves": newLeave
-        //         }
-        //     }
-        // );
+        await mongoFunctions.update_many(
+            "EMPLOYEE",
+            {
+                organisation_id: org_data.organisation_id,
+                "work_info.designation_id": data.designation_id
+            },
+            {
+                $push: {
+                    "leaves": {
+                        $each: [{
+                            ...newLeave,
+                            remaining_leaves: newLeave.total_leaves
+                        }]
+                    }
+                }
+            }
+        );
 
         await redis.update_redis("ORGANISATIONS", updatedOrg);
         return res.status(200).send({
