@@ -83,6 +83,16 @@ router.post(
               data.identity_info.aadhaar,
             // organisation_id: org_data.organisation_id,
           },
+          {
+            "identity_info.uan":
+              data.identity_info.uan,
+            // organisation_id: org_data.organisation_id,
+          },
+          {
+            "identity_info.passport":
+              data.identity_info.passport,
+            // organisation_id: org_data.organisation_id,
+          },
         ],
       });
       if (
@@ -93,6 +103,10 @@ router.post(
         return res.status(400).send("PAN Number Already Exists");
       if (find_adhar && find_adhar.identity_info.aadhaar === data.identity_info.aadhaar)
         return res.status(400).send("Aadhar Number Already Exists");
+      if (find_adhar && find_adhar.identity_info.uan === data.identity_info.uan)
+        return res.status(400).send("Uan Number Already Exists");
+      if (find_adhar && find_adhar.identity_info.passport === data.identity_info.passport)
+        return res.status(400).send("Passport Number Already Exists");
       const new_password="Emp@1234";
       let password_hash = await bcrypt.hash_password(new_password);
       let new_emp_data = {
