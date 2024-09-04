@@ -94,9 +94,9 @@ router.post(
             // organisation_id: org_data.organisation_id,
           },
           {
-            "contact_details.work_phone_number": data.contact_details.work_phone_number,
+            "contact_details.work_phone_number": data.work_phone_number,
           },
-          {"contact_details.personal_mobile_number": data.contact_details.personal_mobile_number,
+          {"contact_details.personal_mobile_number": data.personal_mobile_number,
           },
         ],
       });
@@ -112,9 +112,9 @@ router.post(
         return res.status(400).send("Uan Number Already Exists");
       if (find_adhar && find_adhar.identity_info.passport === data.identity_info.passport)
         return res.status(400).send("Passport Number Already Exists");
-      if (find_adhar && find_adhar.contact_details.work_phone_number === data.contact_details.work_phone_number)
+      if (find_adhar && find_adhar.contact_details.work_phone_number === data.work_phone_number)
         return res.status(400).send("Mobile Number Already Exists");
-      if (find_adhar && find_adhar.contact_details.personal_mobile_number === data.contact_details.personal_mobile_number)
+      if (find_adhar && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number)
         return res.status(400).send("Personal Mobile Number Already Exists");
       const new_password="Emp@1234";
       let password_hash = await bcrypt.hash_password(new_password);
