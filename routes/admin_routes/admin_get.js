@@ -203,6 +203,7 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
     } 
 
     if (roleName === 'director') {
+      query.leave_status = status;
       // No additional conditions for 'director'
     } else if (roleName === 'manager') {
       query.reporting_manager = req.employee.email;
