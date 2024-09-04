@@ -370,9 +370,9 @@ router.post(
     const { error } = validations.add_remove_team(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    if (!data.project_id) {
-        return res.status(400).send('Project ID is required');
-    }
+    // if (!data.project_id) {
+    //     return res.status(400).send('Project ID is required');
+    // }
     const userRole = req.employee.role_name.toLowerCase();
 
     if (data.task_id) {
@@ -667,6 +667,22 @@ module.exports=router;
       // leave_status: data.leave_status
     });
     if (!findId) return res.status(400).send('No Leave Application Found');
+    console.log(findId);
+    const findEmployee= await mongoFunctions.find_one('EMPLOYEE', {
+     employee_id: findId.employee_id,
+     "leaves.leave_id": findId.leave_type_id
+    });
+    console.log(findEmployee);
+    if (!findId) return res.status(400).send('No Employee Found for the given application');
+    const leaveRecord = findEmployee.leaves.find(leave => leave.leave_id === findId.leave_type_id);
+    if (!leaveRecord) {
+      return res.status(400).send('No leave record found for the given leave type');
+  }
+
+    if (leaveRecord&& leaveRecord.remaining_leaves <= 0) {
+      return res.status(400).send('Limit Exceeded: Employee Has No Remaining Leaves');
+    }
+    
     let approved_by=findId.approved_by;
     if (req.employee.role_name.toLowerCase()==="team incharge"){
       approved_by.team_incharge={
