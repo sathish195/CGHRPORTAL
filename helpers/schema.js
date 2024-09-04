@@ -134,7 +134,7 @@ function add_employee_by_admin(data){
         job_title: Joi.string().min(2).max(25).required(),
         from_date: Joi.date().required(),
         to_date: Joi.date().required(),
-        job_description: Joi.string().min(5).max(100).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').required().messages({
+        job_description: Joi.string().trim().min(5).max(100).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').required().messages({
             'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
         }),
         experience: Joi.number().positive().required(),
@@ -143,7 +143,7 @@ function add_employee_by_admin(data){
         institute_name: Joi.string().min(5).max(30).required(),
         degree: Joi.string().min(5).max(15).required(),
         specialization: Joi.string().min(2).max(15).required(),
-        year_of_completion: Joi.number().min(4).max(4).required(),
+        year_of_completion: Joi.number().min(4).max(5).required(),
       });
       const dependent_details_obj = Joi.object({
         name: Joi.string(),

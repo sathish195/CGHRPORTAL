@@ -100,8 +100,8 @@ router.post("/get_tasks",Auth, async (req, res)=>{
     const now = new Date();
     const start_day = new Date(now.setHours(0, 0, 0, 0));
     const end_day = new Date(now.setHours(23, 59, 59, 999));
-    findT=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,status: { $nin: [/^completed$/i, /^under_review$/i] },team: { $elemMatch: { employee_id:req.employee.employee_id }}
-    ,assign_track: { 
+    findT=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,status: { $nin: [/^completed$/i, /^under_review$/i] },team: req.employee.employee_id,
+    assign_track: { 
       $elemMatch: { 
         "assigned_to.employee_id": req.employee.employee_id,
         // "assigned_to.date_time": {
@@ -161,7 +161,7 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
     query = {
       $or: [
         { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
-        { team: { $elemMatch: { employee_id: req.employee.employee_id } } } // Tasks where employee is in the team array
+        { team:req.employee.employee_id   } // Tasks where employee is in the team array
       ]
     };
 
@@ -181,7 +181,8 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
 
   } else {
     // query.status = { $nin: [/^completed$/i, /^under_review$/i] };
-    query.team = { $elemMatch: { employee_id: req.employee.employee_id } };
+    query.team = req.employee.employee_id;
+    // { $elemMatch: { employee_id: req.employee.employee_id } };
 
     if (data.status) {
       query.status = data.status;
