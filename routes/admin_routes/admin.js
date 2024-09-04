@@ -25,7 +25,7 @@ router.post(
       );
       if (!org_data) return res.status(400).send("Access Denied..!");
       if (req.employee.role_name.toLowerCase() !== "director" && req.employee.role_name.toLowerCase() !== "manager"){
-        return res.status(400).send("Only Director Manager Can Add New Employee..!");
+        return res.status(400).send("Only Director,Manager Can Add New Employee..!");
       }
     
       let department_data = org_data.departments.find(
@@ -72,6 +72,27 @@ router.post(
       });
       if (find_email)
         return res.status(400).send("Personal Email Id Already Exists");
+      let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
+        $or: [
+          {
+            "identity_info.pan": data.identity_info.pan,
+            // organisation_id: org_data.organisation_id,
+          },
+          {
+            "identity_info.aadhar":
+              data.identity_info.aadhaar,
+            // organisation_id: org_data.organisation_id,
+          },
+        ],
+      });
+      if (
+        find_adhar &&
+        find_adhar.identity_info.pan ===
+          data.identity_info.pan
+      )
+        return res.status(400).send("PAN Number Already Exists");
+      if (find_adhar && find_adhar.identity_info.aadhaar === data.identity_info.aadhaar)
+        return res.status(400).send("Aadhar Number Already Exists");
       const new_password="Emp@1234";
       let password_hash = await bcrypt.hash_password(new_password);
       let new_emp_data = {
