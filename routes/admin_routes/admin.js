@@ -526,7 +526,8 @@ module.exports=router;
       const findId = await mongoFunctions.find_one('PROJECTS', {
         organisation_id: req.employee.organisation_id,
         project_id: data.project_id,
-        team: { $elemMatch: { employee_id: req.employee.employee_id } }
+        team: req.employee.employee_id,
+        // { $elemMatch: { employee_id: req.employee.employee_id } }
       });
 
     if (!findId) return res.status(400).send('Project ID does not exist');
