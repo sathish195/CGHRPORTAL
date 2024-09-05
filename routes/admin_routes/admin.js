@@ -459,8 +459,20 @@ router.post(
             if (data.task_id && data.task_id.length > 9) {
                 // Add team member to task
                 const task = await mongoFunctions.find_one('TASKS', { project_id: data.project_id, task_id: data.task_id });
-                if (task.team.includes(employeeId)) {
-                    return res.status(400).send(`Employee ${employeeId} is already added to the task team`);
+              //  if (task.team.some(member => member.employee_id === employeeId)) {
+              //       return res.status(400).send(`Employee ${employeeId} is already added to the task team`);
+              //   }
+            const existingEmployeeIds = employeeIds.filter(employeeId =>
+                task.team.some(member => member.employee_id === employeeId)
+            );
+
+            if (existingEmployeeIds.length > 0) {
+                return res.status(400).send(`Employees with IDs ${existingEmployeeIds.join(', ')} are already added to the task team.`);
+            }
+                const team={
+                  employee_id: employeeId,
+                  employee_name:employee.basic_info.first_name + ' '+employee.basic_info.last_name,
+                  date_time: new Date(),
                 }
                 
 
@@ -482,16 +494,23 @@ router.post(
                     { project_id: data.project_id, task_id: data.task_id },
                     { 
                         $push: { 
-                            team: employeeId,
+                            team: team,
                             assign_track: newAssignTrack 
                         }
                     }
                 );
             } else {
                 // Add team member to project
-                if (project.team.includes(employeeId)) {
-                    return res.status(400).send(`Employee ${employeeId} is already added to the project team`);
-                }
+                // if (project.team.some(member => member.employee_id === employeeId)) {
+                //     return res.status(400).send(`Employee ${employeeId} is already added to the project team`);
+                // }
+                const existingEmployeeIds = employeeIds.filter(employeeId =>
+                  project.team.some(member => member.employee_id === employeeId)
+              );
+  
+              if (existingEmployeeIds.length > 0) {
+                  return res.status(400).send(`Employees with IDs ${existingEmployeeIds.join(', ')} are already added to the project team.`);
+              }
 
                 const newAssignTrack = {
                     assigned_by: {
@@ -501,16 +520,22 @@ router.post(
                     },
                     assigned_to: {
                         employee_id: employeeId,
+                        employee_name:employee.basic_info.first_name + ' '+employee.basic_info.last_name,
                         date_time: new Date(),
                     },
                 };
+                const team={
+                  employee_id: employeeId,
+                  employee_name:employee.basic_info.first_name + ' '+employee.basic_info.last_name,
+                  date_time: new Date(),
+                }
 
                 await mongoFunctions.find_one_and_update(
                     'PROJECTS',
                     { project_id: data.project_id },
                     { 
                         $push: { 
-                            team: employeeId,
+                            team: team,
                             assign_track: newAssignTrack 
                         }
                     }
@@ -526,14 +551,14 @@ router.post(
                 await mongoFunctions.find_one_and_update(
                     'TASKS',
                     { project_id: data.project_id, task_id: data.task_id },
-                    { $pull: { team: employeeId } }
+                    { $pull: { team: { employee_id: employeeId } } }
                 );
             } else {
                 // Remove team member from project
                 await mongoFunctions.find_one_and_update(
                     'PROJECTS',
                     { project_id: data.project_id },
-                    { $pull: { team: employeeId } }
+                    { $pull: { team: { employee_id: employeeId } } }
                 );
             }
         }

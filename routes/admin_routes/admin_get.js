@@ -133,8 +133,8 @@ router.post(
         try {
             const projects = await mongoFunctions.find('PROJECTS', {
                 organisation_id: organisationId,
-                team: employeeId,
-                // { $elemMatch: { employee_id: employeeId }
+                team: { $elemMatch: { employee_id: employeeId }},
+                // 
                }
             );
             return res.status(200).send(projects);
@@ -149,7 +149,7 @@ router.post(
         {
             $match: {
                 organisation_id: organisationId,
-                team: employeeId,
+                team: { $elemMatch: { employee_id: employeeId }},
                 // { $elemMatch: { employee_id: employeeId }
                
             }
