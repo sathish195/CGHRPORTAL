@@ -307,8 +307,6 @@ async function update_stats(employee_id, organisation_id, prevStatus, currentSta
           { "prev.status": prevStatus },  // Filter for the previous status
           { "curr.status": currentStatus } // Filter for the current status
         ],
-        upsert: false,  // Do not create a new document if no match is found
-        returnDocument: "after"  // Return the updated document
       }
     );
 
