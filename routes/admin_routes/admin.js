@@ -595,7 +595,8 @@ module.exports=router;
       const findId = await mongoFunctions.find_one('PROJECTS', {
         organisation_id: req.employee.organisation_id,
         project_id: data.project_id,
-        team: req.employee.employee_id,
+        team: { $elemMatch: { employee_id: req.employee.employee_id } }
+        // req.employee.employee_id,
         // { $elemMatch: { employee_id: req.employee.employee_id } }
       });
 
