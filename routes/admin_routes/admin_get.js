@@ -18,7 +18,7 @@ router.post(
       var { error } = validations.employee_id(data);
       if (error) return res.status(400).send(error.details[0].message);
       const emp_find = req.employee;
-      if (emp_find.role_name.toLowerCase()=== "director") {
+      if (emp_find.role_name.toLowerCase()=== "director" || emp_find.role_name.toLowerCase()=== "manager" ) {
         let emp = await mongoFunctions.find_one(
           "EMPLOYEE",
           {
