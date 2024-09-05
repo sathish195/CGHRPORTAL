@@ -89,7 +89,7 @@ router.post('/reset_forgot_password',async(req,res) => {
         return res
             .status(400)
             .send("Employee Status Disabled! Please Contact Admin.");
-    let otp = await redis.redisGetSingle(  employee.employee_id);
+    let otp = await redis.redisGetSingle(employee.employee_id);
     if (!otp) return res.status(400).send("Otp Is Expired");
     if (Number(data.otp) !== Number(otp)) {
         return res.status(400).send("Invalid OTP");
