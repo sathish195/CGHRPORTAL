@@ -679,5 +679,42 @@ router.post("/get_teamHead_mail", Auth, async (req, res) => {
     const data = await mongoFunctions.find("EMPLOYEE", query, { _id: -1 }, projection);
     return res.status(200).send(data);
 });
+router.post("/get_team", Auth, async (req, res) => {
+    try {
+        const roleName = req.employee.role_name.toLowerCase();
+        const query = {
+            organisation_id: req.employee.organisation_id,
+            employee_id: { $ne: req.employee.employee_id }
+        };
+
+        if (roleName === 'director') {
+            query["work_info.role_name"] = { $regex: /^team incharge$/i }; 
+        } else if (roleName === 'manager' || roleName === 'team incharge') {
+            // No additional conditions for 'manager' or 'team incharge'
+        } else {
+            return res.status(403).send("Access denied: Invalid role");
+        }
+
+        const projection = {
+            employee_id: 1,
+            "basic_info.first_name": 1,
+            "basic_info.last_name": 1,
+            "basic_info.email": 1,
+            "work_info.role_name": 1,
+        };
+
+        const teamMembers = await mongoFunctions.find("EMPLOYEE", query,{ _id: -1 }, projection);
+        console.log(teamMembers);
+
+        if (!teamMembers || teamMembers.length === 0) {
+            return res.status(404).send("No team members found.");
+        }
+
+        res.status(200).json(teamMembers);
+    } catch (error) {
+        console.error("Error fetching team members:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
 
 module.exports = router;
