@@ -323,7 +323,7 @@ router.post(
           // organisation_id: org_data.organisation_id,
         },
         {
-          "identity_info.aadhar":
+          "identity_info.aadhaar":
             data.identity_info.aadhaar,
           // organisation_id: org_data.organisation_id,
           employee_id: { $ne: req.employee.employee_id }
