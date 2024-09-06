@@ -48,19 +48,19 @@ router.post('/add_update_org_details',Auth,async (req,res)=>{
         roles:[
             {
                 role_id: functions.get_random_string("R", 15, true),
-                role_name: "Team Member",
+                role_name: "team member",
             },
             {
                 role_id: functions.get_random_string("R", 15, true),
-                role_name: "Manager",
+                role_name: "manager",
             },
             {
                 role_id: functions.get_random_string("R", 15, true),
-                role_name: "Director",
+                role_name: "director",
             },
             {
                 role_id: functions.get_random_string("R", 15, true),
-                role_name: "Team Incharge",
+                role_name: "team incharge",
             },
         ]
     };
@@ -393,11 +393,11 @@ router.post("/universal" ,Auth,async(req, res) => {
         return res.status(200).send(dashborad);
     }
 
-    let org_data = await redis.redisGet(
-        "CRM_ORGANISATIONS",
-        org.organisation_id,
-        true
-    );
+    // let org_data = await redis.redisGet(
+    //     "CRM_ORGANISATIONS",
+    //     org.organisation_id,
+    //     true
+    // );
     let recent_hires = await stats.recent_hires(req.employee.organisation_id);
     const birthdays=await stats.employees_with_birthday_today(req.employee.organisation_id)
     console.log(birthdays);
@@ -405,9 +405,9 @@ router.post("/universal" ,Auth,async(req, res) => {
         let dashborad = {
             recent_hires: recent_hires,
             birthdays: birthdays,
-            organisation_details: org_data,
+            organisation_details: org,
           };
-        // await redis.update_redis("ORGANISATIONS",org);
+        await redis.update_redis("ORGANISATIONS",org);
         return res.status(200).send(dashborad);
         });
      
