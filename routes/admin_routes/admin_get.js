@@ -205,10 +205,12 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
     if (roleName === 'director') {
       query.leave_status = status;
       // No additional conditions for 'director'
-    } else if (roleName === 'manager') {
+    } else if (roleName === 'manager' && roleName === 'project_manager') {
       query.reporting_manager = req.employee.email;
       query["approved_by.manager.leave_status"] = status;
-    } else if (roleName === 'team incharge') {
+    }else if (roleName === 'manager' && req.employee.designation_name.toLowerCase() === 'hr manager') {
+      query.leave_status = status;
+    }else if (roleName === 'team incharge') {
       query.department_id=req.employee.department_id;
       // Optionally add conditions specific to 'team incharge'
       query["approved_by.team_incharge.leave_status"] = status;
@@ -269,6 +271,12 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
     return res.status(500).send("Internal server error");
   }
 });
+
+
+
+
+
+
 
 
 

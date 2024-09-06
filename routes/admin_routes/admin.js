@@ -221,9 +221,9 @@ router.post(
             {"basic_info.email": data.email,
               employee_id: { $ne: data.employee_id}
             },
-            // { employee_id: { $ne: data.employee_id }, 
-            // // organisation_id: org_data.organisation_id
-            // }
+            { employee_id: { $ne: data.employee_id }, 
+            // organisation_id: org_data.organisation_id
+            }
         ]
     });
     if (existingEmployee) {
@@ -260,7 +260,7 @@ router.post(
             // organisation_id: org_data.organisation_id,
           },
           {
-            "identity_info.aadhar":
+            "identity_info.aadhaar":
               data.identity_info.aadhaar,
               employee_id: { $ne: data.employee_id },
             // organisation_id: org_data.organisation_id,
