@@ -901,8 +901,131 @@ module.exports=router;
     
     return res.status(200).send("Leave Status Updated Successfully");
 
-      
+  
 
   })
+  // router.post("/update_leave_status",Auth,async(req, res) => {
+  //   const data = req.body;
+  //   const { error } = validations.update_leave(data);
+  //   if (error) return res.status(400).send(error.details[0].message);
+  //   const userRole = req.employee.role_name.toLowerCase();
+  //   if (userRole=== 'team member' || userRole==='team incharge' || userRole==="manager") {
+  //     return res.status(400).send('Access denied: Not Director');
+  //   };
+  //   const findId = await mongoFunctions.find_one('LEAVE', {
+  //     leave_application_id: data.leave_application_id,
+  //     // leave_status: data.leave_status
+  //   });
+  //   if (!findId) return res.status(400).send('No Leave Application Found');
+  //   console.log(findId);
+  //   const findEmployee= await mongoFunctions.find_one('EMPLOYEE', {
+  //    employee_id: findId.employee_id,
+  //    "leaves.leave_id": findId.leave_type_id
+  //   });
+  //   console.log(findEmployee);
+  //   if (!findId) return res.status(400).send('No Employee Found for the given application');
+  //   const leaveRecord = findEmployee.leaves.find(leave => leave.leave_id === findId.leave_type_id);
+  //   if (!leaveRecord) {
+  //     return res.status(400).send('No leave record found for the given leave type');
+  // }
+
+  //   if (leaveRecord&& leaveRecord.remaining_leaves <= 0) {
+  //     return res.status(400).send('Limit Exceeded: Employee Has No Remaining Leaves');
+  //   }
+    
+  //   let approved_by=findId.approved_by;
+  //   if (req.employee.role_name.toLowerCase()==="team incharge"){
+  //     approved_by.team_incharge={
+  //       employee_id: req.employee.employee_id,
+  //       email: req.employee.email,
+  //       approvedAt: new Date(),
+  //       leave_status: data.leave_status,
+  //       }
+  //   }
+  //   if (req.employee.role_name.toLowerCase()==="manager"&& req.employee.designation_name.toLowerCase()!=="hr manager"){
+  //     approved_by.manager={
+  //       employee_id: req.employee.employee_id,
+  //      email:req.employee.email,
+  //       approvedAt: new Date(),
+  //       leave_status: data.leave_status,
+  //       }
+  //   }
+  //   if (req.employee.role_name.toLowerCase()==="manager" && req.employee.designation_name.toLowerCase()==="hr manager"){
+  //     approved_by.hr={
+  //       employee_id: req.employee.employee_id,
+  //       email:req.employee.email,
+  //       approvedAt: new Date(),
+  //       leave_status: data.leave_status,
+  //       }
+  //   }
+    
+  //   const leave_data_up = await mongoFunctions.find_one_and_update(
+  //     'LEAVE',
+  //     {
+  //       leave_application_id: data.leave_application_id,
+  //     },
+  //     {
+  //       $set: {
+  //         "approved_by":approved_by
+  //     }
+  //     });
+  //     let overallStatus="Pending"
+  //     const statuses = [
+  //       leave_data_up.approved_by.manager?.leave_status,
+  //       leave_data_up.approved_by.team_incharge?.leave_status,
+  //       leave_data_up.approved_by.hr?.leave_status
+  //     ];
+    
+  //     // Determine the overall status based on the statuses array
+  //     for (const status of statuses) {
+  //       if (status === 'Rejected') {
+  //         overallStatus = 'Rejected';
+  //         break; 
+  //       } else if (status === 'Pending') {
+  //         overallStatus = 'Pending';
+  //       } else if (status === 'Approved') {
+          
+  //           overallStatus = 'Approved'; 
+  //       }
+  //     };
+  //     console.log(overallStatus);
+    
+  //     updated_leave_data = await mongoFunctions.find_one_and_update("LEAVE",{"organisation_id":req.employee.organisation_id,"leave_application_id":data.leave_application_id},{$set:{"leave_status":overallStatus}});
+  //     if (updated_leave_data.leave_status === "Approved") {
+  //       const h = await mongoFunctions.find_one_and_update(
+  //         "EMPLOYEE",
+  //         {
+  //           organisation_id: req.employee.organisation_id,
+  //           employee_id: findId.employee_id,
+  //           "leaves.leave_id": findId.leave_type_id
+  //         },
+  //         {
+  //           $inc: { "leaves.$.remaining_leaves": -findId.days_taken }  
+  //         }
+  //       );
+  //       console.log(h);
+  //     }
+      
+  //     if (updated_leave_data.leave_status === "Rejected") {
+  //       const l = await mongoFunctions.find_one_and_update(
+  //         "LEAVE",
+  //         {
+  //           organisation_id: req.employee.organisation_id,
+  //           employee_id: findId.employee_id
+  //         },
+  //         {
+  //           $set: { lop_leaves: findId.days_taken }  // Set the LOP leaves
+  //         }
+  //       );
+  //       console.log(l);
+  //     }
+      
+      
+      
+
+    
+  //   return res.status(200).send("Leave Status Updated Successfully");
+
+  //   })
 
 
