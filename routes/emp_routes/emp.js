@@ -314,6 +314,62 @@ router.post(
             return res.status(400).send("Personal email address already exists for another employee.");
         }
     }
+    let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
+      $or: [
+        {
+          "identity_info.pan": data.identity_info.pan,
+          employee_id: { $ne: req.employee.employee_id }
+
+          // organisation_id: org_data.organisation_id,
+        },
+        {
+          "identity_info.aadhar":
+            data.identity_info.aadhaar,
+          // organisation_id: org_data.organisation_id,
+          employee_id: { $ne: req.employee.employee_id }
+
+        },
+        {
+          "identity_info.uan":
+            data.identity_info.uan,
+          // organisation_id: org_data.organisation_id,
+          employee_id: { $ne: req.employee.employee_id }
+
+        },
+        {
+          "identity_info.passport":
+            data.identity_info.passport,
+            employee_id: { $ne: req.employee.employee_id }
+
+          // organisation_id: org_data.organisation_id,
+        },
+        {
+          "contact_details.work_phone_number": data.work_phone_number,
+          employee_id: { $ne: req.employee.employee_id }
+
+        },
+        {"contact_details.personal_mobile_number": data.personal_mobile_number,
+          employee_id: { $ne: req.employee.employee_id }
+
+        },
+      ],
+    });
+    if (
+      find_adhar &&
+      find_adhar.identity_info.pan ===
+        data.identity_info.pan
+    )
+      return res.status(400).send("PAN Number Already Exists");
+    if (find_adhar && find_adhar.identity_info.aadhaar === data.identity_info.aadhaar)
+      return res.status(400).send("Aadhar Number Already Exists");
+    if (find_adhar && find_adhar.identity_info.uan === data.identity_info.uan)
+      return res.status(400).send("Uan Number Already Exists");
+    if (find_adhar && find_adhar.identity_info.passport === data.identity_info.passport)
+      return res.status(400).send("Passport Number Already Exists");
+    if (find_adhar && find_adhar.contact_details.work_phone_number === data.work_phone_number)
+      return res.status(400).send("Mobile Number Already Exists");
+    if (find_adhar && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number)
+      return res.status(400).send("Personal Mobile Number Already Exists");
       let edit_emp_data = {
         "basic_info.nick_name": data.nick_name,
         "personal_details.expertise": data.expertise,

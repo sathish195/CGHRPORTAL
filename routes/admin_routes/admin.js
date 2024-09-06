@@ -214,12 +214,16 @@ router.post(
             return res.status(400).send("Employee Id Doesn't exists");
        }
     let existingEmployee = await mongoFunctions.find_one("EMPLOYEE", {
-        $and: [
-            { "contact_details.personal_email_address": data.personal_email_address },
-            {"basic_info.email": data.email},
-            { employee_id: { $ne: data.employee_id }, 
-            // organisation_id: org_data.organisation_id
-            }
+        $or: [
+            { "contact_details.personal_email_address": data.personal_email_address,
+              employee_id: { $ne: data.employee_id}
+             },
+            {"basic_info.email": data.email,
+              employee_id: { $ne: data.employee_id}
+            },
+            // { employee_id: { $ne: data.employee_id }, 
+            // // organisation_id: org_data.organisation_id
+            // }
         ]
     });
     if (existingEmployee) {
@@ -248,6 +252,56 @@ router.post(
       );
       if (!designation_data)
         return res.status(400).send("Invalid Designation id..!");
+      let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
+        $or: [
+          {
+            "identity_info.pan": data.identity_info.pan,
+            employee_id: { $ne: data.employee_id },
+            // organisation_id: org_data.organisation_id,
+          },
+          {
+            "identity_info.aadhar":
+              data.identity_info.aadhaar,
+              employee_id: { $ne: data.employee_id },
+            // organisation_id: org_data.organisation_id,
+          },
+          {
+            "identity_info.uan":
+              data.identity_info.uan,
+              employee_id: { $ne: data.employee_id }
+            // organisation_id: org_data.organisation_id,
+          },
+          {
+            "identity_info.passport":
+              data.identity_info.passport,
+              employee_id: { $ne: data.employee_id }
+            // organisation_id: org_data.organisation_id,
+          },
+          {
+            "contact_details.work_phone_number": data.work_phone_number,
+            employee_id: { $ne: data.employee_id }
+          },
+          {"contact_details.personal_mobile_number": data.personal_mobile_number,
+            employee_id: { $ne: data.employee_id }
+          },
+        ],
+      });
+      if (
+        find_adhar &&
+        find_adhar.identity_info.pan ===
+          data.identity_info.pan
+      )
+        return res.status(400).send("PAN Number Already Exists");
+      if (find_adhar && find_adhar.identity_info.aadhaar === data.identity_info.aadhaar)
+        return res.status(400).send("Aadhar Number Already Exists");
+      if (find_adhar && find_adhar.identity_info.uan === data.identity_info.uan)
+        return res.status(400).send("Uan Number Already Exists");
+      if (find_adhar && find_adhar.identity_info.passport === data.identity_info.passport)
+        return res.status(400).send("Passport Number Already Exists");
+      if (find_adhar && find_adhar.contact_details.work_phone_number === data.work_phone_number)
+        return res.status(400).send("Mobile Number Already Exists");
+      if (find_adhar && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number)
+        return res.status(400).send("Personal Mobile Number Already Exists");
 
 
       let new_emp_data = {

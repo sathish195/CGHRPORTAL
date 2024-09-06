@@ -393,11 +393,11 @@ router.post("/universal" ,Auth,async(req, res) => {
         return res.status(200).send(dashborad);
     }
 
-    let org_data = await redis.redisGet(
-        "CRM_ORGANISATIONS",
-        org.organisation_id,
-        true
-    );
+    // let org_data = await redis.redisGet(
+    //     "CRM_ORGANISATIONS",
+    //     org.organisation_id,
+    //     true
+    // );
     let recent_hires = await stats.recent_hires(req.employee.organisation_id);
     const birthdays=await stats.employees_with_birthday_today(req.employee.organisation_id)
     console.log(birthdays);
@@ -405,9 +405,9 @@ router.post("/universal" ,Auth,async(req, res) => {
         let dashborad = {
             recent_hires: recent_hires,
             birthdays: birthdays,
-            organisation_details: org_data,
+            organisation_details: org,
           };
-        // await redis.update_redis("ORGANISATIONS",org_data);
+        await redis.update_redis("ORGANISATIONS",org);
         return res.status(200).send(dashborad);
         });
      
