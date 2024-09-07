@@ -47,7 +47,6 @@ router.post(
       // Check if the director has added at least one employee with the role "Manager"
       let managerAddedByDirector = await mongoFunctions.find_one("EMPLOYEE", {
         "work_info.reporting_manager": req.employee.email,
-        "work_info.admin_type":"2"
       });
 
       // Ensure the reporting manager is the director and that the director has added at least one manager
