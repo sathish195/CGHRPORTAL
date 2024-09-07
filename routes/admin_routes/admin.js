@@ -954,9 +954,7 @@ module.exports=router;
       
 
     
-    return res.status(200).send("Leave Status Updated Successfully");
-
-  
+    return res.status(200).send("Leave Status Updated Successfully")
 
   })
   router.post("/update_leave_status",Auth,async(req, res) => {
@@ -964,7 +962,7 @@ module.exports=router;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
     const userRole = req.employee.role_name.toLowerCase();
-    if (userRole=== 'team member' || userRole==='team incharge' || userRole==="manager") {
+    if (req.employee.admin_type=== '4' || userRole==='team incharge' || userRole==="manager") {
       return res.status(400).send('Access denied: Not Director');
     };
     const findId = await mongoFunctions.find_one('LEAVE', {
