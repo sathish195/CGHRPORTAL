@@ -8,6 +8,7 @@ const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const functions=require('../../helpers/functions');
 const stats=require('../../helpers/stats');
+const { mongo } = require('mongoose');
 
 
 
@@ -406,13 +407,31 @@ router.post("/universal" ,Auth,async(req, res) => {
         true
     );
     let recent_hires = await stats.recent_hires(req.employee.organisation_id);
-    const birthdays=await stats.employees_with_birthday_today(req.employee.organisation_id)
+    const birthdays=await stats.employees_with_birthday_today(req.employee.organisation_id);
+    const projection = {
+        employee_id: 1,
+        "basic_info.first_name": 1,
+        "basic_info.last_name": 1,
+        "basic_info.email": 1,
+        "work_info.role_name": 1,
+    };
+
+    let reporting_manager = await mongoFunctions.find(
+        "EMPLOYEE",
+        {
+            organisation_id: org_data.organisation_id,
+            "work_info.admin_type": { $in: ["1", "2"] }
+        },
+        { _id: -1 } , // Sort in descending order by _id
+        projection // Apply the projection to include/exclude specific fields
+    );
     console.log(birthdays);
        
         let dashborad = {
             recent_hires: recent_hires,
             birthdays: birthdays,
             organisation_details: org_data,
+            reporting_managers: reporting_manager
           };
         // await redis.update_redis("ORGANISATIONS",org);
         return res.status(200).send(dashborad);
