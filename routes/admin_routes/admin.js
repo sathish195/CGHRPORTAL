@@ -268,16 +268,23 @@ router.post(
         return res.status(400).send("Invalid Designation id..!");
       let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
         $or: [
-          { "contact_details.personal_email_address": data.personal_email_address,
-            employee_id: { $ne: data.employee_id}
-           },
-          {"basic_info.email": data.email,
-            employee_id: { $ne: data.employee_id}
+          {
+            "basic_info.email":data.email.toLowerCase(),
+            employee_id: { $ne: data.employee_id }
           },
           {
+
+          },
+            {
+              "contact_details.personal_email_address": data.personal_email_address.toLowerCase(),
+              employee_id: { $ne: data.employee_id }
+              // employee_id: { $ne: data.employee_id }
+            },
+
+          {
             "identity_info.pan": data.identity_info.pan,
-            employee_id: { $ne: data.employee_id },
-            // organisation_id: org_data.organisation_id,
+            employee_id: { $ne: data.employee_id }
+                        // organisation_id: org_data.organisation_id,
           },
           {
             "identity_info.aadhaar":
@@ -306,29 +313,39 @@ router.post(
           },
         ],
       });
-      if (find_adhar &&
-        find_adhar.contact_details.personal_email_address === data.personal_email_address) {
-        return res.status(400).send("Personal email address already exists for another employee.");
+      if (find_adhar) {
+        if (find_adhar.basic_info.email && find_adhar.basic_info.email.toLowerCase() === data.email.toLowerCase().trim()) {
+          return res.status(400).send("Email Id Already Exists");
+      }
+  
+      // Check for duplicate personal email address in contact_details
+      if (find_adhar.contact_details.personal_email_address && find_adhar.contact_details.personal_email_address.toLowerCase() === data.personal_email_address.toLowerCase().trim()) {
+          return res.status(400).send("Personal Email Id Already Exists");
       }
 
-      if (find_adhar &&
-        find_adhar.basic_info.email === data.email) {
-          return res.status(400).send("Email ID already exists for another employee.");
-      }
-      if (
-        find_adhar &&
-        find_adhar.identity_info.pan && data.identity_info.pan && find_adhar.identity_info.pan.length > 0 && find_adhar.identity_info.pan === data.identity_info.pan) 
-        return res.status(400).send("PAN Number Already Exists");
-      if (find_adhar && find_adhar.identity_info.aadhaar.length>0 &&find_adhar.identity_info.aadhaar === data.identity_info.aadhaar)
-        return res.status(400).send("Aadhar Number Already Exists");
-      if (find_adhar && find_adhar.identity_info.uan.length>0 &&  find_adhar.identity_info.uan === data.identity_info.uan)
-        return res.status(400).send("Uan Number Already Exists");
-      if (find_adhar && find_adhar.identity_info.passport.length>0 && find_adhar.identity_info.passport === data.identity_info.passport)
-        return res.status(400).send("Passport Number Already Exists");
-      if (find_adhar && find_adhar.contact_details.work_phone_number.length>0 && find_adhar.contact_details.work_phone_number === data.work_phone_number)
-        return res.status(400).send("Mobile Number Already Exists");
-      if (find_adhar && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number)
-        return res.status(400).send("Personal Mobile Number Already Exists");
+        if (find_adhar.identity_info.aadhaar && find_adhar.identity_info.aadhaar.length > 0 && find_adhar.identity_info.aadhaar === data.identity_info.aadhaar) {
+            return res.status(400).send("Aadhar Number Already Exists");
+        }
+        if (find_adhar.identity_info.uan && find_adhar.identity_info.uan.length > 0 && find_adhar.identity_info.uan === data.identity_info.uan) {
+            return res.status(400).send("Uan Number Already Exists");
+        }
+  
+        if (find_adhar.identity_info.passport && find_adhar.identity_info.passport.length > 0 && find_adhar.identity_info.passport === data.identity_info.passport) {
+            return res.status(400).send("Passport Number Already Exists");
+        }
+    
+        if (find_adhar.contact_details.work_phone_number && find_adhar.contact_details.work_phone_number.length > 0 && find_adhar.contact_details.work_phone_number === data.work_phone_number) {
+            return res.status(400).send("Work Phone Number Already Exists");
+        }
+    
+        if (find_adhar.contact_details.personal_mobile_number && find_adhar.contact_details.personal_mobile_number.length > 0 && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number) {
+            return res.status(400).send("Personal Mobile Number Already Exists");
+        }
+    
+        if (find_adhar.identity_info.pan && find_adhar.identity_info.pan.length > 0 && find_adhar.identity_info.pan === data.identity_info.pan) {
+            return res.status(400).send("PAN Number Already Exists");
+        }
+    }
 
 
       let new_emp_data = {
