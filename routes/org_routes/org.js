@@ -628,52 +628,54 @@ router.post("/add_update_leave", Auth, async (req, res) => {
     }
 });
 
-router.post("/get_employees_by_department", Auth, async (req, res) => {
+router.post("/get_team_for_task", Auth, async (req, res) => {
     const data = req.body;
-    const find_employees = await mongoFunctions.aggregate(
-        "EMPLOYEE",
-        [
-            // Stage 1: Match documents based on organisation_id and department_name
-            {
-                $match: {
-                    organisation_id: req.employee.organisation_id,
-                    employee_id: { $ne: req.employee.employee_id },
-                    "work_info.department_id": req.employee.department_id,
-                }
-            },
-            // Stage 2: Project only the required fields
-            {
-                $project: {
-                    employee_id: 1,
-                    "basic_info.first_name": 1,
-                    "basic_info.last_name": 1,
-                    "work_info.department_name": 1,
-                    "work_info.department_id": 1,
-                    _id: 0 // Exclude _id field
-                }
-            }
-        ]
-    );
-
-    if (!find_employees ) {
-        return res.status(400).send("No Employees Found in the Given Department");
+    const roleName = req.employee.admin_type;
+    const query = {
+        organisation_id: req.employee.organisation_id,
+        employee_id: { $ne: req.employee.employee_id }
+    };
+    if (roleName === '2') { 
+    } 
+    if (roleName==='1'){
+    }else if (roleName === '3') {
+        query["work_info.department_id"]=req.employee.department_id;
+        // No additional conditions for 'manager' or 'team incharge'
+    } else {
+        return res.status(403).send("Access denied: Invalid role");
     }
 
-    return res.status(200).send(find_employees);
+    const projection = {
+        employee_id: 1,
+        "basic_info.first_name": 1,
+        "basic_info.last_name": 1,
+        "basic_info.email": 1,
+        "work_info.role_name": 1,
+    };
+
+    const teamMembers = await mongoFunctions.find("EMPLOYEE", query,{ _id: -1 }, projection);
+    console.log(teamMembers);
+
+    if (!teamMembers || teamMembers.length === 0) {
+        return res.status(404).send("No team members found.");
+    }
+
+    res.status(200).json(teamMembers);
 });
 
 
-router.post("/get_team", Auth, async (req, res) => {
+router.post("/get_team_for_project", Auth, async (req, res) => {
     try {
-        const roleName = req.employee.role_name.toLowerCase();
+        const roleName = req.employee.admin_type;
         const query = {
             organisation_id: req.employee.organisation_id,
             employee_id: { $ne: req.employee.employee_id }
         };
 
-        if (roleName === 'director') {
-            query["work_info.role_name"] = { $regex: /^team incharge$/i }; 
-        } else if (roleName === 'manager' || roleName === 'team incharge') {
+        if (roleName === '1') {
+            query["work_info.admin_type"] = "3"; 
+        } else if (roleName === '2') {
+            query["work_info.admin_type"] = "3"; 
             // No additional conditions for 'manager' or 'team incharge'
         } else {
             return res.status(403).send("Access denied: Invalid role");
@@ -700,5 +702,36 @@ router.post("/get_team", Auth, async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 });
+
+router.post("/update_token",Auth,async(req, res)=>{
+
+    const org_id=await mongoFunctions.find_one('ORGANISATIONS',{email:req.employee.email});
+    if(!org_id) return res.status(404).send("Organisation not found");
+
+
+    const token=jwt.sign({
+        organisation_id: org_id.organisation_id,
+        employee_id: req.employee.employee_id,
+        first_name: req.employee.first_name,
+        last_name: req.employee.last_name,
+        email: req.employee.email,
+        department_id: req.employee.department_id,
+        designation_id: req.employee.designation_id,
+        designation_name:req.employee.designation_name,
+        role_id: req.employee.role_id,
+        role_name: req.employee.role_name,
+        admin_type:req.employee.admin_type,
+        two_fa_status: req.employee.two_fa_status,
+        status: req.employee.employee_status,
+        collection: "EMPLOYEE",
+      },process.env.jwtPrivateKey,{ expiresIn: "90d" });
+    console.log(token);
+  
+    return res.status(200).send({
+    success: token,
+    });
+
+
+})
 
 module.exports = router;
