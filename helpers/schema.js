@@ -161,7 +161,7 @@ function add_employee_by_admin(data){
           .trim()
           .min(10)
           .max(55)
-          .email()
+          // .email()
           .messages({
             "string.pattern.base": "Email Should be valid mail",
           })
