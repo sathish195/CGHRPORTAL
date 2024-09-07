@@ -18,14 +18,14 @@ router.post(
       var { error } = validations.employee_id(data);
       if (error) return res.status(400).send(error.details[0].message);
       const emp_find = req.employee;
-      if (emp_find.role_name.toLowerCase()=== "director" || emp_find.role_name.toLowerCase()=== "manager" ) {
+      if (emp_find.admin_type=== "1" || emp_find.admin_type=== "2" ) {
         let emp = await mongoFunctions.find_one(
           "EMPLOYEE",
           {
             organisation_id: emp_find.organisation_id,
             employee_id: data.employee_id,
           },
-          { two_fa_key: 0, fcm_token: 0, browserid: 0, undatedAt: 0 }
+          { two_fa_key: 0, fcm_token: 0, browserid: 0, updatedAt: 0 }
         );
         return res.status(200).send({ employee: emp });
       }
@@ -44,7 +44,7 @@ router.post(
 
         if (error) return res.status(400).send(error.details[0].message);
 
-        if (emp.role_name.toLowerCase() === "director" || emp.role_name.toLowerCase() === "manager") {
+        if (emp.admin_type === "1" || emp.admin_type === "2") {
             // Logic for director or manager
             let employees = await mongoFunctions.lazy_loading(
                 "EMPLOYEE",

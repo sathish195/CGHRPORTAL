@@ -15,7 +15,7 @@ router.post('/add_update_org_details',Auth,async (req,res)=>{
     let data=req.body;
     const { error } = validations.add_update_org(req.body);
     if (error) return res.status(400).send(error.details[0].message);
-    if (req.employee.role_name.toLowerCase() !== "director") 
+    if (req.employee.admin_type !== "1") 
         return res.status(403).send("Only Director can access this endpoint");
 
     let find_org = await mongoFunctions.find_one("ORGANISATIONS", {
@@ -49,18 +49,22 @@ router.post('/add_update_org_details',Auth,async (req,res)=>{
             {
                 role_id: functions.get_random_string("R", 15, true),
                 role_name: "team member",
+                admin_type:"4"
             },
             {
                 role_id: functions.get_random_string("R", 15, true),
                 role_name: "manager",
+                admin_type:"2"
             },
             {
                 role_id: functions.get_random_string("R", 15, true),
-                role_name: "director",
+                role_name: "admin",
+                admin_type:"1"
             },
             {
                 role_id: functions.get_random_string("R", 15, true),
                 role_name: "team incharge",
+                admin_type:"3"
             },
         ]
     };
@@ -87,8 +91,8 @@ router.post('/add_update_department', Auth, async (req, res) => {
     // Validate data
     var { error } = validations.add_update_department(data);
     if (error) return res.status(400).send(error.details[0].message);
-    if (req.employee.role_name.toLowerCase() !== "director") 
-        return res.status(403).send("Only Director can access this endpoint");
+    if (req.employee.admin_type !== "1" || req.employee.admin_type !=="2")
+        return res.status(403).send("Only Director Or Manager Can Access This Endpoint");
     org=await mongoFunctions.find_one("ORGANISATIONS", {
         email: req.employee.email,
       });
@@ -185,9 +189,8 @@ router.post('/add_update_designation', Auth, async (req, res) => {
     // Validate data
     var { error } = validations.add_update_designation(data);
     if (error) return res.status(400).send(error.details[0].message);
-    if (req.employee.role_name.toLowerCase() !== "director") 
-        return res.status(403).send("Only Director can access this endpoint");
-
+    if (req.employee.admin_type !== "1" || req.employee.admin_type !=="2")
+        return res.status(403).send("Only Director Or Manager Can Access This Endpoint");
     org=await mongoFunctions.find_one("ORGANISATIONS", {
         email: req.employee.email,
       });
@@ -291,6 +294,10 @@ router.post("/add_update_role", Auth, async (req, res) => {
     // Validate data
     const { error } = validations.add_update_role(data);
     if (error) return res.status(400).send(error.details[0].message);
+    if (req.employee.admin_type !== "1") 
+        return res.status(403).send("Only Director can access this endpoint");
+
+
     org=await mongoFunctions.find_one("ORGANISATIONS", {
         email: req.employee.email,
       });
@@ -425,9 +432,8 @@ router.post("/add_update_leave", Auth, async (req, res) => {
     const { error } = validations.update_leaves(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    if (req.employee.role_name.toLowerCase() !== "director") {
-        return res.status(403).send("Only Director can access this endpoint");
-    }
+    if (req.employee.admin_type !== "1" || req.employee.admin_type !=="2")
+        return res.status(403).send("Only Director Or Manager Can Access This Endpoint");
 
     // Retrieve organisation data from Redis
     const org_data = await redis.redisGet("CRM_ORGANISATIONS", req.employee.organisation_id, true);

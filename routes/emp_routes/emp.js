@@ -29,7 +29,7 @@ router.post('/login',async(req,res)=>{
         return res
             .status(400)
             .send("Employee Status Disabled! Please Contact Admin.");
-    await mongoFunctions.find_one_and_update(
+    up_emp=await mongoFunctions.find_one_and_update(
     "EMPLOYEE",
     { employee_id: employee.employee_id },
     {
@@ -40,16 +40,35 @@ router.post('/login',async(req,res)=>{
     }
     );
     // otp=OTP(true)
-    var OTP="654321";
-    var otp=OTP;
-    await redis.genOtp( employee.employee_id, otp, 120);
+    // var OTP="654321";
+    // var otp=OTP;
+    // await redis.genOtp( employee.employee_id, otp, 120);
     //send otp
-    return res.status(200).send({
-    success: "OTP Sent Successfully",
-    two_fa_status: employee.two_fa_status,
-    });  
+     //token
+     const token=jwt.sign({
+      organisation_id: up_emp.organisation_id,
+      employee_id: up_emp.employee_id,
+      first_name: up_emp.basic_info.first_name,
+      last_name: up_emp.basic_info.last_name,
+      email: up_emp.basic_info.email,
+      department_id: up_emp.work_info.department_id,
+      designation_id: up_emp.work_info.designation_id,
+      designation_name:up_emp.work_info.designation_name,
+      role_id: up_emp.work_info.role_id,
+      role_name: up_emp.work_info.role_name,
+      admin_type:up_emp.work_info.admin_type,
+      two_fa_status: up_emp.two_fa_status,
+      status: employee.work_info.employee_status,
+      collection: "EMPLOYEE",
+    },process.env.jwtPrivateKey,{ expiresIn: "90d" });
+  console.log(token);
 
-});
+  return res.status(200).send({
+  success: "Logged In Successfully",
+  token: token,
+  });
+  
+  })
 module.exports = router;
 
 router.post('/forgot_password',async(req,res) => {
@@ -59,6 +78,9 @@ router.post('/forgot_password',async(req,res) => {
     if(error) return res.status(400).send(error.details[0].message);
     const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
+    if (employee.work_info.admin_type !== "1" && employee.work_info.admin_type !== "2"){
+      return res.status(400).send("Only Director or Manager Can Access The Forgot Password Route!");
+    }
     if (
         // employee &&
         employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
@@ -82,6 +104,9 @@ router.post('/reset_forgot_password',async(req,res) => {
     if(error) return res.status(400).send(error.details[0].message);
     const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
+    if (employee.work_info.admin_type !== "1" && employee.work_info.admin_type !== "2"){
+      return res.status(400).send("Only Director or Manager Can Access The Forgot Password Route!");
+    }
     if (
         // employee &&
         employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
@@ -138,60 +163,60 @@ router.post('/resend_otp',async(req,res) => {
 
 //login_verify
 
-router.post('/login_verify',async(req,res) => {
-    data=req.body;
-    //validate data
-    var {error}=validations.emp_login_verify(data);
-    if(error) return res.status(400).send(error.details[0].message);
-    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
-    if(!employee) return res.status(400).send('No Employee Found With The Given Email');
-    if (
-        // employee &&
-        employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
-    )
-        return res
-           .status(400)
-           .send("Employee Status Disabled! Please Contact Admin.");
-    //handle otp expiration and invalid 
-    let otp = await redis.redisGetSingle( employee.employee_id);
-    if (!otp) return res.status(400).send("Otp Is Expired");
-    if (Number(data.otp) !== Number(otp)) {
-      return res.status(400).send("Invalid OTP");
-    }
-    const up_emp = await mongoFunctions.find_one_and_update(
-        "EMPLOYEE",
-        { employee_id: employee.employee_id },
-        {
-          last_ip: data.last_ip,
-          device_id: data.device_id,
-          browserid: data.browserid,
-        },
-        { new: true }
-      );
+// router.post('/login_verify',async(req,res) => {
+//     data=req.body;
+//     //validate data
+//     var {error}=validations.emp_login_verify(data);
+//     if(error) return res.status(400).send(error.details[0].message);
+//     const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
+//     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
+//     if (
+//         // employee &&
+//         employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
+//     )
+//         return res
+//            .status(400)
+//            .send("Employee Status Disabled! Please Contact Admin.");
+//     //handle otp expiration and invalid 
+//     let otp = await redis.redisGetSingle( employee.employee_id);
+//     if (!otp) return res.status(400).send("Otp Is Expired");
+//     if (Number(data.otp) !== Number(otp)) {
+//       return res.status(400).send("Invalid OTP");
+//     }
+//     const up_emp = await mongoFunctions.find_one_and_update(
+//         "EMPLOYEE",
+//         { employee_id: employee.employee_id },
+//         {
+//           last_ip: data.last_ip,
+//           device_id: data.device_id,
+//           browserid: data.browserid,
+//         },
+//         { new: true }
+//       );
 
-    //token
-    const token=jwt.sign({
-        organisation_id: up_emp.organisation_id,
-        employee_id: up_emp.employee_id,
-        first_name: up_emp.basic_info.first_name,
-        last_name: up_emp.basic_info.last_name,
-        email: up_emp.basic_info.email,
-        department_id: up_emp.work_info.department_id,
-        designation_id: up_emp.work_info.designation_id,
-        designation_name:up_emp.work_info.designation_name,
-        role_id: up_emp.work_info.role_id,
-        role_name: up_emp.work_info.role_name,
-        two_fa_status: up_emp.two_fa_status,
-        status: employee.work_info.employee_status,
-        collection: "EMPLOYEE",
-      },process.env.jwtPrivateKey,{ expiresIn: "90d" });
-    console.log(token);
+//     //token
+//     const token=jwt.sign({
+//         organisation_id: up_emp.organisation_id,
+//         employee_id: up_emp.employee_id,
+//         first_name: up_emp.basic_info.first_name,
+//         last_name: up_emp.basic_info.last_name,
+//         email: up_emp.basic_info.email,
+//         department_id: up_emp.work_info.department_id,
+//         designation_id: up_emp.work_info.designation_id,
+//         designation_name:up_emp.work_info.designation_name,
+//         role_id: up_emp.work_info.role_id,
+//         role_name: up_emp.work_info.role_name,
+//         two_fa_status: up_emp.two_fa_status,
+//         status: employee.work_info.employee_status,
+//         collection: "EMPLOYEE",
+//       },process.env.jwtPrivateKey,{ expiresIn: "90d" });
+//     console.log(token);
 
-    return res.status(200).send({
-    success: token,
-    });
+//     return res.status(200).send({
+//     success: token,
+//     });
     
-    })
+//     })
 //change password
 
 router.post('/reset_password',Auth, async (req, res) =>{
@@ -201,6 +226,9 @@ router.post('/reset_password',Auth, async (req, res) =>{
     if(error) return res.status(400).send(error.details[0].message);
     const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':req.employee.email});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
+    if (employee.work_info.admin_type !== "1" && employee.work_info.admin_type !== "2"){
+      return res.status(400).send("Only Director or Manager Can Access The Change Password Route!");
+    }
     if (
         // employee &&
         employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
@@ -298,24 +326,11 @@ router.post(
        if (!Array.isArray(data.educational_details) || data.educational_details.length === 0) {
         return res.status(400).send("Educational details array must contain at least one entry.");
     }
-    let existingEmployee = await mongoFunctions.find_one("EMPLOYEE", {
-        $and: [
-            { "contact_details.personal_email_address": data.personal_email_address },
-            // {
-            //   // "organisation_id": data.organisation_id
-            // },
-            { employee_id: { $ne: data.employee_id } }
-        ]
-    });
-    
-    if (existingEmployee) {
-      console.log("not found employee");
-        if (existingEmployee.contact_details.personal_email_address === data.personal_email_address) {
-            return res.status(400).send("Personal email address already exists for another employee.");
-        }
-    }
     let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
+        { "contact_details.personal_email_address": data.personal_email_address,
+          employee_id: { $ne: req.employee.employee_id }
+         },
         {
           "identity_info.pan": data.identity_info.pan,
           employee_id: { $ne: req.employee.employee_id }
@@ -354,22 +369,25 @@ router.post(
         },
       ],
     });
-    if (
-      find_adhar &&
-      find_adhar.identity_info.pan ===
-        data.identity_info.pan
-    )
-      return res.status(400).send("PAN Number Already Exists");
-    if (find_adhar && find_adhar.identity_info.aadhaar === data.identity_info.aadhaar)
-      return res.status(400).send("Aadhar Number Already Exists");
-    if (find_adhar && find_adhar.identity_info.uan === data.identity_info.uan)
-      return res.status(400).send("Uan Number Already Exists");
-    if (find_adhar && find_adhar.identity_info.passport === data.identity_info.passport)
-      return res.status(400).send("Passport Number Already Exists");
-    if (find_adhar && find_adhar.contact_details.work_phone_number === data.work_phone_number)
-      return res.status(400).send("Mobile Number Already Exists");
-    if (find_adhar && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number)
-      return res.status(400).send("Personal Mobile Number Already Exists");
+    if (find_adhar &&
+      find_adhar.contact_details.personal_email_address.toLowerCase() === data.personal_email_address.toLowerCase()) {
+      return res.status(400).send("Personal email address already exists for another employee.");
+  }
+    
+  if (
+    find_adhar &&
+    find_adhar.identity_info.pan && data.identity_info.pan && find_adhar.identity_info.pan.length > 0 && find_adhar.identity_info.pan === data.identity_info.pan) 
+    return res.status(400).send("PAN Number Already Exists");
+  if (find_adhar && find_adhar.identity_info.aadhaar.length>0 &&find_adhar.identity_info.aadhaar === data.identity_info.aadhaar)
+    return res.status(400).send("Aadhar Number Already Exists");
+  if (find_adhar && find_adhar.identity_info.uan.length>0 &&  find_adhar.identity_info.uan === data.identity_info.uan)
+    return res.status(400).send("Uan Number Already Exists");
+  if (find_adhar && find_adhar.identity_info.passport.length>0 && find_adhar.identity_info.passport === data.identity_info.passport)
+    return res.status(400).send("Passport Number Already Exists");
+  if (find_adhar && find_adhar.contact_details.work_phone_number.length>0 && find_adhar.contact_details.work_phone_number === data.work_phone_number)
+    return res.status(400).send("Mobile Number Already Exists");
+  if (find_adhar && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number)
+    return res.status(400).send("Personal Mobile Number Already Exists");
       let edit_emp_data = {
         "basic_info.nick_name": data.nick_name,
         "personal_details.expertise": data.expertise,

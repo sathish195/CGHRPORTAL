@@ -24,7 +24,7 @@ router.post(
         true
       );
       if (!org_data) return res.status(400).send("Access Denied..!");
-      if (req.employee.role_name.toLowerCase() !== "director" && req.employee.role_name.toLowerCase() !== "manager"){
+      if (req.employee.admin_type !== "1" && req.employee.admin_type !== "2"){
         return res.status(400).send("Only Director,Manager Can Add New Employee..!");
       }
     
@@ -44,7 +44,27 @@ router.post(
       );
       if (!designation_data)
         return res.status(400).send("Invalid Designation id..!");
-      let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+      // Check if the current admin is a Director
+      if (req.employee.admin_type === "1") {
+        // Directors must have added at least one employee with the role "Manager"
+        let managerAddedByDirector = await mongoFunctions.find_one("EMPLOYEE", {
+          "work_info.reporting_manager": req.employee.email,
+          "work_info.admin_type": "2"  
+        });
+        
+        if (!managerAddedByDirector || managerAddedByDirector.length === 0) {
+          return res.status(400).send("Director must have added at least one Manager before adding another employee.");
+        }
+      }
+
+      // Check if the current admin is a Manager
+      if (req.employee.admin_type === "2" && role_data.admin_type=== "2") {
+        // Managers cannot add other Managers
+        if (data.role_id === role_data.role_id) {
+          return res.status(400).send("A Manager cannot add another Manager.");
+        }
+      }
+      let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
         $or: [
           {
             employee_id: data.employee_id.toUpperCase(),
@@ -55,25 +75,11 @@ router.post(
               data.email,
             // organisation_id: org_data.organisation_id,
           },
-        ],
-      });
-      if (
-        find_emp &&
-        find_emp.basic_info.email ===
-          data.email
-      )
-        return res.status(400).send("Email Id Already Exists");
-      if (find_emp && find_emp.employee_id === data.employee_id.toUpperCase())
-        return res.status(400).send("Employee Id Already Exists");
-      let find_email = await mongoFunctions.find_one("EMPLOYEE", {
+          {
 
             "contact_details.personal_email_address": data.personal_email_address.toLowerCase(),
             // organisation_id: org_data.organisation_id,
-      });
-      if (find_email)
-        return res.status(400).send("Personal Email Id Already Exists");
-      let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
-        $or: [
+          },
           {
             "identity_info.pan": data.identity_info.pan,
             // organisation_id: org_data.organisation_id,
@@ -102,21 +108,29 @@ router.post(
       });
       if (
         find_adhar &&
-        find_adhar.identity_info.pan ===
-          data.identity_info.pan
+        find_adhar.basic_info.email ===
+          data.email
       )
+        return res.status(400).send("Email Id Already Exists");
+      if (find_adhar && find_adhar.employee_id === data.employee_id.toUpperCase())
+        return res.status(400).send("Employee Id Already Exists");
+      if ((find_adhar && find_adhar.contact_details.personal_email_address.toLowerCase() === data.personal_email_address.toLowerCase()))
+        return res.status(400).send("Personal Email Id Already Exists");
+      if (
+        find_adhar &&
+        find_adhar.identity_info.pan && data.identity_info.pan && find_adhar.identity_info.pan.length > 0 && find_adhar.identity_info.pan === data.identity_info.pan) 
         return res.status(400).send("PAN Number Already Exists");
-      if (find_adhar && find_adhar.identity_info.aadhaar === data.identity_info.aadhaar)
+      if (find_adhar && find_adhar.identity_info.aadhaar.length>0 &&find_adhar.identity_info.aadhaar === data.identity_info.aadhaar)
         return res.status(400).send("Aadhar Number Already Exists");
-      if (find_adhar && find_adhar.identity_info.uan === data.identity_info.uan)
+      if (find_adhar && find_adhar.identity_info.uan.length>0 &&  find_adhar.identity_info.uan === data.identity_info.uan)
         return res.status(400).send("Uan Number Already Exists");
-      if (find_adhar && find_adhar.identity_info.passport === data.identity_info.passport)
+      if (find_adhar && find_adhar.identity_info.passport.length>0 && find_adhar.identity_info.passport === data.identity_info.passport)
         return res.status(400).send("Passport Number Already Exists");
-      if (find_adhar && find_adhar.contact_details.work_phone_number === data.work_phone_number)
+      if (find_adhar && find_adhar.contact_details.work_phone_number.length>0 && find_adhar.contact_details.work_phone_number === data.work_phone_number)
         return res.status(400).send("Mobile Number Already Exists");
       if (find_adhar && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number)
         return res.status(400).send("Personal Mobile Number Already Exists");
-      const new_password="Emp@1234";
+      const new_password=data.password;
       let password_hash = await bcrypt.hash_password(new_password);
       let new_emp_data = {
         organisation_id: org_data.organisation_id,
@@ -135,6 +149,7 @@ router.post(
 
           role_id: data.role_id,
           role_name: role_data.role_name,
+          admin_type: role_data.admin_type,
 
           designation_id: data.designation_id,
           designation_name: designation_data.designation_name,
@@ -202,7 +217,7 @@ router.post(
         true
       );
       if (!org_data) return res.status(400).send("Access Denied..!");
-      if (req.employee.role_name.toLowerCase() !== "director" && req.employee.role_name.toLowerCase() !== "manager"){
+      if (req.employee.admin_type !== "1" && req.employee.admin_type !== "2"){
         return res.status(400).send("Only Director or Manager Can Update Status Of New Employee..!");
       }
       let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
@@ -213,28 +228,6 @@ router.post(
       if (!find_emp){
             return res.status(400).send("Employee Id Doesn't exists");
        }
-    let existingEmployee = await mongoFunctions.find_one("EMPLOYEE", {
-        $or: [
-            { "contact_details.personal_email_address": data.personal_email_address,
-              employee_id: { $ne: data.employee_id}
-             },
-            {"basic_info.email": data.email,
-              employee_id: { $ne: data.employee_id}
-            },
-            { employee_id: { $ne: data.employee_id }, 
-            // organisation_id: org_data.organisation_id
-            }
-        ]
-    });
-    if (existingEmployee) {
-        if (existingEmployee.contact_details.personal_email_address === data.personal_email_address) {
-            return res.status(400).send("Personal email address already exists for another employee.");
-        }
-
-        if (existingEmployee.basic_info.email === data.email) {
-            return res.status(400).send("Email ID already exists for another employee.");
-        }
-    }
     
       let department_data = org_data.departments.find(
         (e) => e.department_id === data.department_id
@@ -254,6 +247,12 @@ router.post(
         return res.status(400).send("Invalid Designation id..!");
       let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
         $or: [
+          { "contact_details.personal_email_address": data.personal_email_address,
+            employee_id: { $ne: data.employee_id}
+           },
+          {"basic_info.email": data.email,
+            employee_id: { $ne: data.employee_id}
+          },
           {
             "identity_info.pan": data.identity_info.pan,
             employee_id: { $ne: data.employee_id },
@@ -286,19 +285,26 @@ router.post(
           },
         ],
       });
+      if (find_adhar &&
+        find_adhar.contact_details.personal_email_address === data.personal_email_address) {
+        return res.status(400).send("Personal email address already exists for another employee.");
+      }
+
+      if (find_adhar &&
+        find_adhar.basic_info.email === data.email) {
+          return res.status(400).send("Email ID already exists for another employee.");
+      }
       if (
         find_adhar &&
-        find_adhar.identity_info.pan ===
-          data.identity_info.pan
-      )
+        find_adhar.identity_info.pan && data.identity_info.pan && find_adhar.identity_info.pan.length > 0 && find_adhar.identity_info.pan === data.identity_info.pan) 
         return res.status(400).send("PAN Number Already Exists");
-      if (find_adhar && find_adhar.identity_info.aadhaar === data.identity_info.aadhaar)
+      if (find_adhar && find_adhar.identity_info.aadhaar.length>0 &&find_adhar.identity_info.aadhaar === data.identity_info.aadhaar)
         return res.status(400).send("Aadhar Number Already Exists");
-      if (find_adhar && find_adhar.identity_info.uan === data.identity_info.uan)
+      if (find_adhar && find_adhar.identity_info.uan.length>0 &&  find_adhar.identity_info.uan === data.identity_info.uan)
         return res.status(400).send("Uan Number Already Exists");
-      if (find_adhar && find_adhar.identity_info.passport === data.identity_info.passport)
+      if (find_adhar && find_adhar.identity_info.passport.length>0 && find_adhar.identity_info.passport === data.identity_info.passport)
         return res.status(400).send("Passport Number Already Exists");
-      if (find_adhar && find_adhar.contact_details.work_phone_number === data.work_phone_number)
+      if (find_adhar && find_adhar.contact_details.work_phone_number.length>0 && find_adhar.contact_details.work_phone_number === data.work_phone_number)
         return res.status(400).send("Mobile Number Already Exists");
       if (find_adhar && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number)
         return res.status(400).send("Personal Mobile Number Already Exists");
@@ -320,6 +326,7 @@ router.post(
 
           role_id: data.role_id,
           role_name: role_data.role_name,
+          admin_type: role_data.admin_type,
 
           designation_id: data.designation_id,
           designation_name: designation_data.designation_name,

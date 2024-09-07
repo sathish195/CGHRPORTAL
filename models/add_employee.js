@@ -13,7 +13,12 @@ const EMPLOYEE_Schema=new mongoose.Schema({
     work_experience: { type: Array, default: [] },
     educational_details: { type: Array, default: [] },
     dependent_details: { type: Array, default: [] },
-    leaves: { type: Object, default: {} },
+    leaves: [{
+      leave_id: { type: String },
+      leave_name: { type: String },
+      total_leaves: { type: Number },
+      remaining_leaves: { type: Number},
+    }],
     images: { type: Object, default: {} },
     files: { type: Object, default: {} },
     last_ip: { type: String, default: "0.0.0.0" },

@@ -153,6 +153,9 @@ function add_employee_by_admin(data){
       const schema = Joi.object({
         organisation_id: Joi.string().min(15).max(17).required(),
         employee_id: Joi.string().min(5).max(10).required(),
+        password:Joi.string().required().min(8).max(15)
+        .pattern(/(?=.*[A-Z])/,'uppercase')  // At least one uppercase letter
+        .pattern(/(?=.*[@$!%*?&])/,'special'), //atleast one special character
         email: Joi.string()
           .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
           .trim()
