@@ -53,7 +53,7 @@ router.post(
       // if (data.reporting_manager !== req.employee.email) {
       //   return res.status(400).send("Director must have added at least one Manager before adding another employee.");
       // }
-      if (!managerAddedByDirector) {
+      if (!role_data.admin_type==="2") {
         return res.status(400).send("Director must have added at least one Manager before adding another employee.");
       }
 
