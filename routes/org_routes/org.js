@@ -537,30 +537,34 @@ router.post("/add_update_leave", Auth, async (req, res) => {
                 "leaves.$": 1 
             }
         );
-        
-        const currentRemainingLeaves = leave_new.leaves[0].remaining_leaves;
-        const totalLeaves = data.total_leaves;
-        
-        // Calculate the new value
-        const newRemainingLeaves = totalLeaves-currentRemainingLeaves ;
-        console.log(newRemainingLeaves);
-        await mongoFunctions.update_many(
-            "EMPLOYEE",
-            {
-                organisation_id: org_data.organisation_id,
-                "work_info.designation_id": data.designation_id,
-                "leaves.leave_id": data.leave_id
-            },
-            {
-                $set: {
-                    "leaves.$.leave_name": data.leave_name,
-                    "leaves.$.total_leaves": data.total_leaves,
+        if (leave_new){
+            const currentRemainingLeaves = leave_new.leaves[0].remaining_leaves;
+            const totalLeaves = data.total_leaves;
+            
+            // Calculate the new value
+            const newRemainingLeaves = totalLeaves-currentRemainingLeaves ;
+            console.log(newRemainingLeaves);
+            await mongoFunctions.update_many(
+                "EMPLOYEE",
+                {
+                    organisation_id: org_data.organisation_id,
+                    "work_info.designation_id": data.designation_id,
+                    "leaves.leave_id": data.leave_id
                 },
-                $inc: {
-                    "leaves.$.remaining_leaves": newRemainingLeaves // Increment the remaining_leaves
+                {
+                    $set: {
+                        "leaves.$.leave_name": data.leave_name,
+                        "leaves.$.total_leaves": data.total_leaves,
+                    },
+                    $inc: {
+                        "leaves.$.remaining_leaves": newRemainingLeaves // Increment the remaining_leaves
+                    }
                 }
-            }
-        );
+            );
+       
+        }
+        
+       
         return res.status(200).send({
             success: "Leave updated successfully.",
             data: updatedLeave

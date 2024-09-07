@@ -206,10 +206,10 @@ function add_employee_by_admin(data){
           .required(),
         seating_location: Joi.string().allow(null, "").optional(),
         present_address: Joi.string().min(10).max(100).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').messages({
-            'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
+            'string.pattern.base': 'present address can only contain letters, numbers, spaces, periods, commas, and hyphens.',
         }).required().trim(),
         permanent_address: Joi.string().min(10).max(100).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').messages({
-            'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
+            'string.pattern.base': 'permanent address can only contain letters, numbers, spaces, periods, commas, and hyphens.',
         }).required().trim(),
         work_experience: Joi.array().items(work_experience_obj).required(),
         educational_details: Joi.array()
@@ -432,6 +432,7 @@ function add_employee_by_admin(data){
       leave_status: Joi.string().valid("Approved","Rejected","Pending").optional().allow(""),
       employee_id:Joi.string().optional().allow(""),
       year:Joi.string().optional().allow(""),
+
   });
     return schema.validate(data);
   }
