@@ -639,7 +639,6 @@ router.post("/get_team_for_task", Auth, async (req, res) => {
     }else if (roleName==='1'){
     }else if (roleName === '3') {
         query["work_info.department_id"]=req.employee.department_id;
-        // No additional conditions for 'manager' or 'team incharge'
     } else {
         return res.status(403).send("Access denied: Invalid role");
     }
