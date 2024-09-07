@@ -77,10 +77,6 @@ router.post(
       let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
         $or: [
           {
-            employee_id: data.employee_id.toUpperCase()
-           
-          },
-          {
             "basic_info.email":data.email.toLowerCase()
           },
           {
@@ -123,9 +119,9 @@ router.post(
         ],
       });
       if (find_adhar) {
-        if (find_adhar.employee_id && find_adhar.employee_id === data.employee_id) {
-          return res.status(400).send("Employee Id Already Exists");
-      }
+      //   if (find_adhar.employee_id && find_adhar.employee_id === data.employee_id) {
+      //     return res.status(400).send("Employee Id Already Exists");
+      // }
         if (find_adhar.basic_info.email && find_adhar.basic_info.email.toLowerCase() === data.email.toLowerCase().trim()) {
           return res.status(400).send("Email Id Already Exists");
       }
@@ -921,16 +917,16 @@ module.exports=router;
           }
         );
         console.log(h);
-        await mongoFunctions.find_one_and_update(
-          "LEAVE",
-          {
-              organisation_id: req.employee.organisation_id,
-              employee_id: findId.employee_id
-          },
-          {
-              $set: { leaves: h.leaves } // Replace the entire leaves array with h.leaves
-          }
-      );
+      //   await mongoFunctions.find_one_and_update(
+      //     "LEAVE",
+      //     {
+      //         organisation_id: req.employee.organisation_id,
+      //         employee_id: findId.employee_id
+      //     },
+      //     {
+      //         $set: { leaves: h.leaves } // Replace the entire leaves array with h.leaves
+      //     }
+      // );
       }
       
       if (updated_leave_data.leave_status === "Rejected") {
@@ -945,16 +941,16 @@ module.exports=router;
           }
         );
         console.log(l);
-        await mongoFunctions.find_one_and_update(
-          "LEAVE",
-          {
-              organisation_id: req.employee.organisation_id,
-              employee_id: findId.employee_id
-          },
-          {
-              $set: { leaves: l.leaves } // Replace the entire leaves array with h.leaves
-          }
-      );
+      //   await mongoFunctions.find_one_and_update(
+      //     "LEAVE",
+      //     {
+      //         organisation_id: req.employee.organisation_id,
+      //         employee_id: findId.employee_id
+      //     },
+      //     {
+      //         $set: { leaves: l.leaves } // Replace the entire leaves array with h.leaves
+      //     }
+      // );
       }
       
       
