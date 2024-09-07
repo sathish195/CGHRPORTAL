@@ -135,7 +135,7 @@ function add_employee_by_admin(data){
         from_date: Joi.date().required(),
         to_date: Joi.date().required(),
         job_description: Joi.string().regex(/^\S.*\S$/).min(5).max(100).pattern(/^[A-Za-z0-9\s.,-]+$/, 'valid characters').required().messages({
-            'string.pattern.base': 'can only contain letters, numbers, spaces, periods, commas, and hyphens.',
+            'string.pattern.base': 'job description can only contain letters, numbers, spaces, periods, commas, and hyphens.',
         }),
         experience: Joi.number().positive().required(),
       });
