@@ -4,7 +4,7 @@ const moment = require("moment");
 // Define schema for login employee
 function emp_login(data) {
     const schema = Joi.object({
-        email: Joi.string().required().email().max(55),
+        email: Joi.string().required().max(55),
         password: Joi.string().required().min(8).max(15),
         last_ip: Joi.string().required(),
         fcm_token: Joi.string().required(),
