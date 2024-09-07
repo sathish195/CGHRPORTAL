@@ -65,10 +65,21 @@ router.post(
         }
       }
       let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
-                      employee_id: data.employee_id.toUpperCase()})
-      if (find_emp) {
+        $or: [
+          {
+                      employee_id: data.employee_id.toUpperCase()
+          },
+          {
+            "basic_info.email":data.email.toLowerCase()
+          },
+        ]});
+
+      if (find_emp&&find_emp.employee_id.toUpperCase()===data.employee_id.toUpperCase()) {
         return res.status(400).send("Employee Id Already Exists");
       }
+      if (find_emp&& find_emp.basic_info.email && find_emp.basic_info.email.toLowerCase() === data.email.toLowerCase().trim()) {
+        return res.status(400).send("Email Id Already Exists");
+    }
            
           
       
@@ -76,12 +87,6 @@ router.post(
 
       let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
         $or: [
-          {
-            "basic_info.email":data.email.toLowerCase()
-          },
-          {
-
-          },
             {
               "contact_details.personal_email_address": data.personal_email_address.toLowerCase(),
               // employee_id: { $ne: data.employee_id }
@@ -122,9 +127,6 @@ router.post(
       //   if (find_adhar.employee_id && find_adhar.employee_id === data.employee_id) {
       //     return res.status(400).send("Employee Id Already Exists");
       // }
-        if (find_adhar.basic_info.email && find_adhar.basic_info.email.toLowerCase() === data.email.toLowerCase().trim()) {
-          return res.status(400).send("Email Id Already Exists");
-      }
   
       // Check for duplicate personal email address in contact_details
       if (find_adhar.contact_details.personal_email_address && find_adhar.contact_details.personal_email_address.toLowerCase() === data.personal_email_address.toLowerCase().trim()) {
