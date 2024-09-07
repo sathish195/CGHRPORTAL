@@ -50,10 +50,10 @@ router.post(
       });
 
       // Ensure the reporting manager is the director and that the director has added at least one manager
-      if (data.reporting_manager !== req.employee.email) {
-        return res.status(400).send("Director must have added at least one Manager before adding another employee.");
-      }
-      if (managerAddedByDirector&& managerAddedByDirector.work_info.admin_type!== role_data.admin_type) {
+      // if (data.reporting_manager !== req.employee.email) {
+      //   return res.status(400).send("Director must have added at least one Manager before adding another employee.");
+      // }
+      if (!managerAddedByDirector&& managerAddedByDirector.work_info.admin_type!== role_data.admin_type) {
         return res.status(400).send("Director must have added at least one Manager before adding another employee.");
       }
 

@@ -391,6 +391,7 @@ router.post("/universal" ,Auth,async(req, res) => {
     org=await mongoFunctions.find_one("ORGANISATIONS", {
         email: req.employee.organisation_id,
       });
+    console.log(org);
     if (!org){
         let dashborad = {
             recent_hires: [],
