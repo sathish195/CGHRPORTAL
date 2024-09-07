@@ -157,11 +157,11 @@ function add_employee_by_admin(data){
         .pattern(/(?=.*[A-Z])/,'uppercase')  // At least one uppercase letter
         .pattern(/(?=.*[@$!%*?&])/,'special'), //atleast one special character
         email: Joi.string()
-          .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+          // .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
           .trim()
           .min(10)
           .max(55)
-          // .email()
+          .email()
           .messages({
             "string.pattern.base": "Email Should be valid mail",
           })
