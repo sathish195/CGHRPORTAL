@@ -64,6 +64,13 @@ router.post(
           return res.status(400).send("A Manager cannot add another Manager.");
         }
       }
+      let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+                      employee_id: data.employee_id.toUpperCase()})
+      if (find_emp) {
+        return res.status(400).send("Employee Id Already Exists");
+      }
+           
+          
       
       // Assuming mongoFunctions is properly imported and set up
 
