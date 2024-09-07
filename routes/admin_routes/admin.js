@@ -272,9 +272,6 @@ router.post(
             "basic_info.email":data.email.toLowerCase(),
             employee_id: { $ne: data.employee_id }
           },
-          {
-
-          },
             {
               "contact_details.personal_email_address": data.personal_email_address.toLowerCase(),
               employee_id: { $ne: data.employee_id }
