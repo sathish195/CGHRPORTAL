@@ -255,8 +255,25 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
       { skip: data.skip || 0 } // Default skip to 0 if not provided
     );
     console.log(query);
+    let response = { leaveApplications };
 
-    return res.status(200).send(leaveApplications);
+    // If employee_id is provided, fetch the employee profile
+    if (data.employee_id && data.employee_id.length > 5) {
+      const employeeProfile = await mongoFunctions.find_one(
+        "EMPLOYEE",
+        { employee_id: data.employee_id },
+      );
+
+      if (employeeProfile) {
+        response.leaves= employeeProfile.leaves;
+      } else {
+        return res.status(404).send("Employee not found.");
+      }
+    }
+
+    return res.status(200).send(response);
+
+    // return res.status(200).send(leaveApplications);
 
   } catch (err) {
     console.error("Error fetching leave applications:", err);
