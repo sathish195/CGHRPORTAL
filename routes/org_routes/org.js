@@ -389,7 +389,7 @@ router.post("/add_update_role", Auth, async (req, res) => {
 
 router.post("/universal" ,Auth,async(req, res) => {
     org=await mongoFunctions.find_one("ORGANISATIONS", {
-        email: req.employee.organisation_id,
+        organisation_id: req.employee.organisation_id,
       });
     console.log(org);
     if (!org){
