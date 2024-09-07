@@ -967,8 +967,8 @@ module.exports=router;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
     const userRole = req.employee.role_name.toLowerCase();
-    if (req.employee.admin_type=== '4' || userRole==='team incharge' || userRole==="manager") {
-      return res.status(400).send('Access denied: Not Director');
+    if (req.employee.admin_type=== '4' || req.employee.admin_type=== '3'  || req.employee.admin_type=== '2' ) {
+      return res.status(400).send('Access denied: Not Admin');
     };
     const findId = await mongoFunctions.find_one('LEAVE', {
       leave_application_id: data.leave_application_id,
