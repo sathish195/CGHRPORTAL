@@ -636,8 +636,7 @@ router.post("/get_team_for_task", Auth, async (req, res) => {
         employee_id: { $ne: req.employee.employee_id }
     };
     if (roleName === '2') { 
-    } 
-    if (roleName==='1'){
+    }else if (roleName==='1'){
     }else if (roleName === '3') {
         query["work_info.department_id"]=req.employee.department_id;
         // No additional conditions for 'manager' or 'team incharge'
