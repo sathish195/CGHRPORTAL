@@ -431,8 +431,7 @@ function add_employee_by_admin(data){
       skip:Joi.number().min(0).required(),
       leave_status: Joi.string().valid("Approved","Rejected","Pending").optional().allow(""),
       employee_id:Joi.string().optional().allow(""),
-      from_date:Joi.string().optional().allow(""),
-      to_date:Joi.string().optional().allow(""),
+      year:Joi.string().optional().allow(""),
   });
     return schema.validate(data);
   }

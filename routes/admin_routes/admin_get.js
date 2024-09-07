@@ -198,19 +198,17 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
     };
 
     // Role-based access control
-    if (roleName === 'team member') {
+    if (req.employee.admin_type === '4') {
       return res.status(403).send("Access denied: Not Admin");
     } 
 
-    if (roleName === 'director') {
+    if (req.employee.admin_type === '1') {
       query.leave_status = status;
       // No additional conditions for 'director'
-    } else if (roleName === 'manager' && req.employee.designation_id === 'hr manager') {
-      query.leave_status = status;
-    }else if (roleName === 'manager') {
+    } else if (req.employee.admin_type === '2') {
       query.reporting_manager = req.employee.email;
       query["approved_by.manager.leave_status"] = status;
-    }else if (roleName === 'team incharge') {
+    }else if (req.employee.admin_type === '3') {
       query.department_id=req.employee.department_id;
       // Optionally add conditions specific to 'team incharge'
       query["approved_by.team_incharge.leave_status"] = status;
@@ -223,23 +221,17 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
       query.employee_id = data.employee_id;
     }
 
-    if (data.from_date && data.to_date) {
-      const fromDate = new Date(data.from_date);
-      const toDate = new Date(data.to_date);
-
-      // Validate date formats
-      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
-        return res.status(400).send("Invalid date format");
+    if (data.year) {
+      const year = parseInt(data.year, 10);
+      if (!isNaN(year)) {
+          const startOfYear = new Date(year, 0, 1); // January 1st of the given year
+          const endOfYear = new Date(year + 1, 0, 0, 23, 59, 59, 999); // December 31st of the given year
+  
+          query.createdAt = { $gte: startOfYear, $lte: endOfYear };
+      } else {
+          return res.status(400).send("Invalid year format.");
       }
-
-      // Ensure toDate is inclusive of the end of the day
-      toDate.setUTCHours(23, 59, 59, 999);
-
-      query.createdAt = {
-        $gte: fromDate,
-        $lte: toDate
-      };
-    }
+  }
 
     if (data.leave_status && data.leave_status.length > 5) {
       if (roleName === 'manager') {

@@ -533,13 +533,18 @@ router.post("/apply_leave",Auth,async(req,res) => {
   );
   if (!emp_leave_obj)
     return res.status(400).send("Leave Type Not Found..!");
+  const fromDate = new Date('2024-09-26');
+  const toDate = new Date('2024-09-29');
+  
+  // Set the end of the day for toDate to include all times on that day
+  toDate.setHours(23, 59, 59, 999);
   const over_lapping_leaves = await mongoFunctions.find("LEAVE", {
     organisation_id: find_emp.organisation_id,
     employee_id: find_emp.employee_id,
     // from_date: { $gte: new Date(data.from_date) },
     // to_date: { $lte: new Date(data.to_date )},
-    from_date: { $lte: data.to_date},  
-    to_date: { $gte:data.from_date },
+    from_date: { $gte: data.from_date},  
+    to_date: { $lte:data.to_date},
   });
   console.log(new Date(data.from_date));
 
@@ -573,6 +578,7 @@ router.post("/apply_leave",Auth,async(req,res) => {
     approved_by:approved_by,
     reporting_manager:find_emp.work_info.reporting_manager,
     leave_status: "Pending",
+    leaves:find_emp.leaves,
   };
   await mongoFunctions.create_new_record("LEAVE", leave_record_obj);
   return res.status(200).send({

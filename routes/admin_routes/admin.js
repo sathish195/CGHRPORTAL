@@ -826,7 +826,7 @@ module.exports=router;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
     const userRole = req.employee.role_name.toLowerCase();
-    if (userRole=== 'team member' || userRole==='director') {
+    if (req.employee.admin_type=== '4' || req.employee.admin_type==='1') {
       return res.status(400).send('Access denied: Not Team Incharge or Manager');
     };
     const findId = await mongoFunctions.find_one('LEAVE', {
@@ -851,7 +851,7 @@ module.exports=router;
     }
     
     let approved_by=findId.approved_by;
-    if (req.employee.role_name.toLowerCase()==="team incharge"){
+    if (req.employee.admin_type==="3"){
       approved_by.team_incharge={
         employee_id: req.employee.employee_id,
         email: req.employee.email,
@@ -859,7 +859,7 @@ module.exports=router;
         leave_status: data.leave_status,
         }
     }
-    if (req.employee.role_name.toLowerCase()==="manager"&& req.employee.designation_name.toLowerCase()!=="hr manager"){
+    if (req.employee.admin_type==="2"){
       approved_by.manager={
         employee_id: req.employee.employee_id,
        email:req.employee.email,
@@ -867,14 +867,7 @@ module.exports=router;
         leave_status: data.leave_status,
         }
     }
-    if (req.employee.role_name.toLowerCase()==="manager" && req.employee.designation_name.toLowerCase()==="hr manager"){
-      approved_by.hr={
-        employee_id: req.employee.employee_id,
-        email:req.employee.email,
-        approvedAt: new Date(),
-        leave_status: data.leave_status,
-        }
-    }
+   
     
     const leave_data_up = await mongoFunctions.find_one_and_update(
       'LEAVE',
@@ -921,6 +914,16 @@ module.exports=router;
           }
         );
         console.log(h);
+        await mongoFunctions.find_one_and_update(
+          "LEAVE",
+          {
+              organisation_id: req.employee.organisation_id,
+              employee_id: findId.employee_id
+          },
+          {
+              $set: { leaves: h.leaves } // Replace the entire leaves array with h.leaves
+          }
+      );
       }
       
       if (updated_leave_data.leave_status === "Rejected") {
@@ -935,6 +938,16 @@ module.exports=router;
           }
         );
         console.log(l);
+        await mongoFunctions.find_one_and_update(
+          "LEAVE",
+          {
+              organisation_id: req.employee.organisation_id,
+              employee_id: findId.employee_id
+          },
+          {
+              $set: { leaves: l.leaves } // Replace the entire leaves array with h.leaves
+          }
+      );
       }
       
       
