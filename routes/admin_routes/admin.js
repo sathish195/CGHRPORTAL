@@ -44,48 +44,17 @@ router.post(
       );
       if (!designation_data)
         return res.status(400).send("Invalid Designation id..!");
-      let find_id = await mongoFunctions.find_one("EMPLOYEE", {
-           employee_id: data.employee_id.toUpperCase()
-           
+      // Check if the director has added at least one employee with the role "Manager"
+      let managerAddedByDirector = await mongoFunctions.find_one("EMPLOYEE", {
+        "work_info.reporting_manager": req.employee.email, 
       });
-      if (find_id) return res.status(400).send("Employee Id Already Exists");
-      
-      let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
-        $or: [
-            { "basic_info.email": { $regex: new RegExp(`^${data.email.toLowerCase()}`, 'i') } },
-            { "contact_details.personal_email_address": { $regex: new RegExp(`^${data.personal_email_address.toLowerCase()}`, 'i') } },
-            { "identity_info.pan": data.identity_info.pan },
-            { "identity_info.aadhar": data.identity_info.aadhaar },
-            { "identity_info.uan": data.identity_info.uan },
-            { "identity_info.passport": data.identity_info.passport },
-            { "contact_details.work_phone_number": data.work_phone_number },
-            { "contact_details.personal_mobile_number": data.personal_mobile_number }
-        ]
-    });
-      console.log('"find adhar"--->find_adhar');
-  
-      if (find_adhar) {
-        // if (find_adhar.employee_id === data.employee_id.toUpperCase()) return res.status(400).send("Employee Id Already Exists");
-        if (find_adhar.basic_info.email === data.email.toLowerCase()) return res.status(400).send("Email Id Already Exists");
-        if (find_adhar.contact_details.personal_email_address.toLowerCase() === data.personal_email_address.toLowerCase()) return res.status(400).send("Personal Email Id Already Exists");
-        if (find_adhar.identity_info.pan && data.identity_info.pan && find_adhar.identity_info.pan === data.identity_info.pan) return res.status(400).send("PAN Number Already Exists");
-        if (find_adhar.identity_info.aadhaar && data.identity_info.aadhaar && find_adhar.identity_info.aadhaar === data.identity_info.aadhaar) return res.status(400).send("Aadhar Number Already Exists");
-        if (find_adhar.identity_info.uan && data.identity_info.uan && find_adhar.identity_info.uan === data.identity_info.uan) return res.status(400).send("Uan Number Already Exists");
-        if (find_adhar.identity_info.passport && data.identity_info.passport && find_adhar.identity_info.passport === data.identity_info.passport) return res.status(400).send("Passport Number Already Exists");
-        if (find_adhar.contact_details.work_phone_number && data.work_phone_number && find_adhar.contact_details.work_phone_number === data.work_phone_number) return res.status(400).send("Work Phone Number Already Exists");
-        if (find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number) return res.status(400).send("Personal Mobile Number Already Exists");
+
+      // Ensure the reporting manager is the director and that the director has added at least one manager
+      if (data.reporting_manager !== req.employee.email) {
+        return res.status(400).send("Director must have added at least one Manager before adding another employee.");
       }
-      // Check if the current admin is a Director
-      if (req.employee.admin_type === "1") {
-        // Directors must have added at least one employee with the role "Manager"
-        let managerAddedByDirector = await mongoFunctions.find_one("EMPLOYEE", {
-          "work_info.reporting_manager": req.employee.email,
-          "work_info.admin_type": "2"  
-        });
-        
-        if (!data.reporting_manager===req.employee.email || managerAddedByDirector&& managerAddedByDirector.work_info.admin_type !== "2" ) {
-          return res.status(400).send("Director must have added at least one Manager before adding another employee.");
-        }
+      if (managerAddedByDirector&& managerAddedByDirector.work_info.admin_type!== role_data.admin_type) {
+        return res.status(400).send("Director must have added at least one Manager before adding another employee.");
       }
 
       // Check if the current admin is a Manager
@@ -95,6 +64,93 @@ router.post(
           return res.status(400).send("A Manager cannot add another Manager.");
         }
       }
+      
+      // Assuming mongoFunctions is properly imported and set up
+
+      let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
+        $or: [
+          {
+            employee_id: data.employee_id.toUpperCase()
+           
+          },
+          {
+            "basic_info.email":data.email.toLowerCase()
+          },
+          {
+
+          },
+            {
+              "contact_details.personal_email_address": data.personal_email_address.toLowerCase(),
+              // employee_id: { $ne: data.employee_id }
+            },
+
+          {
+            "identity_info.pan": data.identity_info.pan,
+                        // organisation_id: org_data.organisation_id,
+          },
+          {
+            "identity_info.aadhaar":
+              data.identity_info.aadhaar,
+              // employee_id: { $ne: data.employee_id },
+            // organisation_id: org_data.organisation_id,
+          },
+          {
+            "identity_info.uan":
+              data.identity_info.uan,
+              // employee_id: { $ne: data.employee_id }
+            // organisation_id: org_data.organisation_id,
+          },
+          {
+            "identity_info.passport":
+              data.identity_info.passport,
+              // employee_id: { $ne: data.employee_id }
+            // organisation_id: org_data.organisation_id,
+          },
+          {
+            "contact_details.work_phone_number": data.work_phone_number,
+            // employee_id: { $ne: data.employee_id }
+          },
+          {"contact_details.personal_mobile_number": data.personal_mobile_number,
+            // employee_id: { $ne: data.employee_id }
+          },
+        ],
+      });
+      if (find_adhar) {
+        if (find_adhar.employee_id && find_adhar.employee_id === data.employee_id) {
+          return res.status(400).send("Employee Id Already Exists");
+      }
+        if (find_adhar.basic_info.email && find_adhar.basic_info.email.toLowerCase() === data.email.toLowerCase().trim()) {
+          return res.status(400).send("Email Id Already Exists");
+      }
+  
+      // Check for duplicate personal email address in contact_details
+      if (find_adhar.contact_details.personal_email_address && find_adhar.contact_details.personal_email_address.toLowerCase() === data.personal_email_address.toLowerCase().trim()) {
+          return res.status(400).send("Personal Email Id Already Exists");
+      }
+
+        if (find_adhar.identity_info.aadhaar && find_adhar.identity_info.aadhaar.length > 0 && find_adhar.identity_info.aadhaar === data.identity_info.aadhaar) {
+            return res.status(400).send("Aadhar Number Already Exists");
+        }
+        if (find_adhar.identity_info.uan && find_adhar.identity_info.uan.length > 0 && find_adhar.identity_info.uan === data.identity_info.uan) {
+            return res.status(400).send("Uan Number Already Exists");
+        }
+  
+        if (find_adhar.identity_info.passport && find_adhar.identity_info.passport.length > 0 && find_adhar.identity_info.passport === data.identity_info.passport) {
+            return res.status(400).send("Passport Number Already Exists");
+        }
+    
+        if (find_adhar.contact_details.work_phone_number && find_adhar.contact_details.work_phone_number.length > 0 && find_adhar.contact_details.work_phone_number === data.work_phone_number) {
+            return res.status(400).send("Work Phone Number Already Exists");
+        }
+    
+        if (find_adhar.contact_details.personal_mobile_number && find_adhar.contact_details.personal_mobile_number.length > 0 && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number) {
+            return res.status(400).send("Personal Mobile Number Already Exists");
+        }
+    
+        if (find_adhar.identity_info.pan && find_adhar.identity_info.pan.length > 0 && find_adhar.identity_info.pan === data.identity_info.pan) {
+            return res.status(400).send("PAN Number Already Exists");
+        }
+    }
       const new_password=data.password;
       let password_hash = await bcrypt.hash_password(new_password);
       let new_emp_data = {
