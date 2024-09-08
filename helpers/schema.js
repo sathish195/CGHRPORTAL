@@ -21,7 +21,7 @@ function emp_forgot_password(data) {
 }
 function emp_reset_forgot_password(data) {
     const schema = Joi.object({
-        email: Joi.string().required().email().max(55),
+        employee_email: Joi.string().required().email().max(55),
         // otp: Joi.string().required().min(6).max(6),
         new_password: Joi.string().required().min(8).max(15)
         .pattern(/(?=.*[A-Z])/,'uppercase')  // At least one uppercase letter

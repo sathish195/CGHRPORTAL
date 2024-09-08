@@ -102,7 +102,7 @@ router.post('/reset_forgot_password',async(req,res) => {
     //validate data
     var {error}=validations.emp_reset_forgot_password(data);
     if(error) return res.status(400).send(error.details[0].message);
-    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
+    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.employee_email.toLowerCase()});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     // if (employee.work_info.admin_type !== "1" && employee.work_info.admin_type !== "2"){
     //   return res.status(400).send("Only Director or Manager Can Access The Forgot Password Route!");
