@@ -22,7 +22,7 @@ function emp_forgot_password(data) {
 function emp_reset_forgot_password(data) {
     const schema = Joi.object({
         email: Joi.string().required().email().max(55),
-        otp: Joi.string().required().min(6).max(6),
+        // otp: Joi.string().required().min(6).max(6),
         new_password: Joi.string().required().min(8).max(15)
         .pattern(/(?=.*[A-Z])/,'uppercase')  // At least one uppercase letter
         .pattern(/(?=.*[@$!%*?&])/,'special') //atleast one special character
@@ -157,7 +157,7 @@ function add_employee_by_admin(data){
         .pattern(/(?=.*[A-Z])/,'uppercase')  // At least one uppercase letter
         .pattern(/(?=.*[@$!%*?&])/,'special'), //atleast one special character
         email: Joi.string()
-          // .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+          .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
           .trim()
           .min(10)
           .max(55)

@@ -79,7 +79,7 @@ router.post('/forgot_password',async(req,res) => {
     const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
     if (employee.work_info.admin_type !== "1" && employee.work_info.admin_type !== "2"){
-      return res.status(400).send("Only Director or Manager Can Access The Forgot Password Route!");
+      return res.status(400).send("Access Denied..!!Contact Your Admin");
     }
     if (
         // employee &&
@@ -88,13 +88,13 @@ router.post('/forgot_password',async(req,res) => {
         return res
             .status(400)
             .send("Employee Status Disabled! Please Contact Admin.");
-    var OTP="654321";
-    var otp=OTP;
-    await redis.genOtp(employee.employee_id, otp, 120);
+    // var OTP="654321";
+    // var otp=OTP;
+    // await redis.genOtp(employee.employee_id, otp, 120);
 
     //send otp
     return res.status(200).send({
-    success: "OTP Sent Successfully",
+    success: "Success",
     });  
 });
 router.post('/reset_forgot_password',async(req,res) => {
@@ -104,21 +104,21 @@ router.post('/reset_forgot_password',async(req,res) => {
     if(error) return res.status(400).send(error.details[0].message);
     const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
     if(!employee) return res.status(400).send('No Employee Found With The Given Email');
-    if (employee.work_info.admin_type !== "1" && employee.work_info.admin_type !== "2"){
-      return res.status(400).send("Only Director or Manager Can Access The Forgot Password Route!");
-    }
+    // if (employee.work_info.admin_type !== "1" && employee.work_info.admin_type !== "2"){
+    //   return res.status(400).send("Only Director or Manager Can Access The Forgot Password Route!");
+    // }
     if (
         // employee &&
         employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
         )
         return res
             .status(400)
-            .send("Employee Status Disabled! Please Contact Admin.");
-    let otp = await redis.redisGetSingle(employee.employee_id);
-    if (!otp) return res.status(400).send("Otp Is Expired");
-    if (Number(data.otp) !== Number(otp)) {
-        return res.status(400).send("Invalid OTP");
-    }
+            .send("Employee Status Disabled!");
+    // let otp = await redis.redisGetSingle(employee.employee_id);
+    // if (!otp) return res.status(400).send("Otp Is Expired");
+    // if (Number(data.otp) !== Number(otp)) {
+    //     return res.status(400).send("Invalid OTP");
+    // }
     const verifyPassword=bcrypt.compare_password(data.new_password,employee.password);
     console.log(verifyPassword);
     console.log(employee.password);
