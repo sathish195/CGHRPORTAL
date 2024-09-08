@@ -86,12 +86,12 @@ router.post("/get_tasks",Auth, async (req, res)=>{
   //   if (error) return res.status(400).send(error.details[0].message);
 
 
-  const userRole = req.employee.role_name.toLowerCase();
-  if (userRole === 'manager') {
+  const userRole = req.employee.admin_type;
+  if (userRole === '2') {
     findTask=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,status: { $nin: [/^completed$/i] }});
     return res.status(200).send(findTask)
   }
-  if (userRole === 'team incharge' ) {
+  if (userRole === '3' ) {
   // return res.status(403).send('Access denied: Not Admin');
   // }
   findTask=await mongoFunctions.find("TASKS",{organisation_id:req.employee.organisation_id,status: { $nin: [/^completed$/i, /^manager$/i] },"created_by.employee_id":req.employee.employee_id});
@@ -136,12 +136,12 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
 
   const limit = 40;
   const skip=data.skip // Fixed limit value
-  const userRole = req.employee.role_name.toLowerCase();
+  const userRole = req.employee.admin_type;
 
   let query = {
     organisation_id: req.employee.organisation_id
   };
-  if (userRole==='manager'){
+  if (userRole==='2'){
     if (data.status) {
       query.status = data.status;
     }
@@ -156,7 +156,7 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
       };
     }
 
-  } else if (userRole === 'team incharge') {
+  } else if (userRole === '3') {
     // query["created_by.employee_id"] = req.employee.employee_id;
     query = {
       $or: [

@@ -109,7 +109,7 @@ router.post(
     router.post("/get_projects",Auth, async (req, res)=>{
 
     const data = req.body;
-    const userRole = req.employee.role_name.toLowerCase();
+    const userRole = req.employee.admin_type;
     console.log(userRole);
     const organisationId = req.employee.organisation_id;
     const employeeId = req.employee.employee_id;
@@ -119,7 +119,7 @@ router.post(
     //     return res.status(403).send('Access denied: Not authorized');
     // }
 
-    if (userRole === 'director' || userRole === 'manager') {
+    if (userRole === '1' || userRole === '2') {
         // Get all projects for director or manager
         try {
             const projects = await mongoFunctions.find('PROJECTS', { organisation_id: organisationId });
@@ -128,7 +128,7 @@ router.post(
         } catch (err) {
             return res.status(500).send('Server error');
         }
-    } else if (userRole === 'team incharge') {
+    } else if (userRole === '3') {
         // Get only the projects where the team incharge's employee ID is in the team array
         try {
             const projects = await mongoFunctions.find('PROJECTS', {

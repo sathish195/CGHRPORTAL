@@ -431,9 +431,9 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
   
     // Check user role
-    const userRole = req.employee.role_name.toLowerCase();
-    if (userRole !== 'director' && userRole !== 'manager') {
-      return res.status(403).send('Access denied: Not Admin');
+    const userRole = req.employee.admin_type;
+    if (userRole !== '1' && userRole !== '2') {
+      return res.status(403).send('Access denied: Not Admin or Manager');
     }
   
     if (data.project_id && data.project_id.length > 9) {
@@ -476,7 +476,11 @@ router.post(
             );
   
       if (!project_data_up) return res.status(400).send('Project Update Failed');
-  
+      let update_name_in_task = await mongoFunctions.update_many(
+        "TASKS",
+        { project_id: data.project_id },
+        { $set: { project_name: data.project_name } }
+      );
       return res.status(200).send('Project Updated Successfully');
     } else {
       // Check if project name already exists
@@ -518,24 +522,24 @@ router.post(
     // if (!data.project_id) {
     //     return res.status(400).send('Project ID is required');
     // }
-    const userRole = req.employee.role_name.toLowerCase();
+    const userRole = req.employee.admin_type;
 
     if (data.task_id) {
         if (data.task_id.length === 0) {
             // If task_id is empty, only directors and managers can modify project team
-            if (userRole !== 'director' && userRole !== 'manager') {
-                return res.status(403).send('Access denied: Not authorized');
+            if (userRole !== '1' && userRole !== '2') {
+                return res.status(403).send('Access denied: Not Authorized');
             }
         } else if (data.task_id.length > 9) {
             // If task_id is provided and length > 9, only team incharges can modify task team
-            if (userRole !== 'team incharge' && userRole !== 'manager') {
+            if (userRole !== '3' && userRole !== '2') {
                 return res.status(403).send('Access denied: Not authorized');
             }
         } else {
             return res.status(400).send('Invalid task_id length');
         }
     } else {
-        if (userRole === 'team incharge') {
+        if (userRole === '3') {
             return res.status(403).send('Access denied: Not authorized');
         }
     }
@@ -682,9 +686,9 @@ module.exports=router;
     if (error) return res.status(400).send(error.details[0].message);
   
     // Check user role
-    const userRole = req.employee.role_name.toLowerCase();
-    if (userRole !== 'team incharge' && userRole !== 'manager') {
-      return res.status(403).send('Access denied: Not Team Incharge');
+    const userRole = req.employee.admin_type;
+    if (userRole !== '3' && userRole !== '2') {
+      return res.status(403).send('Access denied: Not Team Incharge Or Manager');
     }
     const findId = await mongoFunctions.find_one('PROJECTS', {
       organisation_id: req.employee.organisation_id,
@@ -692,7 +696,7 @@ module.exports=router;
       // team: { $elemMatch: { employee_id: req.employee.employee_id } }
     });
   
-    if (userRole === 'team incharge') {
+    if (userRole === '3') {
       const findId = await mongoFunctions.find_one('PROJECTS', {
         organisation_id: req.employee.organisation_id,
         project_id: data.project_id,
@@ -791,13 +795,14 @@ module.exports=router;
     const data = req.body;
     const { error } = validations.update_project(data);
     if(error) return res.status(400).send(error.details[0].message);
-    const userRole = req.employee.role_name.toLowerCase();
-    if(userRole!=='team incharge'){
+    const userRole = req.employee.admin_type;
+    if(userRole!=='3'){
       return res.status(403).send('Access denied: Not Team Incharge');
     }
     const findId = await mongoFunctions.find_one('PROJECTS',{
       organisation_id: req.employee.organisation_id,
-      project_id: data.project_id
+      project_id: data.project_id,
+      team: { $elemMatch: { employee_id: req.employee.employee_id } }
     });
     if(!findId) return res.status(400).send('Project ID does not exist');
     const project_data_up = await mongoFunctions.find_one_and_update(
