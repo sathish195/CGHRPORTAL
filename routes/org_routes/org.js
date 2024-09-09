@@ -472,7 +472,7 @@ router.post("/add_update_leave", Auth, async (req, res) => {
         return res.status(400).send("Role ID doesn't exist.");
     }
 
-    console.log("Found designation:", designation);
+    // console.log("Found designation:", designation);
 
     // Check if leave exists
     const leave = role.leaves.find(

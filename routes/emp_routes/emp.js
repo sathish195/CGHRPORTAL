@@ -295,9 +295,9 @@ router.post(
         return res.status(400).send("Account not in Active, Contact Admin");
 
       if (!find_emp.images) {
-        update = { images: { dp: data.image } };
+        update = { images: { dp: data.image },about_me:data.about_me };
       } else {
-        update = { "images.dp": data.image };
+        update = { "images.dp": data.image, about_me: data.about_me };
       }
       let update_emp = await mongoFunctions.find_one_and_update(
         "EMPLOYEE",

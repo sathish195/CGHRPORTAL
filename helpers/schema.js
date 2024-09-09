@@ -235,6 +235,8 @@ function add_employee_by_admin(data){
             .messages({
               "any.invalid": "Size should be 250kb only", // Define the custom error message
             }),
+            about_me: Joi.string().allow(null, "").optional().trim(),
+          
         });
         return schema.validate(data);
       }
