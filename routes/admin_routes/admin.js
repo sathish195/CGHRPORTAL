@@ -55,6 +55,7 @@ router.post(
       //   return res.status(400).send("Director must have added at least one Manager before adding another employee.");
       // }
       employees=await mongoFunctions.find('EMPLOYEE',{organisation_id:req.employee.organisation_id})
+      //
       if (employees.length<2 && role_data.admin_type!=="2") {
         return res.status(400).send("Director must have added at least one Manager before adding another employee.");
       }
