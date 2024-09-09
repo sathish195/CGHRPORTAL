@@ -38,7 +38,7 @@ router.post(
     Auth,
     async (req, res) => {
         const emp = req.employee;
-        const LIMIT = 2;
+        const LIMIT = 50;
         const data = req.body;
         const { error } = validations.skip(data);
         //
