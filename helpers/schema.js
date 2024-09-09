@@ -384,7 +384,7 @@ function add_employee_by_admin(data){
       organisation_id:Joi.string().min(5).max(20).required(),
       role_id: Joi.string().min(5).max(15).required(),
       leave_name: Joi.string().required().min(4).max(15).trim(),
-      total_leaves: Joi.number().required().min(1).max(10),
+      total_leaves: Joi.number().required().min(1).max(100),
       leave_id: Joi.string().optional().allow(""),
      
     });
