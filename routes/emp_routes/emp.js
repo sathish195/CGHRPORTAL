@@ -295,9 +295,9 @@ router.post(
         return res.status(400).send("Account not in Active, Contact Admin");
 
       if (!find_emp.images) {
-        update = { images: { dp: data.image },about_me:data.about_me };
+        update = { images: { dp: data.image },"personal_details.about_me":data.about_me };
       } else {
-        update = { "images.dp": data.image, about_me: data.about_me };
+        update = { "images.dp": data.image, "personal_details.about_me": data.about_me };
       }
       let update_emp = await mongoFunctions.find_one_and_update(
         "EMPLOYEE",
@@ -309,7 +309,7 @@ router.post(
     //   await stats.update_emp(update_emp, true, false);
       return res.status(200).send({
         success: "Success",
-        data: update_emp.images.dp,
+        data: {dp:update_emp.images.dp,about_me:update_emp.personal_details.about_me},
       });
     })
   )
