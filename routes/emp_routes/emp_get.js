@@ -202,6 +202,9 @@ router.post("/get_all_tasks", Auth, async (req, res) => {
         }
       }}
   }
+  
+
+  
 
   // Find tasks using the query object
   const findTask = await mongoFunctions.lazy_loading(

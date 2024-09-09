@@ -8,8 +8,18 @@ const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
 const functions=require('../../helpers/functions');
+const {alertDev} = require('../../helpers/telegram');
 // const bcrypt=require('bcrypt');
 
+router.get("/error",alertDev,(async(req,res)=>{
+  const error = req.body
+  // const data = {}
+  alertDev("error")
+  console.log(data);
+  
+  return res.send(error)
+
+}))
 router.post('/login',async(req,res)=>{
     data=req.body;
     console.log(data);

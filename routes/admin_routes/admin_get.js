@@ -48,7 +48,7 @@ router.post(
             // Logic for director or manager
             let employees = await mongoFunctions.lazy_loading(
                 "EMPLOYEE",
-                { organisation_id: emp.organisation_id },
+                { organisation_id: emp.organisation_id,"work_info.admin_type":{$ne:"1"}},
                 { two_fa_key: 0, fcm_token: 0, browserid: 0, others: 0 },
                 { _id: -1 },
                 LIMIT,

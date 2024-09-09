@@ -380,7 +380,7 @@ function add_employee_by_admin(data){
   function update_leaves(data){
     const schema = Joi.object({
       organisation_id:Joi.string().min(5).max(20).required(),
-      designation_id: Joi.string().min(5).max(12).required(),
+      role_id: Joi.string().min(5).max(15).required(),
       leave_name: Joi.string().required().min(4).max(15).trim(),
       total_leaves: Joi.number().required().min(1).max(10),
       leave_id: Joi.string().optional().allow(""),

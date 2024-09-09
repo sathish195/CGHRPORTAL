@@ -464,18 +464,18 @@ router.post("/add_update_leave", Auth, async (req, res) => {
     console.log("Retrieved org_data:", org_data);
 
     // Check if designation exists
-    const designation = org_data.designations.find(
-        (e) => e.designation_id.toLowerCase() === data.designation_id.toLowerCase()
+    const role = org_data.roles.find(
+        (e) => e.role_id.toLowerCase() === data.role_id.toLowerCase()
     );
 
-    if (!designation) {
-        return res.status(400).send("Designation ID doesn't exist.");
+    if (!role) {
+        return res.status(400).send("Role ID doesn't exist.");
     }
 
     console.log("Found designation:", designation);
 
     // Check if leave exists
-    const leave = designation.leaves.find(
+    const leave = role.leaves.find(
         (e) => e.leave_id.toLowerCase() === data.leave_id.toLowerCase()
     );
 
@@ -486,7 +486,7 @@ router.post("/add_update_leave", Auth, async (req, res) => {
         if (!leave) {
             return res.status(400).send("Leave ID doesn't exist.");
         }
-        const leaveNameConflict = designation.leaves.some(
+        const leaveNameConflict = role.leaves.some(
             (e) =>
                 e.leave_name.toLowerCase() === data.leave_name.toLowerCase() &&
                 e.leave_id.toLowerCase() !== data.leave_id.toLowerCase()
@@ -501,18 +501,18 @@ router.post("/add_update_leave", Auth, async (req, res) => {
             "ORGANISATIONS",
             {
                 organisation_id: org_data.organisation_id,
-                "designations.designation_id": data.designation_id,
-                "designations.leaves.leave_id": data.leave_id
+                "roles.role_id": data.role_id,
+                "roles.leaves.leave_id": data.leave_id
             },
             {
                 $set: {
-                    "designations.$[des].leaves.$[leave].leave_name": data.leave_name,
-                    "designations.$[des].leaves.$[leave].total_leaves": data.total_leaves
+                    "roles.$[role].leaves.$[leave].leave_name": data.leave_name,
+                    "roles.$[role].leaves.$[leave].total_leaves": data.total_leaves
                 }
             },
             {
                 arrayFilters: [
-                    { "des.designation_id": data.designation_id },
+                    { "role.role_id": data.role_id },
                     { "leave.leave_id": data.leave_id }
                 ],
                 new: true
@@ -549,7 +549,7 @@ router.post("/add_update_leave", Auth, async (req, res) => {
                 "EMPLOYEE",
                 {
                   organisation_id: org_data.organisation_id,
-                  "work_info.designation_id": data.designation_id,
+                  "work_info.role_id": data.role_id,
                   "leaves.leave_id": data.leave_id
                 },
                 {
@@ -582,7 +582,7 @@ router.post("/add_update_leave", Auth, async (req, res) => {
 
     } else {
         // Check if leave with the same name already exists
-        const leaveExists = designation.leaves.find(
+        const leaveExists =role.leaves.find(
             (e) => e.leave_name.toLowerCase() === data.leave_name.toLowerCase()
         );
 
@@ -601,11 +601,11 @@ router.post("/add_update_leave", Auth, async (req, res) => {
             "ORGANISATIONS",
             {
                 organisation_id: org_data.organisation_id,
-                "designations.designation_id": data.designation_id
+                "roles.role_id": data.role_id
             },
             {
                 $push: {
-                    "designations.$.leaves": newLeave
+                    "roles.$.leaves": newLeave
                 }
             },
             { new: true }
@@ -620,7 +620,7 @@ router.post("/add_update_leave", Auth, async (req, res) => {
             "EMPLOYEE",
             {
                 organisation_id: org_data.organisation_id,
-                "work_info.designation_id": data.designation_id
+                "work_info.role_id": data.role_id
             },
             {
                 $push: {
