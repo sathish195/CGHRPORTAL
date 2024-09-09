@@ -9,6 +9,7 @@ const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
 const functions=require('../../helpers/functions');
 const { date } = require('joi');
+const { RFC_2822 } = require('moment');
 
 // Add new employee
 
@@ -53,7 +54,8 @@ router.post(
       // if (data.reporting_manager !== req.employee.email) {
       //   return res.status(400).send("Director must have added at least one Manager before adding another employee.");
       // }
-      if (!role_data.admin_type!=="2") {
+      employees=await mongoFunctions.find('EMPLOYEE',{organisation_id:req.employee.organisation_id})
+      if (employees.length<2 && role_data.admin_type!=="2") {
         return res.status(400).send("Director must have added at least one Manager before adding another employee.");
       }
 
