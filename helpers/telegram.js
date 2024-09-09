@@ -8,7 +8,7 @@ function alertDev(messaggio) {
   console.log('ID:', id);
 
   const h=sendMessage(id, messaggio, token);
-  console.log(h);
+  console.log("success");
 }
 
 async function sendMessage(id,messaggio,token) {
