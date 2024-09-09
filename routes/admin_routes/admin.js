@@ -46,9 +46,9 @@ router.post(
       if (!designation_data)
         return res.status(400).send("Invalid Designation id..!");
       // Check if the director has added at least one employee with the role "Manager"\\\\\\\\\
-      let managerAddedByDirector = await mongoFunctions.find_one("EMPLOYEE", {
-        "work_info.reporting_manager": req.employee.email,
-      });
+      // let managerAddedByDirector = await mongoFunctions.find_one("EMPLOYEE", {
+      //   "work_info.reporting_manager": req.employee.email,
+      // });
 
       // Ensure the reporting manager is the director and that the director has added at least one manager
       // if (data.reporting_manager !== req.employee.email) {
