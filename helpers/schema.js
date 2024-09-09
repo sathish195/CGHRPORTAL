@@ -408,16 +408,16 @@ function add_employee_by_admin(data){
           "string.max": "The reason must be no more than 200 characters long.",
         })
         .required(),
-      team_mail_id: Joi.string()
-        .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
-        .trim()
-        .min(10)
-        .max(55)
-        .email()
-        .messages({
-          "string.pattern.base": "Email Should be valid mail",
-        })
-        .required(),
+      // team_mail_id: Joi.string()
+        // .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+        // .trim()
+        // .min(10)
+        // .max(55)
+        // .email()
+        // .messages({
+        //   "string.pattern.base": "Email Should be valid mail",
+        // })
+        // .required(),
     });
     return schema.validate(data);
   }

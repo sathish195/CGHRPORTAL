@@ -14,7 +14,7 @@ const leave_Schema = new mongoose.Schema(
     from_date: { type: String, required: true },
     to_date: { type: String, required: true },
     reason: { type: String, required: true },
-    team_mail_id: { type: String, required: true },
+    // team_mail_id: { type: String, required: true },
     leave_status: {
       type: String,
       enum: ["Pending", "Approved", "Rejected"],

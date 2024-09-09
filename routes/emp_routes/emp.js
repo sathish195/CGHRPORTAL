@@ -585,7 +585,7 @@ router.post("/apply_leave",Auth,async(req,res) => {
     from_date: data.from_date,
     to_date: data.to_date,
     reason: data.reason,
-    team_mail_id: data.team_mail_id,
+    // team_mail_id: data.team_mail_id,
     approved_by:approved_by,
     reporting_manager:find_emp.work_info.reporting_manager,
     leave_status: "Pending",
