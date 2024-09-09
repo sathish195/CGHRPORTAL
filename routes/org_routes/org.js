@@ -427,13 +427,23 @@ router.post("/universal" ,Auth,async(req, res) => {
         projection // Apply the projection to include/exclude specific fields
     );
     console.log(birthdays);
-    
+    employees=await mongoFunctions.find(
+        "EMPLOYEE",
+        {
+            organisation_id: org_data.organisation_id,
+            // "work_info.admin_type": { $in: ["1", "2"] }
+        },
+        { createdAt: -1 } , // Sort in descending order by _id
+        projection // Apply the projection to include/exclude specific fields
+    );
+
        
         let dashborad = {
             recent_hires: recent_hires,
             birthdays: birthdays,
             organisation_details: org_data,
-            reporting_managers: reporting_manager
+            reporting_managers: reporting_manager,
+            employees:employees,
           };
         // await redis.update_redis("ORGANISATIONS",org);
         return res.status(200).send(dashborad);
