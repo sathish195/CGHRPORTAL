@@ -43,51 +43,44 @@ router.post(
         const { error } = validations.skip(data);
 
         if (error) return res.status(400).send(error.details[0].message);
+        let query={organisation_id:req.employee.organisation_id};
+        if (emp.admin_type === "1"){
+          query["work_info.admin_type"]={$ne:"1"};
+        }else if (emp.admin_type === "2"){
+          query["work_info.admin_type"]={$nin:["1","2"]};
+        }
 
-        if (emp.admin_type === "1" || emp.admin_type === "2") {
+        // if (emp.admin_type === "1" || emp.admin_type === "2") {
             // Logic for director or manager
+            // let employees = await mongoFunctions.lazy_loading(
+            //     "EMPLOYEE",
+            //     { organisation_id: emp.organisation_id,"work_info.admin_type":{$ne:"1"}},
+            //     { two_fa_key: 0, fcm_token: 0, browserid: 0, others: 0 },
+            //     { _id: -1 },
+            //     LIMIT,
+            //     data.skip
+            // );
+            // return res.status(200).send({ employees });
+        // } 
+        else if (emp.admin_type==="3") {
+          query["work_info.department_id"]= emp.department_id;
+          query["work_info.admin_type"]={$nin:["1","2"]};
+            // Logic for team incharge
+        }
+
+         else {
+            return res.status(403).send("Forbidden: Not Administrator");
+        }
+        //  Logic for director or manager
             let employees = await mongoFunctions.lazy_loading(
                 "EMPLOYEE",
-                { organisation_id: emp.organisation_id,"work_info.admin_type":{$ne:"1"}},
+               query,
                 { two_fa_key: 0, fcm_token: 0, browserid: 0, others: 0 },
                 { _id: -1 },
                 LIMIT,
                 data.skip
             );
             return res.status(200).send({ employees });
-        } else if (emp.role_name.toLowerCase() === "team incharge") {
-            // Logic for team incharge
-            const find_employees = await mongoFunctions.aggregate(
-                "EMPLOYEE",
-                [
-                    {
-                        $match: {
-                            organisation_id: emp.organisation_id,
-                            employee_id: { $ne: emp.employee_id },
-                            "work_info.department_id": emp.department_id,
-                        }
-                    },
-                    {
-                        $project: {
-                            employee_id: 1,
-                            "basic_info.first_name": 1,
-                            "basic_info.last_name": 1,
-                            "work_info.department_name": 1,
-                            "work_info.department_id": 1,
-                            _id: 0 // Exclude _id field
-                        }
-                    }
-                ]
-            );
-
-            if (!find_employees || find_employees.length === 0) {
-                return res.status(400).send("No Employees Found in the Given Department");
-            }
-
-            return res.status(200).send(find_employees);
-        } else {
-            return res.status(403).send("Forbidden: Not Administrator");
-        }
     }
 );
 
