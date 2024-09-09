@@ -196,124 +196,124 @@ async function employees_with_birthday_today(organisation_id) {
   }
 }
 
+
 async function add_stats(employee_id, organisation_id, status) {
-    // Define default status track
-    const defaultStatusTrack = [
-        { status: "new", count: 0 },
-        { status: "in_progress", count: 0 },
-        { status: "completed", count: 0 },
-        { status: "under_review", count: 0 }
-    ];
-
-    // Check if the document exists
-    const stat = await mongoFunctions.find_one("STATS", { 
-        employee_id: employee_id,
-        organisation_id: organisation_id,
-        createdAt: {
-            $gte: new Date().setHours(0, 0, 0, 0),
-            $lt: new Date().setHours(24, 0, 0, 0)
-        }
-    });
-
-    if (!stat) {
-        // Create a new record if the document was not found
-        const statusTrack = defaultStatusTrack.map(st => ({
-            status: st.status,
-            count: st.status === status ? 1 : 0  // Set count to 1 for the given status, 0 for others
-        }));
-
-        await mongoFunctions.create_new_record("STATS", {
-            employee_id: employee_id,
-            organisation_id: organisation_id,  // Add createdAt to the new record
-            status_track: statusTrack
-        });
-
-        return { status: 200, message: "Status added as new record" };
-    } else {
-        // Document exists, attempt to update
-        const result = await mongoFunctions.find_one_and_update(
-            "STATS",
-            {
-                employee_id: employee_id,
-                createdAt: {
-                    $gte: new Date().setHours(0, 0, 0, 0),
-                    $lt: new Date().setHours(24, 0, 0, 0)
-                },
-                "status_track.status": status
-            },
-            {
-                $inc:{ "status_track.$[elem].count": 1 }   // Increment the count field by 1 for the matched status
-            },
-            {
-                arrayFilters: [{ "elem.status": status }],  // Match status in the array
-                returnDocument: "after"  // Return the updated document
-            }
-        );
-
-    }
-}
-
-async function update_stats(employee_id, organisation_id, prevStatus, currentStatus) {
+  // Define default status track
   const defaultStatusTrack = [
-    { status: "new", count: 0 },
-    { status: "in_progress", count: 0 },
-    { status: "completed", count: 0 },
-    { status: "under_review", count: 0 }
+      { status: "new", count: 0 },
+      { status: "in_progress", count: 0 },
+      { status: "completed", count: 0 },
+      { status: "under_review", count: 0 }
   ];
 
-  // Get the start and end of the day
-  const startOfDay = new Date().setHours(0, 0, 0, 0);
-  const endOfDay = new Date().setHours(24, 0, 0, 0);
-
   // Check if the document exists
-  const stat = await mongoFunctions.find_one("STATS", {
-    employee_id: employee_id,
-    organisation_id: organisation_id,
-    createdAt: { $gte: startOfDay, $lt: endOfDay }
+  const stat = await mongoFunctions.find_one("STATS", { 
+      employee_id: employee_id,
+      organisation_id: organisation_id,
+      createdAt: {
+          $gte: new Date().setHours(0, 0, 0, 0),
+          $lt: new Date().setHours(24, 0, 0, 0)
+      }
   });
 
   if (!stat) {
-    // Create a new record if the document was not found
-    const statusTrack = defaultStatusTrack.map(st => ({
-      status: st.status,
-      count: st.status === currentStatus ? 1 : 0
-    }));
+      // Create a new record if the document was not found
+      const statusTrack = defaultStatusTrack.map(st => ({
+          status: st.status,
+          count: st.status === status ? 1 : 0  // Set count to 1 for the given status, 0 for others
+      }));
 
-    await mongoFunctions.create_new_record("STATS", {
-      employee_id: employee_id,
-      organisation_id: organisation_id,
-      createdAt: new Date(),
-      status_track: statusTrack
-    });
+      await mongoFunctions.create_new_record("STATS", {
+          employee_id: employee_id,
+          organisation_id: organisation_id,  // Add createdAt to the new record
+          status_track: statusTrack
+      });
 
-    return { status: 200, message: "Status added as new record" };
+      return { status: 200, message: "Status added as new record" };
   } else {
-    // Update the existing record
-    const result = await mongoFunctions.find_one_and_update(
-      "STATS",
-      {
-        employee_id: employee_id,
-        organisation_id: organisation_id,
-        createdAt: { $gte: startOfDay, $lt: endOfDay }
-      },
-      {
-        $inc: {
-          "status_track.$[prev].count": prevStatus ? -1 : 0,  // Decrement previous status count
-          "status_track.$[curr].count": currentStatus ? 1 : 0  // Increment current status count
-        }
-      },
-      {
-        arrayFilters: [
-          { "prev.status": prevStatus },  // Filter for the previous status
-          { "curr.status": currentStatus } // Filter for the current status
-        ],
-      }
-    );
+      // Document exists, attempt to update
+      const result = await mongoFunctions.find_one_and_update(
+          "STATS",
+          {
+              employee_id: employee_id,
+              createdAt: {
+                  $gte: new Date().setHours(0, 0, 0, 0),
+                  $lt: new Date().setHours(24, 0, 0, 0)
+              },
+              "status_track.status": status
+          },
+          {
+              $inc:{ "status_track.$[elem].count": 1 }   // Increment the count field by 1 for the matched status
+          },
+          {
+              arrayFilters: [{ "elem.status": status }],  // Match status in the array
+              returnDocument: "after"  // Return the updated document
+          }
+      );
 
-    return { status: 200, message: "Status updated successfully", data: result };
   }
 }
 
+async function update_stats(employee_id, organisation_id, prevStatus, currentStatus) {
+const defaultStatusTrack = [
+  { status: "new", count: 0 },
+  { status: "in_progress", count: 0 },
+  { status: "completed", count: 0 },
+  { status: "under_review", count: 0 }
+];
+
+// Get the start and end of the day
+const startOfDay = new Date().setHours(0, 0, 0, 0);
+const endOfDay = new Date().setHours(24, 0, 0, 0);
+
+// Check if the document exists
+const stat = await mongoFunctions.find_one("STATS", {
+  employee_id: employee_id,
+  organisation_id: organisation_id,
+  createdAt: { $gte: startOfDay, $lt: endOfDay }
+});
+
+if (!stat) {
+  // Create a new record if the document was not found
+  const statusTrack = defaultStatusTrack.map(st => ({
+    status: st.status,
+    count: st.status === currentStatus ? 1 : 0
+  }));
+
+  await mongoFunctions.create_new_record("STATS", {
+    employee_id: employee_id,
+    organisation_id: organisation_id,
+    createdAt: new Date(),
+    status_track: statusTrack
+  });
+
+  return { status: 200, message: "Status added as new record" };
+} else {
+  // Update the existing record
+  const result = await mongoFunctions.find_one_and_update(
+    "STATS",
+    {
+      employee_id: employee_id,
+      organisation_id: organisation_id,
+      createdAt: { $gte: startOfDay, $lt: endOfDay }
+    },
+    {
+      $inc: {
+        "status_track.$[prev].count": prevStatus ? -1 : 0,  // Decrement previous status count
+        "status_track.$[curr].count": currentStatus ? 1 : 0  // Increment current status count
+      }
+    },
+    {
+      arrayFilters: [
+        { "prev.status": prevStatus },  // Filter for the previous status
+        { "curr.status": currentStatus } // Filter for the current status
+      ],
+    }
+  );
+
+  return { status: 200, message: "Status updated successfully", data: result };
+}
+}
 
 
 

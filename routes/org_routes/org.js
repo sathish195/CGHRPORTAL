@@ -526,43 +526,53 @@ router.post("/add_update_leave", Auth, async (req, res) => {
         }
 
         await redis.update_redis("ORGANISATIONS", updatedLeave);
-        const leave_new = await mongoFunctions.find_one(
-            "EMPLOYEE",
-            {
-                organisation_id: org_data.organisation_id,
-                "work_info.designation_id": data.designation_id,
-                "leaves.leave_id": data.leave_id
-            },
-            {
-                "leaves.$": 1 
-            }
-        );
-        if (leave_new){
-            const currentRemainingLeaves = leave_new.leaves[0].remaining_leaves;
-            const totalLeaves = data.total_leaves;
+        // const leave_new = await mongoFunctions.find_one(
+        //     "EMPLOYEE",
+        //     {
+        //         organisation_id: org_data.organisation_id,
+        //         "work_info.designation_id": data.designation_id,
+        //         "leaves.leave_id": data.leave_id
+        //     },
+        //     {
+        //         "leaves.$": 1 
+        //     }
+        // );
+        // if (leave_new){
+        //     const currentRemainingLeaves = leave_new.leaves[0].remaining_leaves;
+        //     const totalLeaves = data.total_leaves;
             
             // Calculate the new value
-            const newRemainingLeaves = totalLeaves-currentRemainingLeaves ;
-            console.log(newRemainingLeaves);
+            // const newRemainingLeaves = totalLeaves-currentRemainingLeaves ;
+            // console.log(newRemainingLeaves);
+           
             await mongoFunctions.update_many(
                 "EMPLOYEE",
                 {
-                    organisation_id: org_data.organisation_id,
-                    "work_info.designation_id": data.designation_id,
-                    "leaves.leave_id": data.leave_id
+                  organisation_id: org_data.organisation_id,
+                  "work_info.designation_id": data.designation_id,
+                  "leaves.leave_id": data.leave_id
                 },
                 {
-                    $set: {
-                        "leaves.$.leave_name": data.leave_name,
-                        "leaves.$.total_leaves": data.total_leaves,
-                    },
-                    $inc: {
-                        "leaves.$.remaining_leaves": newRemainingLeaves // Increment the remaining_leaves
-                    }
+                  $set: {
+                    "leaves.$[elem].leave_name": data.leave_name,
+                    "leaves.$[elem].total_leaves": data.total_leaves
+                  },
+                  $inc: {
+                    "leaves.$[elem].remaining_leaves": data.total_leaves // Increment the remaining_leaves
+                  }
+                },
+                {
+                  arrayFilters: [
+                    { "elem.leave_id": data.leave_id }
+                  ]
                 }
-            );
+              );
+              
+            //   if (h) {
+            //     console.log(h);
+            //   }
        
-        }
+        // }
         
        
         return res.status(200).send({
@@ -640,6 +650,7 @@ router.post("/get_team_for_task", Auth, async (req, res) => {
         employee_id: { $ne: req.employee.employee_id }
     };
     if (roleName === '2') { 
+        query["work_info.admin_type"] = { $in: ["3", "4"] };  
     }else if (roleName==='1'){
     }else if (roleName === '3') {
         query["work_info.department_id"]=req.employee.department_id;
