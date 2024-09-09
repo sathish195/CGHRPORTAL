@@ -230,11 +230,12 @@ function add_employee_by_admin(data){
       }
       function add_image (data) {
         const schema = Joi.object({
-          image: Joi.string()
-            .required()
-            .messages({
-              "any.invalid": "Size should be 250kb only", // Define the custom error message
-            }),
+          image: Joi.string().allow(null, "").optional(),
+          // Joi.string()
+          //   .required()
+          //   .messages({
+          //     "any.invalid": "Size should be 250kb only", // Define the custom error message
+          //   }),
             about_me: Joi.string().allow(null, "").optional().trim(),
           
         });

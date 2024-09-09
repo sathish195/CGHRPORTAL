@@ -427,14 +427,23 @@ router.post("/universal" ,Auth,async(req, res) => {
         projection // Apply the projection to include/exclude specific fields
     );
     console.log(birthdays);
-    employees=await mongoFunctions.find(
+    const project = {
+        employee_id: 1,
+        _id:0,
+        // "basic_info.first_name": 1,
+        // "basic_info.last_name": 1,
+        // "basic_info.email": 1,
+        // "work_info.role_name": 1,
+    };
+
+    employee_id=await mongoFunctions.find_one(
         "EMPLOYEE",
         {
             organisation_id: org_data.organisation_id,
             // "work_info.admin_type": { $in: ["1", "2"] }
-        },
-        { createdAt: -1 } , // Sort in descending order by _id
-        projection // Apply the projection to include/exclude specific fields
+        }, // Sort in descending order by _id
+        project ,
+        { createdAt: -1 } ,// Apply the projection to include/exclude specific fields
     );
 
        
@@ -443,7 +452,7 @@ router.post("/universal" ,Auth,async(req, res) => {
             birthdays: birthdays,
             organisation_details: org_data,
             reporting_managers: reporting_manager,
-            employees:employees,
+            employee_id:employee_id,
           };
         // await redis.update_redis("ORGANISATIONS",org);
         return res.status(200).send(dashborad);
