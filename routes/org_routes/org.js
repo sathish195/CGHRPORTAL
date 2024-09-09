@@ -427,6 +427,7 @@ router.post("/universal" ,Auth,async(req, res) => {
         projection // Apply the projection to include/exclude specific fields
     );
     console.log(birthdays);
+    
        
         let dashborad = {
             recent_hires: recent_hires,

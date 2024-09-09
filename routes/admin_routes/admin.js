@@ -206,8 +206,8 @@ router.post(
         educational_details: data.educational_details,
         dependent_details: data.dependent_details,
         leaves:
-          designation_data.leaves && designation_data.leaves.length > 0
-            ? designation_data.leaves.map((e) => ({
+          role_data.leaves && role_data.leaves.length > 0
+            ? role_data.leaves.map((e) => ({
                 ...e,
                 used_leaves: 0,
                 remaining_leaves: e.total_leaves,
@@ -397,8 +397,8 @@ router.post(
         educational_details: data.educational_details,
         dependent_details: data.dependent_details,
         leaves:
-          designation_data.leaves && designation_data.leaves.length > 0
-            ? designation_data.leaves.map((e) => ({
+          role_data.leaves && role_data.leaves.length > 0
+            ? role_data.leaves.map((e) => ({
                 ...e,
                 used_leaves: 0,
                 remaining_leaves: e.total_leaves,
