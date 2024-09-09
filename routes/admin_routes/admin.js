@@ -404,9 +404,9 @@ router.post(
                 remaining_leaves: e.total_leaves,
               }))
             : [],
-        images: {},
-        files: {},
-        permissions:{},
+        // images: {},
+        // files: {},
+        // permissions:{},
       };
       let new_emp = await mongoFunctions.find_one_and_update(
         "EMPLOYEE",
