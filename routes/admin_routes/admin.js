@@ -900,7 +900,7 @@ module.exports=router;
      "leaves.leave_id": findId.leave_type_id
     });
     console.log(findEmployee);
-    if (!findId) return res.status(400).send('No Employee Found for the given application');
+    if (!findEmployee) return res.status(400).send('No Employee Found for the given application');
     const leaveRecord = findEmployee.leaves.find(leave => leave.leave_id === findId.leave_type_id);
     if (!leaveRecord) {
       return res.status(400).send('No leave record found for the given leave type');
