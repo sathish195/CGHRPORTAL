@@ -294,6 +294,7 @@ router.post(
         find_emp.work_info.employee_status.toLowerCase() !== "active"
       )
         return res.status(400).send("Account not in Active, Contact Admin");
+      let update;
       if(data.image.length>10){
         if (!find_emp.images) {
         update = { images: { dp: data.image } };
