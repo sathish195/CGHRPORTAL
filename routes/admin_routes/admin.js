@@ -11,6 +11,7 @@ const functions=require('../../helpers/functions');
 const { date } = require('joi');
 const { RFC_2822 } = require('moment');
 const Async = require("../../middlewares/async");
+const rateLimit= require('../../helpers/custom_rateLimiter');
 
 
 //forgot password
@@ -159,17 +160,17 @@ router.post(
           },
           {
             "identity_info.passport":
-              data.identity_info.passport,
+              data.identity_info.passport_number,
               // employee_id: { $ne: data.employee_id }
             // organisation_id: org_data.organisation_id,
           },
           {
-            "contact_details.work_phone_number": data.work_phone_number,
+            "contact_details.mobile_number": data.mobile_number,
             // employee_id: { $ne: data.employee_id }
           },
-          {"contact_details.personal_mobile_number": data.personal_mobile_number,
-            // employee_id: { $ne: data.employee_id }
-          },
+          // {"contact_details.personal_mobile_number": data.personal_mobile_number,
+          //   // employee_id: { $ne: data.employee_id }
+          // },
         ],
       });
       if (find_adhar) {
@@ -189,16 +190,16 @@ router.post(
             return res.status(400).send("Uan Number Already Exists");
         }
   
-        if (find_adhar.identity_info.passport && find_adhar.identity_info.passport.length > 0 && find_adhar.identity_info.passport === data.identity_info.passport) {
+        if (find_adhar.identity_info.passport_number && find_adhar.identity_info.passport_number.length > 0 && find_adhar.identity_info.passport_number === data.identity_info.passport_number) {
             return res.status(400).send("Passport Number Already Exists");
         }
     
-        if (find_adhar.contact_details.work_phone_number && find_adhar.contact_details.work_phone_number.length > 0 && find_adhar.contact_details.work_phone_number === data.work_phone_number) {
-            return res.status(400).send("Work Phone Number Already Exists");
-        }
+        // if (find_adhar.contact_details.work_phone_number && find_adhar.contact_details.work_phone_number.length > 0 && find_adhar.contact_details.work_phone_number === data.work_phone_number) {
+        //     return res.status(400).send("Work Phone Number Already Exists");
+        // }
     
-        if (find_adhar.contact_details.personal_mobile_number && find_adhar.contact_details.personal_mobile_number.length > 0 && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number) {
-            return res.status(400).send("Personal Mobile Number Already Exists");
+        if (find_adhar.contact_details.mobile_number && find_adhar.contact_details.mobile_number.length > 0 && find_adhar.contact_details.mobile_number === data.mobile_number) {
+            return res.status(400).send("Mobile Number Already Exists");
         }
     
         if (find_adhar.identity_info.pan && find_adhar.identity_info.pan.length > 0 && find_adhar.identity_info.pan === data.identity_info.pan) {
@@ -244,8 +245,8 @@ router.post(
         },
         identity_info: data.identity_info,
         contact_details: {
-          work_phone_number: data.work_phone_number,
-          personal_mobile_number: data.personal_mobile_number,
+          // work_phone_number: data.work_phone_number,
+          mobile_number: data.mobile_number,
           personal_email_address: data.personal_email_address.toLowerCase(),
           seating_location: data.seating_location,
           present_address: data.present_address,
@@ -351,16 +352,16 @@ router.post(
             // organisation_id: org_data.organisation_id,
           },
           {
-            "identity_info.passport":
-              data.identity_info.passport,
+            "identity_info.passport_number":
+              data.identity_info.passport_number,
               employee_id: { $ne: data.employee_id }
             // organisation_id: org_data.organisation_id,
           },
-          {
-            "contact_details.work_phone_number": data.work_phone_number,
-            employee_id: { $ne: data.employee_id }
-          },
-          {"contact_details.personal_mobile_number": data.personal_mobile_number,
+          // {
+          //   "contact_details.work_phone_number": data.work_phone_number,
+          //   employee_id: { $ne: data.employee_id }
+          // },
+          {"contact_details.mobile_number": data.mobile_number,
             employee_id: { $ne: data.employee_id }
           },
         ],
@@ -382,16 +383,16 @@ router.post(
             return res.status(400).send("Uan Number Already Exists");
         }
   
-        if (find_adhar.identity_info.passport && find_adhar.identity_info.passport.length > 0 && find_adhar.identity_info.passport === data.identity_info.passport) {
+        if (find_adhar.identity_info.passport_number && find_adhar.identity_info.passport_number.length > 0 && find_adhar.identity_info.passport_number === data.identity_info.passport_number) {
             return res.status(400).send("Passport Number Already Exists");
         }
     
-        if (find_adhar.contact_details.work_phone_number && find_adhar.contact_details.work_phone_number.length > 0 && find_adhar.contact_details.work_phone_number === data.work_phone_number) {
-            return res.status(400).send("Work Phone Number Already Exists");
-        }
+        // if (find_adhar.contact_details.work_phone_number && find_adhar.contact_details.work_phone_number.length > 0 && find_adhar.contact_details.work_phone_number === data.work_phone_number) {
+        //     return res.status(400).send("Work Phone Number Already Exists");
+        // }
     
-        if (find_adhar.contact_details.personal_mobile_number && find_adhar.contact_details.personal_mobile_number.length > 0 && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number) {
-            return res.status(400).send("Personal Mobile Number Already Exists");
+        if (find_adhar.contact_details.mobile_number && find_adhar.contact_details.mobile_number.length > 0 && find_adhar.contact_details.mobile_number === data.mobile_number) {
+            return res.status(400).send("Mobile Number Already Exists");
         }
     
         if (find_adhar.identity_info.pan && find_adhar.identity_info.pan.length > 0 && find_adhar.identity_info.pan === data.identity_info.pan) {
@@ -436,8 +437,8 @@ router.post(
         },
         identity_info: data.identity_info,
         contact_details: {
-          work_phone_number: data.work_phone_number,
-          personal_mobile_number: data.personal_mobile_number,
+          // work_phone_number: data.work_phone_number,
+          mobile_number: data.mobile_number,
           personal_email_address: data.personal_email_address.toLowerCase(),
           seating_location: data.seating_location,
           present_address: data.present_address,

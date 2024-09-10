@@ -8,6 +8,8 @@ const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
 const Async = require("../../middlewares/async");
+const rateLimit= require('../../helpers/custom_rateLimiter');
+
 // const rateLimiter=require('../../middlewares/rate_limiter');
 
 
@@ -16,7 +18,7 @@ const Async = require("../../middlewares/async");
 
 router.post(
     "/get_profile",
-    Auth,Async((async (req, res) => {
+    Auth,rateLimit(60,3),Async((async (req, res) => {
       const employee= req.employee;
       let emp = await mongoFunctions.find_one(
         employee.collection,
