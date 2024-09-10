@@ -50,8 +50,8 @@ router.post('/add_update_org_details',Auth,async (req,res)=>{
         roles:[
             {
                 role_id: functions.get_random_string("R", 15, true),
-                role_name: "team member",
-                admin_type:"4"
+                role_name: "admin",
+                admin_type:"1"
             },
             {
                 role_id: functions.get_random_string("R", 15, true),
@@ -60,13 +60,13 @@ router.post('/add_update_org_details',Auth,async (req,res)=>{
             },
             {
                 role_id: functions.get_random_string("R", 15, true),
-                role_name: "admin",
-                admin_type:"1"
+                role_name: "team incharge",
+                admin_type:"3"
             },
             {
                 role_id: functions.get_random_string("R", 15, true),
-                role_name: "team incharge",
-                admin_type:"3"
+                role_name: "team member",
+                admin_type:"4"
             },
         ]
     };
