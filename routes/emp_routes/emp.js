@@ -584,7 +584,7 @@ router.post("/apply_leave",Auth,async(req,res) => {
     leave_type_id: emp_leave_obj.leave_id,
     leave_type: emp_leave_obj.leave_name,
     employee_name:
-      find_emp.basic_info.first_name + "" + find_emp.basic_info.last_name,
+      find_emp.basic_info.first_name + " " + find_emp.basic_info.last_name,
     email: find_emp.basic_info.email,
     days_taken: leaves_count,
     from_date: data.from_date,
