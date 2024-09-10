@@ -9,6 +9,7 @@ const redis=require('../../helpers/redisFunctions');
 const functions=require('../../helpers/functions');
 const stats=require('../../helpers/stats');
 const { mongo } = require('mongoose');
+const Fuse = require("fuse.js");
 
 
 
@@ -665,6 +666,8 @@ router.post("/add_update_leave", Auth, async (req, res) => {
 router.post("/get_team_for_task", Auth, async (req, res) => {
     const data = req.body;
     const roleName = req.employee.admin_type;
+
+    
     const query = {
         organisation_id: req.employee.organisation_id,
         employee_id: { $ne: req.employee.employee_id }
@@ -684,16 +687,32 @@ router.post("/get_team_for_task", Auth, async (req, res) => {
         "basic_info.last_name": 1,
         "basic_info.email": 1,
         "work_info.role_name": 1,
+        "images":1
     };
+    let teamMembers;
 
-    const teamMembers = await mongoFunctions.find("EMPLOYEE", query,{ _id: -1 }, projection);
-    console.log(teamMembers);
+    if (data.name && data.name.length > 1) {
+        const teamMembersFromDb = await mongoFunctions.find("EMPLOYEE", query, { _id: -1 }, projection);
+        
+        const fuse = new Fuse(teamMembersFromDb, {
+            keys: ["basic_info.first_name", "basic_info.last_name"],
+            threshold: 0.3,
+        });
+
+        teamMembers = fuse.search(data.name).map(result => result.item);
+        console.log(teamMembers);
+    } else {
+        teamMembers = await mongoFunctions.find("EMPLOYEE", query, { _id: -1 }, projection);
+    }
+
+    // const teamMembers = await mongoFunctions.find("EMPLOYEE", query,{ _id: -1 }, projection);
+    // console.log(teamMembers);
 
     if (!teamMembers || teamMembers.length === 0) {
         return res.status(404).send("No team members found.");
     }
 
-    res.status(200).json(teamMembers);
+    res.status(200).send(teamMembers);
 });
 
 
