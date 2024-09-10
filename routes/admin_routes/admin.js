@@ -10,10 +10,11 @@ const stats=require('../../helpers/stats');
 const functions=require('../../helpers/functions');
 const { date } = require('joi');
 const { RFC_2822 } = require('moment');
+const Async = require("../../middlewares/async");
 
 
 //forgot password
-router.post('/emp_reset_password',Auth,async(req,res) => {
+router.post('/emp_reset_password',Auth,Async(async(req,res) => {
   data=req.body;
   var {error}=validations.emp_reset_password_by_admin(data);
   if(error) return res.status(400).send(error.details[0].message);
@@ -55,12 +56,12 @@ router.post('/emp_reset_password',Auth,async(req,res) => {
   // return res.status(200).send({
   // success: "Success",
   // });  
-});
+}));
 // Add new employee
 
 router.post(
     "/add_employee",
-    Auth,(async (req, res) => {
+    Auth,Async((async (req, res) => {
       let data = req.body;
       var { error } = validations.add_employee_by_admin(data);
       if (error) return res.status(400).send(error.details[0].message);
@@ -277,12 +278,12 @@ router.post(
         // data: new_emp,
       });
     })
-  )
+  ))
 
   // Update employee profile
   router.post(
     "/update_employee_profile",
-    Auth,(async (req, res) => {
+    Auth,Async((async (req, res) => {
       let data = req.body;
       var { error } = validations.add_employee_by_admin(data);
       if (error) return res.status(400).send(error.details[0].message);
@@ -471,9 +472,9 @@ router.post(
         // data: new_emp,
       });
     })
-  )
+  ))
 
-  router.post('/add_update_project',Auth, async (req, res) => {
+  router.post('/add_update_project',Auth, Async(async (req, res) => {
     const data = req.body;
   
     // Validate request data
@@ -560,9 +561,9 @@ router.post(
   
       return res.status(201).send('Project created successfully');
     }
-  });
+  }));
 
-  router.post('/add_remove_team', Auth, async (req, res) => {
+  router.post('/add_remove_team', Auth, Async(async (req, res) => {
     const data = req.body;
 
     // Validate request data
@@ -722,13 +723,13 @@ router.post(
     } else {
         return res.status(400).send('Invalid action');
     }
-});
+}));
 
   
 module.exports=router;
 
 
-  router.post('/add_update_task',Auth, async (req, res) => {
+  router.post('/add_update_task',Auth, Async(async (req, res) => {
     const data = req.body;
   
     // Validate request data
@@ -840,8 +841,8 @@ module.exports=router;
   
       return res.status(201).send('Task Created successfully');
     }
-  });
-  router.post("/update_project",Auth,async(req, res)=>{
+  }));
+  router.post("/update_project",Auth,Async(async(req, res)=>{
     const data = req.body;
     const { error } = validations.update_project(data);
     if(error) return res.status(400).send(error.details[0].message);
@@ -879,9 +880,9 @@ module.exports=router;
           );
           if(!project_data_up) return res.status(400).send('Project Update Failed');
           return res.status(200).send('Project Updated Successfully');
-  });
+  }));
 
-  router.post("/update_leave_application",Auth,async(req, res) => {
+  router.post("/update_leave_application",Auth,Async(async(req, res) => {
     const data = req.body;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -1016,8 +1017,8 @@ module.exports=router;
     
     return res.status(200).send("Leave Status Updated Successfully")
 
-  })
-  router.post("/update_leave_status",Auth,async(req, res) => {
+  }))
+  router.post("/update_leave_status",Auth,Async(async(req, res) => {
     const data = req.body;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -1088,6 +1089,6 @@ module.exports=router;
       
       return res.status(200).send("Leave Status Updated Successfully");
 
-    })
+    }))
 
 

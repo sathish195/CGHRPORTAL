@@ -7,13 +7,15 @@ const jwt=require('jsonwebtoken');
 const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const { mongo } = require('mongoose');
+const Async = require("../../middlewares/async");
+
 
 //get employee list
 
 //------------------------get emp by id------------------
 router.post(
     "/get_emp_by_id",
-    Auth,(async (req, res) => {
+    Auth,Async((async (req, res) => {
       let data = req.body;
       var { error } = validations.employee_id(data);
       if (error) return res.status(400).send(error.details[0].message);
@@ -31,11 +33,11 @@ router.post(
       }
       return res.status(400).send("Not Admin");
     })
-  )
+  ))
   //-----------------get emp by lazy loading--------
   router.post(
     "/get_employee_list",
-    Auth,
+    Auth,Async(
     async (req, res) => {
         const emp = req.employee;
         const LIMIT = 50;
@@ -82,9 +84,9 @@ router.post(
             );
             return res.status(200).send({ employees });
     }
-);
+));
 
-  router.post("/get_project_by_id",Auth, async (req, res)=>{
+  router.post("/get_project_by_id",Auth, Async(async (req, res)=>{
     data=req.body;
     var { error } =validations.get_project_by_id(data);
       if (error) return res.status(400).send(error.details[0].message);
@@ -97,9 +99,9 @@ router.post(
     if(!findProject) return res.status(400).send("Project not found")
     return res.status(200).send(findProject)
 
-    });
+    }));
 
-    router.post("/a",Auth, async (req, res)=>{
+    router.post("/get_projects",Auth, Async(async (req, res)=>{
 
     const data = req.body;
     const userRole = req.employee.admin_type;
@@ -172,8 +174,8 @@ router.post(
     // });
     return res.status(200).send(projects);
     }
-});
-router.post("/all_leave_applications", Auth, async (req, res) => {
+}));
+router.post("/all_leave_applications", Auth,Async( async (req, res) => {
   try {
     const data = req.body;
     const { error } = validations.get_all_leave_applications(data);
@@ -272,7 +274,7 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
     console.error("Error fetching leave applications:", err);
     return res.status(500).send("Internal server error");
   }
-});
+}));
 
 
 

@@ -7,7 +7,7 @@ function alertDev(messaggio) {
   console.log('Token:', token);
   console.log('ID:', id);
 
-  const h=sendMessage(id, messaggio, token);
+  sendMessage(id, messaggio, token);
   console.log("success");
 }
 

@@ -1,4 +1,5 @@
 const express=require('express')
+// const globalErrorHandler = require('./middlewares/async');
 
 
 app=express()
@@ -15,6 +16,8 @@ require("./helpers/redisFunctions");
 
 
 require("./helpers/routeConfig")(app);
+// app.use(globalErrorHandler);
+// app.use(async);
 
 
 app.listen(process.env.PORT, () => {

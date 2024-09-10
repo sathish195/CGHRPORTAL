@@ -34,7 +34,7 @@ router.post('/add_update_org_details',Auth,async (req,res)=>{
     "images.logo": data.logo,
     };
     if (find_org) {
-    org_data_up = await mongoFunctions.find_one_and_update(
+    let org_data_up = await mongoFunctions.find_one_and_update(
         "ORGANISATIONS",
         { email: req.employee.email },
         org_data,
@@ -70,7 +70,7 @@ router.post('/add_update_org_details',Auth,async (req,res)=>{
             },
         ]
     };
-    org_data_up = await mongoFunctions.create_new_record(
+    let org_data_up = await mongoFunctions.create_new_record(
         "ORGANISATIONS",
         new_org_data
     );
@@ -95,7 +95,7 @@ router.post('/add_update_department', Auth, async (req, res) => {
     if (error) return res.status(400).send(error.details[0].message);
     if (req.employee.admin_type !== "1" && req.employee.admin_type !=="2")
         return res.status(403).send("Only Director Or Manager Can Access This Endpoint");
-    org=await mongoFunctions.find_one("ORGANISATIONS", {
+    let org=await mongoFunctions.find_one("ORGANISATIONS", {
         email: req.employee.email,
       });
 
@@ -106,7 +106,7 @@ router.post('/add_update_department', Auth, async (req, res) => {
         true
     );
     console.log(org_data);
-    console.log(org_data.organisation_id);
+    // console.log(org_data.organisation_id);
     if (org_data && org_data.organisation_id === data.organisation_id) {
         // Check if department already exists
         let department_exists = org_data.departments.find(
@@ -139,7 +139,7 @@ router.post('/add_update_department', Auth, async (req, res) => {
                     new: true,
                 }
             );
-            employee_data_up = await mongoFunctions.update_many(
+            let employee_data_up = await mongoFunctions.update_many(
                 "EMPLOYEE",
                 {
                     organisation_id: org_data.organisation_id,
@@ -158,7 +158,7 @@ router.post('/add_update_department', Auth, async (req, res) => {
                 department_name: data.department_name.toLowerCase(),
             };
             
-            department_data_up = await mongoFunctions.find_one_and_update(
+            let department_data_up = await mongoFunctions.find_one_and_update(
                 "ORGANISATIONS",
                 {
                     organisation_id: org_data.organisation_id,
@@ -389,7 +389,7 @@ router.post("/add_update_role", Auth, async (req, res) => {
 });
 
 router.post("/universal" ,Auth,async(req, res) => {
-    org=await mongoFunctions.find_one("ORGANISATIONS", {
+    let org=await mongoFunctions.find_one("ORGANISATIONS", {
         organisation_id: req.employee.organisation_id,
       });
     console.log(org);
@@ -424,8 +424,8 @@ router.post("/universal" ,Auth,async(req, res) => {
             organisation_id: org_data.organisation_id,
             "work_info.admin_type": { $in: ["1", "2"] }
         },
-        { _id: -1 } , // Sort in descending order by _id
-        projection // Apply the projection to include/exclude specific fields
+        { _id: -1 } , 
+        projection 
     );
     console.log(birthdays);
     const project = {
@@ -442,9 +442,9 @@ router.post("/universal" ,Auth,async(req, res) => {
         {
             organisation_id: org_data.organisation_id,
             // "work_info.admin_type": { $in: ["1", "2"] }
-        }, // Sort in descending order by _id
+        }, // 
         project ,
-        { createdAt: -1 } ,// Apply the projection to include/exclude specific fields
+        { createdAt: -1 } ,
     );
 
        

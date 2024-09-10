@@ -8,19 +8,19 @@ const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
 const functions=require('../../helpers/functions');
-const {alertDev} = require('../../helpers/telegram');
+const Async = require("../../middlewares/async");
 // const bcrypt=require('bcrypt');
 
-router.get("/error",alertDev,(async(req,res)=>{
-  const error = req.body
+router.post("/error",Async(async(req,res)=>{
+  const error = req.validations.error;
   // const data = {}
-  alertDev("error")
-  console.log(data);
+  // alertDev("error")
+  console.log(error);
   
   return res.send(error)
 
 }))
-router.post('/login',async(req,res)=>{
+router.post('/login',Async(async(req,res)=>{
     data=req.body;
     console.log(data);
     //validate data
@@ -78,10 +78,10 @@ router.post('/login',async(req,res)=>{
   token: token,
   });
   
-  })
+  }))
 module.exports = router;
 
-router.post('/forgot_password',async(req,res) => {
+router.post('/forgot_password',Async(async(req,res) => {
     data=req.body;
     //validate data
     var {error}=validations.emp_forgot_password(data);
@@ -106,9 +106,9 @@ router.post('/forgot_password',async(req,res) => {
     return res.status(200).send({
     success: "Success",
     });  
-});
+}));
 
-router.post('/reset_forgot_password',async(req,res) => {
+router.post('/reset_forgot_password',Async(async(req,res) => {
     data=req.body;
     //validate data
     var {error}=validations.emp_reset_forgot_password(data);
@@ -144,11 +144,11 @@ router.post('/reset_forgot_password',async(req,res) => {
     return res.status(200).send({
     success: "Password Reset Done Successfully",
     });
-});
+}));
 
 //resend otp
 
-router.post('/resend_otp',async(req,res) => {
+router.post('/resend_otp',Async(async(req,res) => {
     data=req.body;
     //validate data
     var {error}=validations.emp_forgot_password(data);
@@ -170,7 +170,7 @@ router.post('/resend_otp',async(req,res) => {
     return res.status(200).send({
     success: "OTP Sent Successfully",
     });
-})
+}));
 
 //login_verify
 
@@ -230,7 +230,7 @@ router.post('/resend_otp',async(req,res) => {
 //     })
 //change password
 
-router.post('/reset_password',Auth, async (req, res) =>{
+router.post('/reset_password',Auth, Async(async (req, res) =>{
     data=req.body;
     //validate data
     var {error}=validations.emp_reset_password(data);
@@ -264,13 +264,13 @@ router.post('/reset_password',Auth, async (req, res) =>{
     success: "Password Changed Successfully",
     });
 
-})
+}));
 
 //update dp
 
 router.post(
     "/update_dp",
-    Auth,(async (req, res) => {
+    Auth,Async((async (req, res) => {
       if (req.employee.collection !== "EMPLOYEE")
         return res.status(400).send("Invalid token details");
       let data = req.body;
@@ -317,9 +317,9 @@ router.post(
         data: {dp:update_emp.images.dp,about_me:update_emp.personal_details.about_me},
       });
     })
-  )
+  ))
 
-  router.post("/edit_profile",Auth, async (req, res) =>{
+  router.post("/edit_profile",Auth, Async(async (req, res) =>{
     let data = req.body;
     console.log(req.body);
       var { error } = validations.edit_profile(data);
@@ -442,8 +442,8 @@ router.post(
         success: "Success",
         data: update_emp,
       });
-    });
-    router.post("/update_task",Auth,async(req, res)=>{
+    }));
+    router.post("/update_task",Auth,Async(async(req, res)=>{
       const data = req.body;
       const { error } = validations.update_task(data);
       if(error) return res.status(400).send(error.details[0].message);
@@ -486,9 +486,9 @@ router.post(
             }
             console.log("Sending");
             return res.status(200).send('Task Updated Successfully');
-    });
+    }));
 
-router.post("/apply_leave",Auth,async(req,res) => {
+router.post("/apply_leave",Auth,Async(async(req,res) => {
   if (req.employee.role_name ==="director"){
     return res.status(400).send('Access denied: Director Do Not Apply Leave');
   }
@@ -600,7 +600,7 @@ router.post("/apply_leave",Auth,async(req,res) => {
   return res.status(200).send({
     success: "Leave Applied Successfully...!",
   });
-});
+}));
   
   
   
