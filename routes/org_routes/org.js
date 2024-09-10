@@ -10,10 +10,11 @@ const functions=require('../../helpers/functions');
 const stats=require('../../helpers/stats');
 const { mongo } = require('mongoose');
 const Fuse = require("fuse.js");
+const Async = require("../../middlewares/async");
 
 
 
-router.post('/add_update_org_details',Auth,async (req,res)=>{
+router.post('/add_update_org_details',Auth,Async(async (req,res)=>{
     let data=req.body;
     const { error } = validations.add_update_org(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -85,9 +86,9 @@ router.post('/add_update_org_details',Auth,async (req,res)=>{
     return res
     .status(200)
     .send({ success: "Details Added..!", data: org_data_up });
-});
+}));
 
-router.post('/add_update_department', Auth, async (req, res) => {
+router.post('/add_update_department', Auth, Async(async (req, res) => {
     let data = req.body;
 
     // Validate data
@@ -184,8 +185,8 @@ router.post('/add_update_department', Auth, async (req, res) => {
     }
 
     return res.status(400).send("Invalid Organisation id");
-});
-router.post('/add_update_designation', Auth, async (req, res) => {
+}));
+router.post('/add_update_designation', Auth, Async(async (req, res) => {
     let data = req.body;
 
     // Validate data
@@ -288,9 +289,9 @@ router.post('/add_update_designation', Auth, async (req, res) => {
     }
 
     return res.status(400).send("Invalid Organisation id");
-});
+}));
 
-router.post("/add_update_role", Auth, async (req, res) => {
+router.post("/add_update_role", Auth,Async( async (req, res) => {
     let data = req.body;
 
     // Validate data
@@ -386,9 +387,9 @@ router.post("/add_update_role", Auth, async (req, res) => {
     }
 
     return res.status(400).send("Invalid Organisation id");
-});
+}));
 
-router.post("/universal" ,Auth,async(req, res) => {
+router.post("/universal" ,Auth,Async(async(req, res) => {
     let org=await mongoFunctions.find_one("ORGANISATIONS", {
         organisation_id: req.employee.organisation_id,
       });
@@ -457,7 +458,7 @@ router.post("/universal" ,Auth,async(req, res) => {
           };
         // await redis.update_redis("ORGANISATIONS",org);
         return res.status(200).send(dashborad);
-        });
+        }));
      
     // return res
     //     .status(200)
@@ -466,7 +467,7 @@ router.post("/universal" ,Auth,async(req, res) => {
     // await redis.update_redis("ORGANISATIONS",org);
 
 //update leaves in a designation
-router.post("/add_update_leave", Auth, async (req, res) => {
+router.post("/add_update_leave", Auth,Async( async (req, res) => {
     const data = req.body;
 
     // Validate data
@@ -661,9 +662,9 @@ router.post("/add_update_leave", Auth, async (req, res) => {
             data: updatedOrg
         });
     }
-});
+}));
 
-router.post("/get_team_for_task", Auth, async (req, res) => {
+router.post("/get_team_for_task", Auth, Async(async (req, res) => {
     const data = req.body;
     const roleName = req.employee.admin_type;
 
@@ -713,10 +714,10 @@ router.post("/get_team_for_task", Auth, async (req, res) => {
     }
 
     res.status(200).send(teamMembers);
-});
+}));
 
 
-router.post("/get_team_for_project", Auth, async (req, res) => {
+router.post("/get_team_for_project", Auth, Async(async (req, res) => {
     try {
         const roleName = req.employee.admin_type;
         const query = {
@@ -753,9 +754,9 @@ router.post("/get_team_for_project", Auth, async (req, res) => {
         console.error("Error fetching team members:", error);
         res.status(500).send("Internal Server Error");
     }
-});
+}));
 
-router.post("/update_token",Auth,async(req, res)=>{
+router.post("/update_token",Auth,Async(async(req, res)=>{
 
     const org_id=await mongoFunctions.find_one('ORGANISATIONS',{email:req.employee.email});
     if(!org_id) return res.status(404).send("Organisation not found");
@@ -784,6 +785,6 @@ router.post("/update_token",Auth,async(req, res)=>{
     });
 
 
-})
+}))
 
 module.exports = router;
