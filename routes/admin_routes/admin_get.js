@@ -99,7 +99,7 @@ router.post(
 
     });
 
-    router.post("/get_projects",Auth, async (req, res)=>{
+    router.post("/a",Auth, async (req, res)=>{
 
     const data = req.body;
     const userRole = req.employee.admin_type;
@@ -182,7 +182,7 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
       return res.status(400).send(error.details[0].message);
     }
 
-    const roleName = req.employee.role_name.toLowerCase();
+    const roleName = req.employee.admin_type;
     const status = "Pending";
     const query = {
       organisation_id: req.employee.organisation_id,
@@ -227,9 +227,9 @@ router.post("/all_leave_applications", Auth, async (req, res) => {
   }
 
     if (data.leave_status && data.leave_status.length > 5) {
-      if (roleName === 'manager') {
+      if (roleName === '2') {
         query["approved_by.manager.leave_status"] = data.leave_status;
-      } else if (roleName === 'team incharge') {
+      } else if (roleName === '3') {
         query["approved_by.team_incharge.leave_status"] = data.leave_status;
       }
       else{
