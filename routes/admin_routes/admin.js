@@ -224,7 +224,8 @@ router.post(
         new_emp_data
       );
 
-      //   await rediscon.update_redis("EMPLOYEE", new_emp);
+        // let h= await redis.update_redis("EMPLOYEE", new_emp);
+        // console.log(h);
     //   await stats.update_emp(new_emp, true, true);
       return res.status(200).send({
         success: "Success",
@@ -417,7 +418,8 @@ router.post(
         { $set: new_emp_data },
       );
 
-      //   await rediscon.update_redis("EMPLOYEE", new_emp);
+      // let h= await rediscon.update_redis("EMPLOYEE", new_emp);
+      // console.log(h);
     //   await stats.update_emp(new_emp, true, true);
       return res.status(200).send({
         success: "Success",

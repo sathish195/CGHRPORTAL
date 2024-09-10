@@ -293,11 +293,15 @@ router.post(
         find_emp.work_info.employee_status.toLowerCase() !== "active"
       )
         return res.status(400).send("Account not in Active, Contact Admin");
-
-      if (!find_emp.images) {
-        update = { images: { dp: data.image },"personal_details.about_me":data.about_me };
-      } else {
-        update = { "images.dp": data.image, "personal_details.about_me": data.about_me };
+      if(data.image.length>10){
+        if (!find_emp.images) {
+        update = { images: { dp: data.image } };
+      }
+      else {
+        update = { "images.dp": data.image };
+      }
+      }if(data.about_me.length>2){
+        update = { "personal_details.about_me": data.about_me };
       }
       let update_emp = await mongoFunctions.find_one_and_update(
         "EMPLOYEE",

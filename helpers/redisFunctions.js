@@ -88,7 +88,7 @@ module.exports = {
     } else if (COLLECTION === "EMPLOYEE") {
       obj._id = undefined;
       obj.__v = undefined;
-      obj.createdAt = undefined;
+      // obj.createdAt = undefined;
       obj.updatedAt = undefined;
       await client.hSet(
         obj.organisation_id,

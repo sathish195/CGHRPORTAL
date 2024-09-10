@@ -193,7 +193,7 @@ function add_employee_by_admin(data){
         about_me: Joi.string().allow(null, "").optional().trim(),
         identity_info: Joi.object().min(2).required(),
         work_phone_number: Joi.string().allow(null, "").optional(),
-        personal_mobile_number: Joi.string().required(),
+        personal_mobile_number: Joi.string().min(10).max(10).required(),
         personal_email_address: Joi.string()
           .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
           .trim()
