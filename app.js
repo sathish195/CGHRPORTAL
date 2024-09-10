@@ -2,6 +2,7 @@ const express=require('express')
 
 
 app=express()
+app.set('trust proxy', 1);
 
 app.use(express.json({ limit: "10mb" }));
 // app.use(error_handler);
@@ -11,15 +12,6 @@ require("dotenv").config();
 require("./helpers/cors")(app);
 require("./helpers/db")();
 require("./helpers/redisFunctions");
-// app.use(error_handler.handle500Errors());
-// require("./middlewares/error")
-
-//error handling is pending
-//compression is pending
-//helmet is pending
-//ratelimiter is pending
-//slowdown is pending
-//rate cutter is pending
 
 
 require("./helpers/routeConfig")(app);
