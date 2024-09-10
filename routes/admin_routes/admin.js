@@ -11,6 +11,51 @@ const functions=require('../../helpers/functions');
 const { date } = require('joi');
 const { RFC_2822 } = require('moment');
 
+
+//forgot password
+router.post('/emp_reset_password',Auth,async(req,res) => {
+  data=req.body;
+  var {error}=validations.emp_reset_password_by_admin(data);
+  if(error) return res.status(400).send(error.details[0].message);
+  //validate data
+  if (req.employee.admin_type !== "1" && req.employee.admin_type !== "2"){
+    return res.status(400).send("Access Denied..!!Not Admin Or Manager");
+  }
+  // var {error}=validations.emp_reset_password_by_admin(data);
+  // if(error) return res.status(400).send(error.details[0].message);
+  const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
+  if(!employee) return res.status(400).send('No Employee Found With The Given Email');
+  
+  if (
+      // employee &&
+      employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
+      )
+      return res
+          .status(400)
+          .send("Employee Status Disabled!");
+    const verifyPassword=bcrypt.compare_password(data.new_password,employee.password);
+    console.log(verifyPassword);
+    console.log(employee.password);
+    console.log(data.new_password);
+    if(verifyPassword) return res.status(400).send('Password Should Not Same As Your Old Password');
+    const hashedPassword=bcrypt.hash_password(data.new_password);
+    await mongoFunctions.find_one_and_update(
+        "EMPLOYEE",
+        { employee_id: employee.employee_id },
+        { password: hashedPassword }
+    );
+    return res.status(200).send({
+    success: "Password Reset Done Successfully",
+    });
+  // var OTP="654321";
+  // var otp=OTP;
+  // await redis.genOtp(employee.employee_id, otp, 120);
+
+  //send otp
+  // return res.status(200).send({
+  // success: "Success",
+  // });  
+});
 // Add new employee
 
 router.post(
@@ -990,7 +1035,7 @@ module.exports=router;
      employee_id: findId.employee_id,
      "leaves.leave_id": findId.leave_type_id
     });
-    console.log(findEmployee);
+    // console.log(findEmployee);
     if (!findId) return res.status(400).send('No Employee Found for the given application');
     const leaveRecord = findEmployee.leaves.find(leave => leave.leave_id === findId.leave_type_id);
     if (!leaveRecord) {

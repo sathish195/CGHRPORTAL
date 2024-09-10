@@ -107,6 +107,7 @@ router.post('/forgot_password',async(req,res) => {
     success: "Success",
     });  
 });
+
 router.post('/reset_forgot_password',async(req,res) => {
     data=req.body;
     //validate data

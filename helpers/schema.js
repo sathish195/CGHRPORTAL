@@ -19,6 +19,15 @@ function emp_forgot_password(data) {
     });
     return schema.validate(data);
 }
+function emp_reset_password_by_admin(data) {
+  const schema = Joi.object({
+      email: Joi.string().required().email().max(55),
+      new_password: Joi.string().required().min(8).max(15)
+      .pattern(/(?=.*[A-Z])/,'uppercase')  // At least one uppercase letter
+      .pattern(/(?=.*[@$!%*?&])/,'special') //atleast one special character
+  });
+  return schema.validate(data);
+}
 function emp_reset_forgot_password(data) {
     const schema = Joi.object({
         employee_email: Joi.string().required().email().max(55),
@@ -468,5 +477,5 @@ function add_employee_by_admin(data){
 // Export the functions
 module.exports = {emp_login,emp_forgot_password,emp_reset_forgot_password ,emp_login_verify,emp_reset_password,add_update_org,add_update_department,add_update_designation
     ,add_update_role ,add_employee_by_admin,employee_id,skip,add_image,edit_profile,add_project,get_project_by_id,add_remove_team,add_update_task,get_task_by_id,update_project,update_task,
-    update_leaves,get_all_tasks,apply_leave,update_leave,get_all_leave_applications,get_employee_leave_applications,get_team
+    update_leaves,get_all_tasks,apply_leave,update_leave,get_all_leave_applications,get_employee_leave_applications,get_team,emp_reset_password_by_admin
 };
