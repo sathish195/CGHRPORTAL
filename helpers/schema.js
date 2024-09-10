@@ -161,7 +161,7 @@ function add_employee_by_admin(data){
       });
       const schema = Joi.object({
         organisation_id: Joi.string().min(15).max(17).required(),
-        employee_id: Joi.string().min(5).max(10).required(),
+        employee_id: Joi.string().min(5).max(10).regex(/^[A-Za-z0-9]+$/).required(),
         password:Joi.string().required().min(8).max(60)
         .pattern(/(?=.*[A-Z])/,'uppercase')  // At least one uppercase letter
         .pattern(/(?=.*[@$!%*?&])/,'special'), //atleast one special character
@@ -281,7 +281,7 @@ function add_employee_by_admin(data){
           });
           const schema = Joi.object({
             organisation_id: Joi.string().min(15).max(17).required(),
-            employee_id: Joi.string().min(5).max(10).required(),
+            employee_id: Joi.string().min(5).max(10).regex(/^[A-Za-z0-9]+$/).required(),
             nick_name: Joi.string().max(15).allow(null, "").optional(),
             expertise: Joi.string().allow(null, "").optional(),
             marital_status: Joi.string().valid("married", "unmarried").required(),
