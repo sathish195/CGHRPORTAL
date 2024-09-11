@@ -1084,12 +1084,37 @@ module.exports=router;
             employee_id: findId.employee_id
           },
           {
-            $set: { lop_leaves: findId.days_taken }  // Set the LOP leaves
+            $inc: { lop_leaves: +findId.days_taken }  // Set the LOP leaves
           }
         );
         console.log(l);
       }
-      // if (findId.leave_status==="Approved" && leave_data_up.leave_status === "Rejected") {
+      if (findId.leave_status==="Approved" && leave_data_up.leave_status === "Rejected") {
+        const l = await mongoFunctions.find_one_and_update(
+          "LEAVE",
+          {
+            organisation_id: req.employee.organisation_id,
+            employee_id: findId.employee_id
+          },
+          {
+            $inc: { lop_leaves: +findId.days_taken }  // Set the LOP leaves
+          }
+        );
+        console.log(l);
+      const h = await mongoFunctions.find_one_and_update(
+        "EMPLOYEE",
+        {
+          organisation_id: req.employee.organisation_id,
+          employee_id: findId.employee_id,
+          "leaves.leave_id": findId.leave_type_id
+        },
+        {
+          $inc: { "leaves.$.remaining_leaves": +findId.days_taken }  
+        }
+      );
+      console.log(h);
+      }
+      // if (findId.leave_status==="Rejected" && leave_data_up.leave_status === "Approved") {
       //   const l = await mongoFunctions.find_one_and_update(
       //     "LEAVE",
       //     {
@@ -1097,11 +1122,23 @@ module.exports=router;
       //       employee_id: findId.employee_id
       //     },
       //     {
-      //       $set: { lop_leaves: findId.days_taken }  // Set the LOP leaves
+      //       $inc: { lop_leaves: -findId.days_taken }  // Set the LOP leaves
       //     }
       //   );
       //   console.log(l);
       // }
+      // const h = await mongoFunctions.find_one_and_update(
+      //     "EMPLOYEE",
+      //     {
+      //       organisation_id: req.employee.organisation_id,
+      //       employee_id: findId.employee_id,
+      //       "leaves.leave_id": findId.leave_type_id
+      //     },
+      //     {
+      //       $inc: { "leaves.$.remaining_leaves": -findId.days_taken }  
+      //     }
+      //   );
+      //   console.log(h);
       
       return res.status(200).send("Leave Status Updated Successfully");
 

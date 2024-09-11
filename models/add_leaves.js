@@ -22,7 +22,7 @@ const leave_Schema = new mongoose.Schema(
     },
     approved_by: { type: Object, default:{}},
     reporting_manager:{type: String,required: true},
-    lop_leaves:{type: Number},
+    lop_leaves:{type: Number,default: 0},
     // leaves:{ type: Array}
   },
   { timestamps: true }
