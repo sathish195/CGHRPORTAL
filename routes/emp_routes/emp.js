@@ -25,7 +25,7 @@ router.post("/error",Async(async(req,res)=>{
   return res.send(error)
 
 }))
-router.post('/login',rateLimit(60,20),Async(async(req,res)=>{
+router.post('/login',rateLimit(60,40),Async(async(req,res)=>{
     data=req.body;
     console.log(data);
     //validate data
