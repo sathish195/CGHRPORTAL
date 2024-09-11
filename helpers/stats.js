@@ -155,19 +155,22 @@ async function recent_hires(organisation_id) {
 async function employees_with_birthday_today(organisation_id) {
   try {
       const today = new Date();
-      const currentMonth = String(today.getMonth() + 1).padStart(2, '0'); // Get month as "MM"
-      const currentDay = String(today.getDate()).padStart(2, '0'); // Get day as "DD"
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth(); // 0-based month
+      const currentDay = today.getDate();
 
-      // Construct regex to match "MM-DD" format for birthdays
-      const birthdayRegex = new RegExp(`-${currentMonth}-${currentDay}$`);
+      // Construct the start and end of the range for today's month and day
+      const startOfDay = new Date(currentYear, currentMonth, currentDay, 0, 0, 0, 0);
+      const endOfDay = new Date(currentYear, currentMonth, currentDay, 23, 59, 59, 999);
 
-      // Find employees whose birthday is today
+      // To match any year but the same month and day
       const employeesWithBirthday = await mongoFunctions.find(
           "EMPLOYEE",
           {
             organisation_id: organisation_id,
             "personal_details.date_of_birth": {
-                $regex: birthdayRegex // Matches "MM-DD" at the end of the date string
+                $gte: startOfDay, // Start of the day
+                $lte: endOfDay   // End of the day
             }
           },
           { _id: -1 },
@@ -187,6 +190,8 @@ async function employees_with_birthday_today(organisation_id) {
       return [];
   }
 }
+
+
 
 
 async function add_stats(employee_id, organisation_id, status) {
