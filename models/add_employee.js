@@ -5,14 +5,74 @@ const EMPLOYEE_Schema=new mongoose.Schema({
     organisation_name: { type: String, required: true },
     password:{ type: String, required: true},
     employee_id: { type: String, required: true, unique: true },
-    basic_info: { type: Object, default: {} },
-    work_info: { type: Object, default: {} },
-    personal_details: { type: Object, default: {} },
-    identity_info: { type: Object, default: {} },
-    contact_details: { type: Object, default: {} },
-    work_experience: { type: Array, default: [] },
-    educational_details: { type: Array, default: [] },
-    dependent_details: { type: Array, default: [] },
+    basic_info: {
+      first_name: { type: String},
+      last_name: { type: String},
+      nick_name: { type: String },
+      email: { type: String}
+    },
+    work_info: {
+      department_id: { type: String, required: true },
+      department_name: { type: String, required: true },
+      role_id: { type: String, required: true },
+      role_name: { type: String, required: true },
+      admin_type: { type: String },
+      designation_id: { type: String, required: true },
+      designation_name: { type: String, required: true },
+      employment_type: { type: String, required: true },
+      employee_status: { type: String, required: true },
+      source_of_hire: { type: String },
+      reporting_manager: { type: String },
+      date_of_join: { type: Date, required: true }
+    },
+    personal_details: {
+      date_of_birth: { type: String},
+      expertise: { type: String},
+      gender: { type: String},
+      marital_status: { type: String },
+      about_me: { type: String }
+    },
+    identity_info: {
+      uan: { type: String,default:"" },
+      pan: { type: String,default:"" },
+      aadhaar: { type: String,default:"" },
+      passport_number: { type: String ,default:""}
+    },
+    contact_details: {
+      mobile_number: { type: String},
+      personal_email_address: { type: String},
+      seating_location: { type: String },
+      present_address: { type: String},
+      permanent_address: { type: String}
+    },
+    work_experience: {
+      type: [{
+        company_name: { type: String },
+        job_title: { type: String },
+        from_date: { type: Date },
+        to_date: { type: Date },
+        job_description: { type: String },
+        experience: { type: String }
+      }],
+      default: [] 
+    },
+    educational_details: {
+      type: [{
+        institute_name: { type: String },
+        degree: { type: String },
+        specialization: { type: String },
+        year_of_completion: { type: Number }
+      }],
+      default: [] 
+    },
+    dependent_details: {
+      type: [{
+        name: { type: String },
+        relation: { type: String },
+        dependent_mobile_number: { type: String}
+      }],
+      default: [] 
+    },
     leaves: [{
       leave_id: { type: String },
       leave_name: { type: String },
