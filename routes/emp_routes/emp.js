@@ -12,7 +12,6 @@ const Async = require("../../middlewares/async");
 
 router.post("/error",Async(async(req,res)=>{
   const error = req.validations.error;
-  // const data = {}
   // alertDev("error")
   console.log(error);
   
