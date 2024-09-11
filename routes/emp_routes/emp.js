@@ -10,9 +10,8 @@ const stats=require('../../helpers/stats');
 const functions=require('../../helpers/functions');
 const Async = require("../../middlewares/async");
 const rateLimit= require('../../helpers/custom_rateLimiter');
+const slowDown=require("../../middlewares/slow_down");
 
-const time_in_sec = 60; 
-const limit = 10;
 
 
 // const bcrypt=require('bcrypt');
@@ -26,7 +25,7 @@ router.post("/error",Async(async(req,res)=>{
   return res.send(error)
 
 }))
-router.post('/login',rateLimit(60,10),Async(async(req,res)=>{
+router.post('/login',rateLimit(60,20),Async(async(req,res)=>{
     data=req.body;
     console.log(data);
     //validate data
@@ -239,7 +238,7 @@ router.post('/resend_otp',Async(async(req,res) => {
 //     })
 //change password
 
-router.post('/reset_password',Auth, Async(async (req, res) =>{
+router.post('/reset_password',Auth,rateLimit(60,10), Async(async (req, res) =>{
     data=req.body;
     //validate data
     var {error}=validations.emp_reset_password(data);
@@ -279,7 +278,7 @@ router.post('/reset_password',Auth, Async(async (req, res) =>{
 
 router.post(
     "/update_dp",
-    Auth,Async((async (req, res) => {
+    Auth,rateLimit(60,10),Async((async (req, res) => {
       if (req.employee.collection !== "EMPLOYEE")
         return res.status(400).send("Invalid token details");
       let data = req.body;
@@ -329,7 +328,7 @@ router.post(
     })
   ))
 
-  router.post("/edit_profile",Auth, Async(async (req, res) =>{
+  router.post("/edit_profile",Auth,Async(async (req, res) =>{
     let data = req.body;
     console.log(req.body);
       var { error } = validations.edit_profile(data);
@@ -448,12 +447,14 @@ router.post(
         edit_emp_data,
         { new: true }
       );
+      // await redis.update_redis("EMPLOYEE", update_emp);
+      // console.log("updated emp in redis");
       return res.status(200).send({
         success: "Success",
         data: update_emp,
       });
     }));
-    router.post("/update_task",Auth,Async(async(req, res)=>{
+    router.post("/update_task",rateLimit(60,10),Auth,Async(async(req, res)=>{
       const data = req.body;
       const { error } = validations.update_task(data);
       if(error) return res.status(400).send(error.details[0].message);
@@ -498,7 +499,7 @@ router.post(
             return res.status(200).send('Task Updated Successfully');
     }));
 
-router.post("/apply_leave",Auth,Async(async(req,res) => {
+router.post("/apply_leave",Auth,rateLimit(60,10),Async(async(req,res) => {
   if (req.employee.role_name ==="director"){
     return res.status(400).send('Access denied: Director Do Not Apply Leave');
   }

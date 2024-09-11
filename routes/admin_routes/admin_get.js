@@ -8,6 +8,9 @@ const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const { mongo } = require('mongoose');
 const Async = require("../../middlewares/async");
+const rateLimit= require('../../helpers/custom_rateLimiter');
+const slowDown=require("../../middlewares/slow_down");
+
 
 
 //get employee list
@@ -37,7 +40,7 @@ router.post(
   //-----------------get emp by lazy loading--------
   router.post(
     "/get_employee_list",
-    Auth,Async(
+    Auth,slowDown,Async(
     async (req, res) => {
         const emp = req.employee;
         const LIMIT = 50;
@@ -101,7 +104,7 @@ router.post(
 
     }));
 
-    router.post("/get_projects",Auth, Async(async (req, res)=>{
+    router.post("/get_projects",Auth,slowDown, Async(async (req, res)=>{
 
     const data = req.body;
     const userRole = req.employee.admin_type;
@@ -175,7 +178,7 @@ router.post(
     return res.status(200).send(projects);
     }
 }));
-router.post("/all_leave_applications", Auth,Async( async (req, res) => {
+router.post("/all_leave_applications", Auth,slowDown,Async( async (req, res) => {
   try {
     const data = req.body;
     const { error } = validations.get_all_leave_applications(data);
@@ -275,14 +278,6 @@ router.post("/all_leave_applications", Auth,Async( async (req, res) => {
     return res.status(500).send("Internal server error");
   }
 }));
-
-
-
-
-
-
-
-
 
 
   module.exports =router;

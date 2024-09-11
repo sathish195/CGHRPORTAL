@@ -7,6 +7,7 @@ module.exports = slowDown({
   keyGenerator: function (req ) {
     // Ensure req.employee exists and has employee_id
     if (req.employee && req.employee.employee_id) {
+      console.log("slowDown middleware");
       return req.employee.employee_id;
     } 
   },
