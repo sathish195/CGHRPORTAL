@@ -43,7 +43,7 @@ module.exports = {
 },
 update_status:(leave_status_up)=>{
 
-  
+
 }
   
 

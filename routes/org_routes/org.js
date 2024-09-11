@@ -611,7 +611,7 @@ router.post("/add_update_leave", Auth,rateLimit(60,10),Async( async (req, res) =
         
        
         return res.status(200).send({
-            success: "Leave updated successfully.",
+            success: "Leave Updated Successfully.",
             data: updatedLeave
         });
 

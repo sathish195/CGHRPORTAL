@@ -11,8 +11,8 @@ const leave_Schema = new mongoose.Schema(
     employee_name: { type: String, required: true },
     email: { type: String, required: true },
     days_taken: { type: Number, required: true },
-    from_date: { type: String, required: true },
-    to_date: { type: String, required: true },
+    from_date: { type: Date, required: true },
+    to_date: { type: Date, required: true },
     reason: { type: String, required: true },
     // team_mail_id: { type: String, required: true },
     leave_status: {
