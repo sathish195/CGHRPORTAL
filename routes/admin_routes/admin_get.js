@@ -210,12 +210,14 @@ router.post("/all_leave_applications", Auth,slowDown,Async( async (req, res) => 
     }else if (req.employee.admin_type === '3') {
       query.department_id=req.employee.department_id;
       query.leave_status={$in:["Approved","Pending"]};
-      
+
       // Optionally add conditions specific to 'team incharge'
       query["approved_by.team_incharge.leave_status"] = status;
     } else {
       return res.status(403).send("Access denied: Invalid role");
     }
+
+    // Fetch leave applications with pagination
 
     // Add optional fields to the query
     if (data.employee_id && data.employee_id.length > 5) {
