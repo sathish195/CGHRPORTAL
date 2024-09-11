@@ -590,9 +590,9 @@ router.post("/add_update_leave", Auth,rateLimit(60,10),Async( async (req, res) =
                 {
                   $set: {
                     "leaves.$[elem].leave_name": data.leave_name,
-                    "leaves.$[elem].total_leaves": data.total_leaves
-                  },
-                  $inc: {
+                    "leaves.$[elem].total_leaves": data.total_leaves,
+                //   },
+                //   $inc: {
                     "leaves.$[elem].remaining_leaves": data.total_leaves // Increment the remaining_leaves
                   }
                 },
