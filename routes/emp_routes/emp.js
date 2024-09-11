@@ -9,7 +9,6 @@ const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
 const functions=require('../../helpers/functions');
 const Async = require("../../middlewares/async");
-// const bcrypt=require('bcrypt');
 
 router.post("/error",Async(async(req,res)=>{
   const error = req.validations.error;
