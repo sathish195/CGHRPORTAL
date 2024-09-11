@@ -13,15 +13,7 @@ const rateLimit= require('../../helpers/custom_rateLimiter');
 const slowDown=require("../../middlewares/slow_down");
 // const bcrypt=require('bcrypt');
 
-<<<<<<< HEAD
-=======
-const rateLimit= require('../../helpers/custom_rateLimiter');
-const slowDown=require("../../middlewares/slow_down");
 
-
-
-// const bcrypt=require('bcrypt');
->>>>>>> 7f0c22d66500f90000959f11339af277d9296ba2
 
 router.post("/error",Async(async(req,res)=>{
   const error = req.validations.error;
