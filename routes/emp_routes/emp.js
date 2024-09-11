@@ -583,6 +583,7 @@ router.post("/apply_leave",Auth,rateLimit(60,10),Async(async(req,res) => {
     data.from_date,
     data.to_date
   );
+  console.log(leaves_count);
   if (leaves_count > emp_leave_obj.remaining_leaves)
     return res.status(400).send("Leaves Limit Exceeded..!");
   let leave_record_obj = {

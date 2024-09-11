@@ -25,8 +25,8 @@ module.exports = {
   },
   calculate_leave_days :(from_date, to_date) => {
     // Parse the date strings into Date objects
-    const date1 = from_date;
-    const date2 = to_date;
+    const date1 = new Date(from_date);
+    const date2 = new Date(to_date);
 
     // Ensure the start date is before the end date
     if (date1 > date2) {
