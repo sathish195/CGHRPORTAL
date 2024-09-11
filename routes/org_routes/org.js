@@ -38,7 +38,7 @@ router.post('/add_update_org_details',Auth,rateLimit(60,10),Async(async (req,res
     "images.logo": data.logo,
     };
     if (find_org) {
-    let org_data_up = await mongoFunctions.find_one_and_update(
+    org_data_up = await mongoFunctions.find_one_and_update(
         "ORGANISATIONS",
         { email: req.employee.email },
         org_data,
@@ -74,7 +74,7 @@ router.post('/add_update_org_details',Auth,rateLimit(60,10),Async(async (req,res
             },
         ]
     };
-    let org_data_up = await mongoFunctions.create_new_record(
+    org_data_up = await mongoFunctions.create_new_record(
         "ORGANISATIONS",
         new_org_data
     );
