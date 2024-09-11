@@ -122,38 +122,30 @@ async function recent_hires(organisation_id) {
       const today = new Date();
       const fifteenDaysAgo = new Date(today);
       fifteenDaysAgo.setDate(today.getDate() - 15);
-      
-      // Format dates to "YYYY-MM-DD"
-      const formatDateToString = date => {
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          return `${year}-${month}-${day}`;
-      };
 
-      const fifteenDaysAgoString = formatDateToString(fifteenDaysAgo);
-      const todayString = formatDateToString(today);
+      fifteenDaysAgo.setHours(0, 0, 0, 0);
+      today.setHours(23, 59, 59, 999);
 
-      // Find employees who joined exactly 15 days ago
+      // Find employees who joined within the last 15 days
       const recentHires = await mongoFunctions.find(
           "EMPLOYEE",
           {
               organisation_id: organisation_id,
               "work_info.date_of_join": {
-                  $gte: fifteenDaysAgoString,
-                  $lte: todayString
+                  $gte: fifteenDaysAgo,
+                  $lte: today
               }
           },
           { _id: -1 },
           {
-            employee_id:1,
+            employee_id: 1,
             "basic_info.first_name": 1,
-            "basic_info.last_name":1,
+            "basic_info.last_name": 1,
             "basic_info.email": 1,
-            "work_info.date_of_join":1
-
+            "work_info.date_of_join": 1
           }
       );
+
       return recentHires;
   } catch (error) {
       console.error("Error fetching employees:", error);
@@ -163,10 +155,11 @@ async function recent_hires(organisation_id) {
 async function employees_with_birthday_today(organisation_id) {
   try {
       const today = new Date();
-      const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
-      const currentDay = String(today.getDate()).padStart(2, '0');
-      const todayString = currentDay + currentMonth;
-      console.log(todayString) // "DDMM" format for comparison
+      const currentMonth = String(today.getMonth() + 1).padStart(2, '0'); // Get month as "MM"
+      const currentDay = String(today.getDate()).padStart(2, '0'); // Get day as "DD"
+
+      // Construct regex to match "MM-DD" format for birthdays
+      const birthdayRegex = new RegExp(`-${currentMonth}-${currentDay}$`);
 
       // Find employees whose birthday is today
       const employeesWithBirthday = await mongoFunctions.find(
@@ -174,21 +167,20 @@ async function employees_with_birthday_today(organisation_id) {
           {
             organisation_id: organisation_id,
             "personal_details.date_of_birth": {
-                $regex: `^${todayString}`  // Matches "DDMM" at the beginning of the date string
+                $regex: birthdayRegex // Matches "MM-DD" at the end of the date string
             }
-        },
-        { _id: -1 },
+          },
+          { _id: -1 },
           {
-            employee_id:1,
+            employee_id: 1,
             "basic_info.first_name": 1,
-            "basic_info.last_name":1,
+            "basic_info.last_name": 1,
             "basic_info.email": 1,
-            "personal_details.date_of_birth":1
-
+            "personal_details.date_of_birth": 1
           }
       );
 
-      console.log(employeesWithBirthday);
+      console.log(employeesWithBirthday); // Debug: Print employees with birthday today
       return employeesWithBirthday;
   } catch (error) {
       console.error("Error fetching employees:", error);

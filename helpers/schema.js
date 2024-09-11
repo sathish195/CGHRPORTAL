@@ -197,11 +197,12 @@ function add_employee_by_admin(data){
         reporting_manager: Joi.string().required(),
         date_of_join: Joi.date().required(),
   
-        date_of_birth: Joi.string()
-          .regex(/^\d{2}\d{2}\d{4}$/)
-          .message("Date must be in DDMMYYYY format")
-          .required()
-          .custom(validate_dob),
+        date_of_birth: Joi.date().required(),
+        // Joi.string()
+        //   .regex(/^\d{2}\d{2}\d{4}$/)
+        //   .message("Date must be in DDMMYYYY format")
+        //   .required()
+        //   .custom(validate_dob),
         expertise: Joi.string().allow(null, "").optional(),
         gender: Joi.string().valid("male", "female", "others").required(),
         marital_status: Joi.string().valid("married", "unmarried").required(),
