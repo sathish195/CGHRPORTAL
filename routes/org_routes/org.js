@@ -163,7 +163,7 @@ router.post('/add_update_department', Auth,rateLimit(60,10), Async(async (req, r
                 department_name: data.department_name.toLowerCase(),
             };
             
-            let department_data_up = await mongoFunctions.find_one_and_update(
+            department_data_up = await mongoFunctions.find_one_and_update(
                 "ORGANISATIONS",
                 {
                     organisation_id: org_data.organisation_id,

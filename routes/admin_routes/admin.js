@@ -1029,9 +1029,11 @@ module.exports=router;
     };
     const findId = await mongoFunctions.find_one('LEAVE', {
       leave_application_id: data.leave_application_id,
+      // leave_status:reject
       // leave_status: data.leave_status
     });
     if (!findId) return res.status(400).send('No Leave Application Found');
+    if (findId && findId.leave_status===data.leave_status) return res.status(400).send('Leave Application Is Already In The Given Status'); 
     console.log(findId);
     const findEmployee= await mongoFunctions.find_one('EMPLOYEE', {
      employee_id: findId.employee_id,
@@ -1059,7 +1061,7 @@ module.exports=router;
       }
       });
       
-      if (leave_data_up.leave_status === "Approved") {
+      if (findId.leave_status==="Pending" && leave_data_up.leave_status === "Approved") {
         const h = await mongoFunctions.find_one_and_update(
           "EMPLOYEE",
           {
@@ -1074,7 +1076,7 @@ module.exports=router;
         console.log(h);
       }
       
-      if (leave_data_up.leave_status === "Rejected") {
+      if (findId.leave_status==="Pending" && leave_data_up.leave_status === "Rejected") {
         const l = await mongoFunctions.find_one_and_update(
           "LEAVE",
           {
@@ -1087,6 +1089,19 @@ module.exports=router;
         );
         console.log(l);
       }
+      // if (findId.leave_status==="Approved" && leave_data_up.leave_status === "Rejected") {
+      //   const l = await mongoFunctions.find_one_and_update(
+      //     "LEAVE",
+      //     {
+      //       organisation_id: req.employee.organisation_id,
+      //       employee_id: findId.employee_id
+      //     },
+      //     {
+      //       $set: { lop_leaves: findId.days_taken }  // Set the LOP leaves
+      //     }
+      //   );
+      //   console.log(l);
+      // }
       
       return res.status(200).send("Leave Status Updated Successfully");
 
