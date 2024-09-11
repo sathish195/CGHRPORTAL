@@ -25,6 +25,7 @@ const EMPLOYEE_Schema=new mongoose.Schema({
       reporting_manager: { type: String },
       date_of_join: { type: Date, required: true }
     },
+    
     personal_details: {
       date_of_birth: { type: String},
       expertise: { type: String},
