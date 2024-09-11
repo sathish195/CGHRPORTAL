@@ -157,7 +157,7 @@ function add_employee_by_admin(data){
       const dependent_details_obj = Joi.object({
         name: Joi.string(),
         relation: Joi.string(),
-        dependent_date_of_birth: Joi.date(),
+        dependent_mobile_number: Joi.string(),
       });
       const schema = Joi.object({
         organisation_id: Joi.string().min(15).max(17).required(),
@@ -207,8 +207,8 @@ function add_employee_by_admin(data){
         marital_status: Joi.string().valid("married", "unmarried").required(),
         about_me: Joi.string().allow(null, "").optional().trim(),
         identity_info: Joi.object().min(2).required(),
-        work_phone_number: Joi.string().allow(null, "").optional(),
-        personal_mobile_number: Joi.string().min(10).max(10).required(),
+        mobile_number: Joi.string().allow(null, "").optional(),
+        // mobile_number: Joi.string().min(10).max(10).required(),
         personal_email_address: Joi.string()
           .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
           .trim()
@@ -283,7 +283,7 @@ function add_employee_by_admin(data){
           const dependent_details_obj = Joi.object({
             name: Joi.string(),
             relation: Joi.string(),
-            dependent_date_of_birth: Joi.date(),
+            dependent_mobile_number: Joi.string(),
           });
           const schema = Joi.object({
             organisation_id: Joi.string().min(15).max(17).required(),
@@ -299,8 +299,8 @@ function add_employee_by_admin(data){
             marital_status: Joi.string().valid("married", "unmarried").required(),
             about_me: Joi.string().allow(null, "").optional().trim(),
             identity_info: Joi.object().required(),
-            work_phone_number: Joi.string().allow(null, "").optional(),
-            personal_mobile_number: Joi.string().required(),
+            mobile_number: Joi.string().allow(null, "").optional(),
+            // personal_mobile_number: Joi.string().required(),
             personal_email_address: Joi.string()
               .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
               .trim()

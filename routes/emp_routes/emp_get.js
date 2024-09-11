@@ -8,6 +8,10 @@ const { Auth } = require("../../middlewares/auth");
 const redis=require('../../helpers/redisFunctions');
 const stats=require('../../helpers/stats');
 const Async = require("../../middlewares/async");
+const rateLimit= require('../../helpers/custom_rateLimiter');
+const slowDown=require("../../middlewares/slow_down");
+
+
 // const rateLimiter=require('../../middlewares/rate_limiter');
 
 
@@ -16,7 +20,7 @@ const Async = require("../../middlewares/async");
 
 router.post(
     "/get_profile",
-    Auth,Async((async (req, res) => {
+    Auth,slowDown,Async((async (req, res) => {
       const employee= req.employee;
       let emp = await mongoFunctions.find_one(
         employee.collection,
@@ -44,7 +48,7 @@ router.post(
 
   //get universal route
 
-  router.post("/universal" ,Auth,Async(async(req, res) => {
+  router.post("/universal" ,Auth,slowDown,Async(async(req, res) => {
     // org=await mongoFunctions.find_one("ORGANISATIONS", {
     //     email: req.employee.email,
     //   });
@@ -81,7 +85,7 @@ router.post(
 
         }));
 
-router.post("/get_tasks",Auth, Async(async (req, res)=>{
+router.post("/get_tasks",Auth,slowDown, Async(async (req, res)=>{
   // data=req.body;
   // var { error } =validations.get_project_by_id(data);
   //   if (error) return res.status(400).send(error.details[0].message);
@@ -117,7 +121,7 @@ router.post("/get_tasks",Auth, Async(async (req, res)=>{
 
 
   })); 
-router.post("/get_task_by_id",Auth, Async(async (req, res)=>{
+router.post("/get_task_by_id",Auth,slowDown, Async(async (req, res)=>{
   data=req.body;
   var { error } =validations.get_task_by_id(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -130,7 +134,7 @@ router.post("/get_task_by_id",Auth, Async(async (req, res)=>{
 
 //get all tasks with filters
 
-router.post("/get_all_tasks", Auth, Async(async (req, res) => {
+router.post("/get_all_tasks", Auth,slowDown, Async(async (req, res) => {
   const data = req.body;
   const { error } = validations.get_all_tasks(data);
   if (error) return res.status(400).send(error.details[0].message);
@@ -222,7 +226,7 @@ router.post("/get_all_tasks", Auth, Async(async (req, res) => {
 }));
 module.exports =router;
 
-router.post("/leave_applications",Auth, Async(async(req, res) => {
+router.post("/leave_applications",Auth,slowDown, Async(async(req, res) => {
   const data = req.body;
   const { error } = validations.get_employee_leave_applications(data);
   if (error) return res.status(400).send(error.details[0].message);

@@ -11,10 +11,13 @@ const stats=require('../../helpers/stats');
 const { mongo } = require('mongoose');
 const Fuse = require("fuse.js");
 const Async = require("../../middlewares/async");
+const rateLimit= require('../../helpers/custom_rateLimiter');
+const slowDown=require("../../middlewares/slow_down");
 
 
 
-router.post('/add_update_org_details',Auth,Async(async (req,res)=>{
+
+router.post('/add_update_org_details',Auth,rateLimit(60,10),Async(async (req,res)=>{
     let data=req.body;
     const { error } = validations.add_update_org(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -88,7 +91,7 @@ router.post('/add_update_org_details',Auth,Async(async (req,res)=>{
     .send({ success: "Details Added..!", data: org_data_up });
 }));
 
-router.post('/add_update_department', Auth, Async(async (req, res) => {
+router.post('/add_update_department', Auth,rateLimit(60,10), Async(async (req, res) => {
     let data = req.body;
 
     // Validate data
@@ -153,6 +156,7 @@ router.post('/add_update_department', Auth, Async(async (req, res) => {
                 },
             );
 
+
         } else {
             let new_department_data = {
                 department_id: functions.get_random_string("D", 10, true),
@@ -186,7 +190,7 @@ router.post('/add_update_department', Auth, Async(async (req, res) => {
 
     return res.status(400).send("Invalid Organisation id");
 }));
-router.post('/add_update_designation', Auth, Async(async (req, res) => {
+router.post('/add_update_designation', Auth,rateLimit(60,10), Async(async (req, res) => {
     let data = req.body;
 
     // Validate data
@@ -291,7 +295,7 @@ router.post('/add_update_designation', Auth, Async(async (req, res) => {
     return res.status(400).send("Invalid Organisation id");
 }));
 
-router.post("/add_update_role", Auth,Async( async (req, res) => {
+router.post("/add_update_role", Auth,rateLimit(60,10),Async( async (req, res) => {
     let data = req.body;
 
     // Validate data
@@ -389,7 +393,7 @@ router.post("/add_update_role", Auth,Async( async (req, res) => {
     return res.status(400).send("Invalid Organisation id");
 }));
 
-router.post("/universal" ,Auth,Async(async(req, res) => {
+router.post("/universal" ,Auth,slowDown,Async(async(req, res) => {
     let org=await mongoFunctions.find_one("ORGANISATIONS", {
         organisation_id: req.employee.organisation_id,
       });
@@ -447,6 +451,15 @@ router.post("/universal" ,Auth,Async(async(req, res) => {
         project ,
         { createdAt: -1 } ,
     );
+    // employee_id=await redis.redisGet(
+    //     "EMPLOYEE",
+    //     {
+    //         organisation_id: org_data.organisation_id,
+    //         // "work_info.admin_type": { $in: ["1", "2"] }
+    //     }, // 
+    //     project ,
+    //     { createdAt: -1 } ,
+    // );
 
        
         let dashborad = {
@@ -467,7 +480,7 @@ router.post("/universal" ,Auth,Async(async(req, res) => {
     // await redis.update_redis("ORGANISATIONS",org);
 
 //update leaves in a designation
-router.post("/add_update_leave", Auth,Async( async (req, res) => {
+router.post("/add_update_leave", Auth,rateLimit(60,10),Async( async (req, res) => {
     const data = req.body;
 
     // Validate data
@@ -664,7 +677,7 @@ router.post("/add_update_leave", Auth,Async( async (req, res) => {
     }
 }));
 
-router.post("/get_team_for_task", Auth, Async(async (req, res) => {
+router.post("/get_team_for_task", Auth, slowDown,Async(async (req, res) => {
     const data = req.body;
     const roleName = req.employee.admin_type;
 
@@ -717,7 +730,7 @@ router.post("/get_team_for_task", Auth, Async(async (req, res) => {
 }));
 
 
-router.post("/get_team_for_project", Auth, Async(async (req, res) => {
+router.post("/get_team_for_project", Auth,slowDown, Async(async (req, res) => {
     try {
         const roleName = req.employee.admin_type;
         const query = {

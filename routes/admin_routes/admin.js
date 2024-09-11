@@ -11,10 +11,11 @@ const functions=require('../../helpers/functions');
 const { date } = require('joi');
 const { RFC_2822 } = require('moment');
 const Async = require("../../middlewares/async");
+const rateLimit= require('../../helpers/custom_rateLimiter');
 
 
 //forgot password
-router.post('/emp_reset_password',Auth,Async(async(req,res) => {
+router.post('/emp_reset_password',Auth,rateLimit(60,10),Async(async(req,res) => {
   data=req.body;
   var {error}=validations.emp_reset_password_by_admin(data);
   if(error) return res.status(400).send(error.details[0].message);
@@ -159,17 +160,17 @@ router.post(
           },
           {
             "identity_info.passport":
-              data.identity_info.passport,
+              data.identity_info.passport_number,
               // employee_id: { $ne: data.employee_id }
             // organisation_id: org_data.organisation_id,
           },
           {
-            "contact_details.work_phone_number": data.work_phone_number,
+            "contact_details.mobile_number": data.mobile_number,
             // employee_id: { $ne: data.employee_id }
           },
-          {"contact_details.personal_mobile_number": data.personal_mobile_number,
-            // employee_id: { $ne: data.employee_id }
-          },
+          // {"contact_details.personal_mobile_number": data.personal_mobile_number,
+          //   // employee_id: { $ne: data.employee_id }
+          // },
         ],
       });
       if (find_adhar) {
@@ -189,16 +190,16 @@ router.post(
             return res.status(400).send("Uan Number Already Exists");
         }
   
-        if (find_adhar.identity_info.passport && find_adhar.identity_info.passport.length > 0 && find_adhar.identity_info.passport === data.identity_info.passport) {
+        if (find_adhar.identity_info.passport_number && find_adhar.identity_info.passport_number.length > 0 && find_adhar.identity_info.passport_number === data.identity_info.passport_number) {
             return res.status(400).send("Passport Number Already Exists");
         }
     
-        if (find_adhar.contact_details.work_phone_number && find_adhar.contact_details.work_phone_number.length > 0 && find_adhar.contact_details.work_phone_number === data.work_phone_number) {
-            return res.status(400).send("Work Phone Number Already Exists");
-        }
+        // if (find_adhar.contact_details.work_phone_number && find_adhar.contact_details.work_phone_number.length > 0 && find_adhar.contact_details.work_phone_number === data.work_phone_number) {
+        //     return res.status(400).send("Work Phone Number Already Exists");
+        // }
     
-        if (find_adhar.contact_details.personal_mobile_number && find_adhar.contact_details.personal_mobile_number.length > 0 && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number) {
-            return res.status(400).send("Personal Mobile Number Already Exists");
+        if (find_adhar.contact_details.mobile_number && find_adhar.contact_details.mobile_number.length > 0 && find_adhar.contact_details.mobile_number === data.mobile_number) {
+            return res.status(400).send("Mobile Number Already Exists");
         }
     
         if (find_adhar.identity_info.pan && find_adhar.identity_info.pan.length > 0 && find_adhar.identity_info.pan === data.identity_info.pan) {
@@ -244,8 +245,8 @@ router.post(
         },
         identity_info: data.identity_info,
         contact_details: {
-          work_phone_number: data.work_phone_number,
-          personal_mobile_number: data.personal_mobile_number,
+          // work_phone_number: data.work_phone_number,
+          mobile_number: data.mobile_number,
           personal_email_address: data.personal_email_address.toLowerCase(),
           seating_location: data.seating_location,
           present_address: data.present_address,
@@ -270,8 +271,8 @@ router.post(
         new_emp_data
       );
 
-        // let h= await redis.update_redis("EMPLOYEE", new_emp);
-        // console.log(h);
+        await redis.update_redis("EMPLOYEE", new_emp);
+        console.log("added emp in redis");
     //   await stats.update_emp(new_emp, true, true);
       return res.status(200).send({
         success: "Success",
@@ -283,7 +284,7 @@ router.post(
   // Update employee profile
   router.post(
     "/update_employee_profile",
-    Auth,Async((async (req, res) => {
+    Auth,rateLimit(60,10),Async((async (req, res) => {
       let data = req.body;
       var { error } = validations.add_employee_by_admin(data);
       if (error) return res.status(400).send(error.details[0].message);
@@ -351,16 +352,16 @@ router.post(
             // organisation_id: org_data.organisation_id,
           },
           {
-            "identity_info.passport":
-              data.identity_info.passport,
+            "identity_info.passport_number":
+              data.identity_info.passport_number,
               employee_id: { $ne: data.employee_id }
             // organisation_id: org_data.organisation_id,
           },
-          {
-            "contact_details.work_phone_number": data.work_phone_number,
-            employee_id: { $ne: data.employee_id }
-          },
-          {"contact_details.personal_mobile_number": data.personal_mobile_number,
+          // {
+          //   "contact_details.work_phone_number": data.work_phone_number,
+          //   employee_id: { $ne: data.employee_id }
+          // },
+          {"contact_details.mobile_number": data.mobile_number,
             employee_id: { $ne: data.employee_id }
           },
         ],
@@ -382,16 +383,16 @@ router.post(
             return res.status(400).send("Uan Number Already Exists");
         }
   
-        if (find_adhar.identity_info.passport && find_adhar.identity_info.passport.length > 0 && find_adhar.identity_info.passport === data.identity_info.passport) {
+        if (find_adhar.identity_info.passport_number && find_adhar.identity_info.passport_number.length > 0 && find_adhar.identity_info.passport_number === data.identity_info.passport_number) {
             return res.status(400).send("Passport Number Already Exists");
         }
     
-        if (find_adhar.contact_details.work_phone_number && find_adhar.contact_details.work_phone_number.length > 0 && find_adhar.contact_details.work_phone_number === data.work_phone_number) {
-            return res.status(400).send("Work Phone Number Already Exists");
-        }
+        // if (find_adhar.contact_details.work_phone_number && find_adhar.contact_details.work_phone_number.length > 0 && find_adhar.contact_details.work_phone_number === data.work_phone_number) {
+        //     return res.status(400).send("Work Phone Number Already Exists");
+        // }
     
-        if (find_adhar.contact_details.personal_mobile_number && find_adhar.contact_details.personal_mobile_number.length > 0 && find_adhar.contact_details.personal_mobile_number === data.personal_mobile_number) {
-            return res.status(400).send("Personal Mobile Number Already Exists");
+        if (find_adhar.contact_details.mobile_number && find_adhar.contact_details.mobile_number.length > 0 && find_adhar.contact_details.mobile_number === data.mobile_number) {
+            return res.status(400).send("Mobile Number Already Exists");
         }
     
         if (find_adhar.identity_info.pan && find_adhar.identity_info.pan.length > 0 && find_adhar.identity_info.pan === data.identity_info.pan) {
@@ -436,8 +437,8 @@ router.post(
         },
         identity_info: data.identity_info,
         contact_details: {
-          work_phone_number: data.work_phone_number,
-          personal_mobile_number: data.personal_mobile_number,
+          // work_phone_number: data.work_phone_number,
+          mobile_number: data.mobile_number,
           personal_email_address: data.personal_email_address.toLowerCase(),
           seating_location: data.seating_location,
           present_address: data.present_address,
@@ -464,8 +465,8 @@ router.post(
         { $set: new_emp_data },
       );
 
-      // let h= await rediscon.update_redis("EMPLOYEE", new_emp);
-      // console.log(h);
+      // await redis.update_redis("EMPLOYEE", new_emp);
+      // console.log("updated emp in redis");
     //   await stats.update_emp(new_emp, true, true);
       return res.status(200).send({
         success: "Success",
@@ -474,7 +475,7 @@ router.post(
     })
   ))
 
-  router.post('/add_update_project',Auth, Async(async (req, res) => {
+  router.post('/add_update_project',Auth,rateLimit(60,10), Async(async (req, res) => {
     const data = req.body;
   
     // Validate request data
@@ -563,7 +564,7 @@ router.post(
     }
   }));
 
-  router.post('/add_remove_team', Auth, Async(async (req, res) => {
+  router.post('/add_remove_team',Auth,rateLimit(60,10), Async(async (req, res) => {
     const data = req.body;
 
     // Validate request data
@@ -729,7 +730,7 @@ router.post(
 module.exports=router;
 
 
-  router.post('/add_update_task',Auth, Async(async (req, res) => {
+  router.post('/add_update_task',Auth,rateLimit(60,10), Async(async (req, res) => {
     const data = req.body;
   
     // Validate request data
@@ -842,7 +843,7 @@ module.exports=router;
       return res.status(201).send('Task Created successfully');
     }
   }));
-  router.post("/update_project",Auth,Async(async(req, res)=>{
+  router.post("/update_project",Auth,rateLimit(60,10),Async(async(req, res)=>{
     const data = req.body;
     const { error } = validations.update_project(data);
     if(error) return res.status(400).send(error.details[0].message);
@@ -882,7 +883,7 @@ module.exports=router;
           return res.status(200).send('Project Updated Successfully');
   }));
 
-  router.post("/update_leave_application",Auth,Async(async(req, res) => {
+  router.post("/update_leave_application",Auth,rateLimit(60,10),Async(async(req, res) => {
     const data = req.body;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -1018,7 +1019,7 @@ module.exports=router;
     return res.status(200).send("Leave Status Updated Successfully")
 
   }))
-  router.post("/update_leave_status",Auth,Async(async(req, res) => {
+  router.post("/update_leave_status",Auth,rateLimit(60,10),Async(async(req, res) => {
     const data = req.body;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
