@@ -152,6 +152,8 @@ async function recent_hires(organisation_id) {
       return [];
   }
 }
+
+
 async function employees_with_birthday_today(organisation_id) {
   try {
       const today = new Date();
