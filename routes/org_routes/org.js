@@ -569,6 +569,9 @@ router.post("/add_update_leave", Auth,rateLimit(60,10),Async( async (req, res) =
             "work_info.role_id": data.role_id,
             "leaves.leave_id": data.leave_id
             },
+            {
+                _id: -1
+            },
             { projection: { "leaves.$": 1 } } // Only return the leaves array matching the filter
         );
         
