@@ -808,4 +808,80 @@ router.post("/update_token",Auth,Async(async(req, res)=>{
 
 }))
 
+
+router.post(
+    "/add_admin_employee",
+    Async((async (req, res) => {
+      
+      const new_password="Emp@1234";
+      let password_hash = await bcrypt.hash_password(new_password);
+
+      let new_emp_data = 
+        {
+            "organisation_id": "O9593C6393261F1",
+            "employee_id": "CGTPL0001",
+            "password":"Emp@1234",
+            "email": "admin@gmail.com",
+            "first_name": "pavan",
+            "last_name": "Rebba",
+            "nick_name": "pavan sir",
+            "department_id": "D72FAFACC9E",
+            "role_id": "RD53A5ACBC27D09",
+            "designation_id": "DE2CDAC3B2C",
+            "employment_type": "Full-time",
+            "employee_status": "active",
+            "source_of_hire": "nothing",
+            "reporting_manager": "teju@gmail.com",
+            "date_of_join": "2024-09-12",
+            "date_of_birth": "2024-09-12",
+            "expertise": "Good in everything",
+            "gender": "male",
+            "marital_status": "married",
+            "about_me": "A lot to say",
+            "identity_info": {
+              "pan":"188888888234",
+              "uan":"123888888881"
+          
+            },
+            "mobile_number": "9849841358",
+            "personal_email_address": "pavan@gmail.com",
+            "seating_location": "s-97",
+            "present_address": "vijayawada,Ap",
+            "permanent_address": "Hyderabad,Ts",
+            "work_experience": [
+              {
+                "company_name": "codegene",
+                "job_title": "Backend developer",
+                "from_date": "2023-03-30",
+                "to_date": "2024-08-30",
+                "job_description": "Backend developement",
+                "experience": 1
+              }
+            ],
+            "educational_details": [
+              
+            ],
+            "dependent_details": [
+              
+            ],
+          
+        images: {},
+        files: {},
+      };
+      let new_emp = await mongoFunctions.create_new_record(
+        "EMPLOYEE",
+        new_emp_data
+      );
+
+        await redis.update_redis("EMPLOYEE", new_emp);
+        console.log("added emp in redis");
+    //   await stats.update_emp(new_emp, true, true);
+      return res.status(200).send({
+        success: "Success",
+        // data: new_emp,
+      });
+    })
+  ));
+
+
 module.exports = router;

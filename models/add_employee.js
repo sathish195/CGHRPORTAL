@@ -1,10 +1,10 @@
 const mongoose = require('mongoose')
 
 const EMPLOYEE_Schema=new mongoose.Schema({
-    organisation_id: { type: String, required: true },
+    organisation_id: { type: String, required: true,index: true},
     organisation_name: { type: String, required: true },
     password:{ type: String, required: true},
-    employee_id: { type: String, required: true, unique: true },
+    employee_id: { type: String, required: true, unique: true,index: true},
     basic_info: {
       first_name: { type: String},
       last_name: { type: String},
@@ -96,5 +96,5 @@ const EMPLOYEE_Schema=new mongoose.Schema({
   },
   { timestamps: true },
 );
-
+EMPLOYEE_Schema.index({ organisation_id: 1, employee_id: 1 }); 
 exports.EMPLOYEE = mongoose.model('Employees', EMPLOYEE_Schema)

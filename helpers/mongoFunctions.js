@@ -42,10 +42,10 @@ module.exports = {
         .find(condition)
         .select(select)
         .sort(sort)
-        .limit(limit);
+        .limit(limit).lean();
     },
     find_one: async (collection, condition, select, sort) => {
-      return await eval(collection).findOne(condition).select(select).sort(sort);
+      return await eval(collection).findOne(condition).select(select).sort(sort).lean();
     },
     find_one_and_update: async (collection, condition, update, options) => {
       if (!options) {
