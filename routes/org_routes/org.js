@@ -820,13 +820,13 @@ router.post(
       {
         "organisation_id": "O9593C6393261F1",
         "organisation_name": "CODEGENE TECHNOLOGIES PVT LTD",
-        "password": "$2b$10$HMWOZVLpCprqLv.4DrPrAOZqovd9FJZ.P8MvtxadEO8xk250eJ6Lq",
+        "password": password_hash,
         "employee_id": "CGTPL0003",
         "basic_info": {
-            "first_name": "tejasvi",
-            "last_name": "kodali",
+            "first_name": "pavan",
+            "last_name": "rebba",
             "nick_name": "teju mam",
-            "email": "tejasvi@gmail.com"
+            "email": "admin@gmail.com"
         },
         "work_info": {
             "department_id": "D72FAFACC9E",
@@ -872,21 +872,18 @@ router.post(
                 "leave_name": "casual leave",
                 "total_leaves": 5,
                 "remaining_leaves": 9,
-                "_id": "66dee4fd453e9c4e8f17f7e8"
             },
             {
                 "leave_id": "L9CA10A6F",
                 "leave_name": "sick leave",
                 "total_leaves": 6,
                 "remaining_leaves": 5,
-                "_id": "66dee506453e9c4e8f17f7f5"
             },
             {
                 "leave_id": "L943CC97E",
                 "leave_name": "others",
                 "total_leaves": 5,
                 "remaining_leaves": 5,
-                "_id": "66e15e565c3157640297fe64"
             }
         ],
 
