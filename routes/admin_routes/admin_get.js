@@ -205,11 +205,11 @@ router.post("/all_leave_applications", Auth,slowDown,Async( async (req, res) => 
       // No additional conditions for 'director'
     } else if (req.employee.admin_type === '2') {
       query.reporting_manager = req.employee.email;
-      query.leave_status={$in:["Approved","Pending"]};
+      query.leave_status=status;
       query["approved_by.manager.leave_status"] = status;
     }else if (req.employee.admin_type === '3') {
       query.department_id=req.employee.department_id;
-      query.leave_status={$in:["Approved","Pending"]};
+      query.leave_status=status;
 
       // Optionally add conditions specific to 'team incharge'
       query["approved_by.team_incharge.leave_status"] = status;
