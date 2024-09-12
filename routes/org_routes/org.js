@@ -561,59 +561,54 @@ router.post("/add_update_leave", Auth,rateLimit(60,10),Async( async (req, res) =
         }
 
         await redis.update_redis("ORGANISATIONS", updatedLeave);
-        // Fetch documents to find current remaining leaves
-        const employees = await mongoFunctions.find(
-            "EMPLOYEE",
-            {
-            organisation_id: org_data.organisation_id,
-            "work_info.role_id": data.role_id,
-            "leaves.leave_id": data.leave_id
-            },
-            {
-                _id: -1
-            },
-            { projection: { "leaves.$": 1 } } // Only return the leaves array matching the filter
-        );
-        
-        if (employees.length > 0) {
-            for (const employee of employees) {
-              // Ensure `employee.leaves` is an array
-              if (Array.isArray(employee.leaves)) {
-                for (const leave of employee.leaves) {
-                  if (leave.leave_id === data.leave_id) {
-                    // Calculate new remaining leaves
-                    const newRemainingLeaves = data.total_leaves - leave.remaining_leaves;
-                    console.log(newRemainingLeaves);
-                    
-                // Update the documents
-                await mongoFunctions.update_one(
-                    "EMPLOYEE",
-                    {
-                    organisation_id: org_data.organisation_id,
-                    "work_info.role_id": data.role_id,
-                    "leaves.leave_id": data.leave_id
-                    },
-                    {
-                    $set: {
-                        "leaves.$[elem].leave_name": data.leave_name,
-                        "leaves.$[elem].total_leaves": data.total_leaves,
-                    },
-                    $inc: {
-                        "leaves.$[elem].remaining_leaves": newRemainingLeaves
-                    },
-                
-                    },
-                    {
-                    arrayFilters: [
-                        { "elem.leave_id": data.leave_id }
-                    ],
-                    }
-                );
+        // const leave_new = await mongoFunctions.find_one(
+        //     "EMPLOYEE",
+        //     {
+        //         organisation_id: org_data.organisation_id,
+        //         "work_info.designation_id": data.designation_id,
+        //         "leaves.leave_id": data.leave_id
+        //     },
+        //     {
+        //         "leaves.$": 1 
+        //     }
+        // );
+        // if (leave_new){
+        //     const currentRemainingLeaves = leave_new.leaves[0].remaining_leaves;
+        //     const totalLeaves = data.total_leaves;
+            
+            // Calculate the new value
+            // const newRemainingLeaves = totalLeaves-currentRemainingLeaves ;
+            // console.log(newRemainingLeaves);
+           
+            await mongoFunctions.update_many(
+                "EMPLOYEE",
+                {
+                  organisation_id: org_data.organisation_id,
+                  "work_info.role_id": data.role_id,
+                  "leaves.leave_id": data.leave_id
+                },
+                {
+                  $set: {
+                    "leaves.$[elem].leave_name": data.leave_name,
+                    "leaves.$[elem].total_leaves": data.total_leaves,
+                //   },
+                //   $inc: {
+                    "leaves.$[elem].remaining_leaves": data.total_leaves // Increment the remaining_leaves
+                  }
+                },
+                {
+                  arrayFilters: [
+                    { "elem.leave_id": data.leave_id }
+                  ]
                 }
-            }
-            }
-        }}
-  
+              );
+              
+            //   if (h) {
+            //     console.log(h);
+            //   }
+       
+        // }
+        
        
         return res.status(200).send({
             success: "Leave Updated Successfully.",
