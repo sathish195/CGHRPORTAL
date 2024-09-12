@@ -5,7 +5,7 @@ const rateLimit=require('express-rate-limit');
 
 const limiter = rateLimit({ 
   max: 100, 
-  windowMs: 1 * 60 * 1000, 
+  windowMs: 1 * 60 * 1000,
 }); 
 
 module.exports = (app) => {
