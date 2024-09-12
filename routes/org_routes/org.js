@@ -817,54 +817,79 @@ router.post(
       let password_hash = await bcrypt.hash_password(new_password);
 
       let new_emp_data = 
-        {
-            "organisation_id": "O9593C6393261F1",
-            "employee_id": "CGTPL0001",
-            "password":"Emp@1234",
-            "email": "admin@gmail.com",
-            "first_name": "pavan",
-            "last_name": "Rebba",
-            "nick_name": "pavan sir",
+      {
+        "organisation_id": "O9593C6393261F1",
+        "organisation_name": "CODEGENE TECHNOLOGIES PVT LTD",
+        "password": "$2b$10$HMWOZVLpCprqLv.4DrPrAOZqovd9FJZ.P8MvtxadEO8xk250eJ6Lq",
+        "employee_id": "CGTPL0003",
+        "basic_info": {
+            "first_name": "tejasvi",
+            "last_name": "kodali",
+            "nick_name": "teju mam",
+            "email": "tejasvi@gmail.com"
+        },
+        "work_info": {
             "department_id": "D72FAFACC9E",
-            "role_id": "RD53A5ACBC27D09",
+            "department_name": "managers",
+            "role_id": "RD7FF12619090D2",
+            "role_name": "admin",
+            "admin_type": "1",
             "designation_id": "DE2CDAC3B2C",
+            "designation_name": "hr manager",
             "employment_type": "Full-time",
             "employee_status": "active",
-            "source_of_hire": "nothing",
-            "reporting_manager": "teju@gmail.com",
-            "date_of_join": "2024-09-12",
-            "date_of_birth": "2024-09-12",
-            "expertise": "Good in everything",
-            "gender": "male",
-            "marital_status": "married",
-            "about_me": "A lot to say",
-            "identity_info": {
-              "pan":"188888888234",
-              "uan":"123888888881"
-          
+            "source_of_hire": "Direct",
+            "reporting_manager": "director@gmail.com",
+            "date_of_join": "2024-09-02"
+        },
+        "personal_details": {
+            "date_of_birth": "02092003",
+            "expertise": "everything",
+            "gender": "female",
+            "marital_status": "unmarried",
+            "about_me": "jhytgfcv\n"
+        },
+        "identity_info": {
+            "uan": "123456734563",
+            "pan": "DCUPN1233A",
+            "aadhaar": "987654321543",
+            "passport": "234567891234"
+        },
+        "contact_details": {
+            "work_phone_number": "7654326789",
+            "personal_mobile_number": "9876543456",
+            "personal_email_address": "tejumam@gmail.com",
+            "seating_location": "second",
+            "present_address": "telangana,ts",
+            "permanent_address": "vijayawada,ap"
+        },
+        "work_experience": [],
+        "educational_details": [],
+        "dependent_details": [],
+        "leaves": [
+            {
+                "leave_id": "L43A7B58B",
+                "leave_name": "casual leave",
+                "total_leaves": 5,
+                "remaining_leaves": 9,
+                "_id": "66dee4fd453e9c4e8f17f7e8"
             },
-            "mobile_number": "9849841358",
-            "personal_email_address": "pavan@gmail.com",
-            "seating_location": "s-97",
-            "present_address": "vijayawada,Ap",
-            "permanent_address": "Hyderabad,Ts",
-            "work_experience": [
-              {
-                "company_name": "codegene",
-                "job_title": "Backend developer",
-                "from_date": "2023-03-30",
-                "to_date": "2024-08-30",
-                "job_description": "Backend developement",
-                "experience": 1
-              }
-            ],
-            "educational_details": [
-              
-            ],
-            "dependent_details": [
-              
-            ],
-          
+            {
+                "leave_id": "L9CA10A6F",
+                "leave_name": "sick leave",
+                "total_leaves": 6,
+                "remaining_leaves": 5,
+                "_id": "66dee506453e9c4e8f17f7f5"
+            },
+            {
+                "leave_id": "L943CC97E",
+                "leave_name": "others",
+                "total_leaves": 5,
+                "remaining_leaves": 5,
+                "_id": "66e15e565c3157640297fe64"
+            }
+        ],
+
         images: {},
         files: {},
       };
