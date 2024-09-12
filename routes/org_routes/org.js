@@ -577,10 +577,12 @@ router.post("/add_update_leave", Auth,rateLimit(60,10),Async( async (req, res) =
         
         if (employees.length > 0) {
             for (const employee of employees) {
-            for (const leave of employee.leaves) {
-                if (leave.leave_id === data.leave_id) {
-                // Calculate new remaining leaves
-                const newRemainingLeaves = data.total_leaves - leave.remaining_leaves;
+              // Ensure `employee.leaves` is an array
+              if (Array.isArray(employee.leaves)) {
+                for (const leave of employee.leaves) {
+                  if (leave.leave_id === data.leave_id) {
+                    // Calculate new remaining leaves
+                    const newRemainingLeaves = data.total_leaves - leave.remaining_leaves;
         
                 // Update the documents
                 await mongoFunctions.updateMany(
@@ -609,7 +611,7 @@ router.post("/add_update_leave", Auth,rateLimit(60,10),Async( async (req, res) =
                 }
             }
             }
-        }
+        }}
   
        
         return res.status(200).send({
