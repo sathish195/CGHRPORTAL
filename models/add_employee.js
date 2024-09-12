@@ -12,18 +12,18 @@ const EMPLOYEE_Schema=new mongoose.Schema({
       email: { type: String}
     },
     work_info: {
-      department_id: { type: String, required: true },
-      department_name: { type: String, required: true },
-      role_id: { type: String, required: true },
-      role_name: { type: String, required: true },
+      department_id: { type: String },
+      department_name: { type: String},
+      role_id: { type: String},
+      role_name: { type: String },
       admin_type: { type: String },
-      designation_id: { type: String, required: true },
-      designation_name: { type: String, required: true },
-      employment_type: { type: String, required: true },
-      employee_status: { type: String, required: true },
+      designation_id: { type: String},
+      designation_name: { type: String },
+      employment_type: { type: String},
+      employee_status: { type: String },
       source_of_hire: { type: String },
       reporting_manager: { type: String },
-      date_of_join: { type: Date, required: true }
+      date_of_join: { type: Date}
     },
 
     personal_details: {
