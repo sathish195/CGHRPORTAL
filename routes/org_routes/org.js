@@ -818,7 +818,7 @@ router.post(
 
       let new_emp_data = 
       {
-        "organisation_id": "O9593C6393261F1",
+        "organisation_id": "O9593",
         "organisation_name": "CODEGENE TECHNOLOGIES PVT LTD",
         "password": password_hash,
         "employee_id": "CGTPL0001",
