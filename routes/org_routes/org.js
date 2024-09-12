@@ -569,7 +569,7 @@ router.post("/add_update_leave", Auth,rateLimit(60,10),Async( async (req, res) =
         //         "leaves.leave_id": data.leave_id
         //     },
         //     {
-        //         "leaves.$": 1 
+        //         "leaves.$": 1
         //     }
         // );
         // if (leave_new){
@@ -579,6 +579,14 @@ router.post("/add_update_leave", Auth,rateLimit(60,10),Async( async (req, res) =
             // Calculate the new value
             // const newRemainingLeaves = totalLeaves-currentRemainingLeaves ;
             // console.log(newRemainingLeaves);
+        const remainingLeaves=data.total_leaves-leave.total_leaves;
+        let remaining=Math.max(remainingLeaves, 0);
+        // if (remainingLeaves>0){
+        //     remaining = remainingLeaves;
+        // }
+        // else{
+        //     remaining=0;
+        // }
            
             await mongoFunctions.update_many(
                 "EMPLOYEE",
@@ -591,9 +599,9 @@ router.post("/add_update_leave", Auth,rateLimit(60,10),Async( async (req, res) =
                   $set: {
                     "leaves.$[elem].leave_name": data.leave_name,
                     "leaves.$[elem].total_leaves": data.total_leaves,
-                //   },
-                //   $inc: {
-                    "leaves.$[elem].remaining_leaves": data.total_leaves // Increment the remaining_leaves
+                  },
+                  $inc: {
+                    "leaves.$[elem].remaining_leaves": remaining // Increment the remaining_leaves
                   }
                 },
                 {
