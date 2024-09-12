@@ -586,7 +586,7 @@ router.post("/add_update_leave", Auth,rateLimit(60,10),Async( async (req, res) =
                     console.log(newRemainingLeaves);
                     
                 // Update the documents
-                await mongoFunctions.find_one_and_update(
+                await mongoFunctions.update_one(
                     "EMPLOYEE",
                     {
                     organisation_id: org_data.organisation_id,
