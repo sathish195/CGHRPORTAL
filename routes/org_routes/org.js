@@ -843,7 +843,7 @@ router.post(
             "date_of_join": "2024-09-02"
         },
         "personal_details": {
-            "date_of_birth": "02092003",
+            "date_of_birth": "2024-09-12",
             "expertise": "everything",
             "gender": "female",
             "marital_status": "unmarried",
@@ -856,8 +856,7 @@ router.post(
             "passport": "234567891234"
         },
         "contact_details": {
-            "work_phone_number": "7654326789",
-            "personal_mobile_number": "9876543456",
+            "mobile_number": "9876543456",
             "personal_email_address": "tejumam@gmail.com",
             "seating_location": "second",
             "present_address": "telangana,ts",
