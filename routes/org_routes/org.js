@@ -821,12 +821,12 @@ router.post(
         "organisation_id": "O9593C6393261F1",
         "organisation_name": "CODEGENE TECHNOLOGIES PVT LTD",
         "password": password_hash,
-        "employee_id": "CGTPL0003",
+        "employee_id": "CGTPL0001",
         "basic_info": {
             "first_name": "pavan",
             "last_name": "rebba",
-            "nick_name": "teju mam",
-            "email": "admin@gmail.com"
+            "nick_name": "pavan sir",
+            "email": "admin@codegene.io"
         },
         "work_info": {
             "department_id": "D72FAFACC9E",
@@ -857,7 +857,7 @@ router.post(
         },
         "contact_details": {
             "mobile_number": "9876543456",
-            "personal_email_address": "tejumam@gmail.com",
+            "personal_email_address": "pavan@gmail.com",
             "seating_location": "second",
             "present_address": "telangana,ts",
             "permanent_address": "vijayawada,ap"
