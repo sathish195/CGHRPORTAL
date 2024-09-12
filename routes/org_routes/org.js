@@ -583,7 +583,8 @@ router.post("/add_update_leave", Auth,rateLimit(60,10),Async( async (req, res) =
                   if (leave.leave_id === data.leave_id) {
                     // Calculate new remaining leaves
                     const newRemainingLeaves = data.total_leaves - leave.remaining_leaves;
-        
+                    console.log(newRemainingLeaves);
+                    
                 // Update the documents
                 await mongoFunctions.find_one_and_update(
                     "EMPLOYEE",
