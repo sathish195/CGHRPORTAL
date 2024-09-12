@@ -408,11 +408,11 @@ router.post("/universal" ,Auth,slowDown,Async(async(req, res) => {
         return res.status(200).send(dashborad);
     }
 
-    let org_data = await redis.redisGet(
-        "CRM_ORGANISATIONS",
-        org.organisation_id,
-        true
-    );
+    // let org_data = await redis.redisGet(
+    //     "CRM_ORGANISATIONS",
+    //     org.organisation_id,
+    //     true
+    // );
     let recent_hires = await stats.recent_hires(req.employee.organisation_id);
     const birthdays=await stats.employees_with_birthday_today(req.employee.organisation_id);
     const projection = {
@@ -426,7 +426,7 @@ router.post("/universal" ,Auth,slowDown,Async(async(req, res) => {
     let reporting_manager = await mongoFunctions.find(
         "EMPLOYEE",
         {
-            organisation_id: org_data.organisation_id,
+            organisation_id: org.organisation_id,
             "work_info.admin_type": { $in: ["1", "2"] }
         },
         { _id: -1 } , 
@@ -445,7 +445,7 @@ router.post("/universal" ,Auth,slowDown,Async(async(req, res) => {
     employee_id=await mongoFunctions.find_one(
         "EMPLOYEE",
         {
-            organisation_id: org_data.organisation_id,
+            organisation_id: org.organisation_id,
             // "work_info.admin_type": { $in: ["1", "2"] }
         }, // 
         project ,
@@ -465,11 +465,11 @@ router.post("/universal" ,Auth,slowDown,Async(async(req, res) => {
         let dashborad = {
             recent_hires: recent_hires,
             birthdays: birthdays,
-            organisation_details: org_data,
+            organisation_details: org,
             reporting_managers: reporting_manager,
             employee_id:employee_id,
           };
-        // await redis.update_redis("ORGANISATIONS",org);
+        await redis.update_redis("ORGANISATIONS",org);
         return res.status(200).send(dashborad);
         }));
      
