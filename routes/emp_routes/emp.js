@@ -319,6 +319,7 @@ router.post(
       );
       //   await rediscon.update_redis("EMPLOYEE", new_emp);
     //   await stats.update_emp(update_emp, true, false);
+    
       return res.status(200).send({
         success: "Profile Updated Successfully",
         data: {dp:update_emp.images.dp,about_me:update_emp.personal_details.about_me},
