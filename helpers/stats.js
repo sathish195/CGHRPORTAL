@@ -143,6 +143,7 @@ async function recent_hires(organisation_id) {
         "basic_info.last_name": 1,
         "basic_info.email": 1,
         "work_info.date_of_join": 1,
+        "images.dp": 1,
       }
     );
 
@@ -197,6 +198,7 @@ async function employees_with_birthday_today(organisation_id) {
         "basic_info.last_name": 1,
         "basic_info.email": 1,
         "personal_details.date_of_birth": 1,
+        "images.dp": 1,
       }
     );
 

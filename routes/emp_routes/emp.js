@@ -656,7 +656,7 @@ router.post(
     if (!emp_leave_obj) return res.status(400).send("Leave Type Not Found..!");
 
     // Set the end of the day for toDate to include all times on that day
-    toDate.setHours(23, 59, 59, 999);
+    // toDate.setHours(23, 59, 59, 999);
     const over_lapping_leaves = await mongoFunctions.find("LEAVE", {
       organisation_id: find_emp.organisation_id,
       employee_id: find_emp.employee_id,

@@ -164,9 +164,9 @@ function add_employee_by_admin(data) {
     experience: Joi.number().positive().required(),
   });
   const educational_details_obj = Joi.object({
-    institute_name: Joi.string().trim().min(5).max(50).required(),
+    institute_name: Joi.string().trim().min(2).max(50).required(),
     degree: Joi.string().min(3).max(15).required(),
-    specialization: Joi.string().min(2).max(15).required(),
+    specialization: Joi.string().min(2).max(30).required(),
     year_of_completion: Joi.number().required(),
   });
   const dependent_details_obj = Joi.object({
