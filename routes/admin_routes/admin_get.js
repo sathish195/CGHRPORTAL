@@ -1,186 +1,173 @@
-const express = require('express');
-const mongoFunctions = require('../../helpers/mongoFunctions');
-const router=express.Router();
-const validations=require('../../helpers/schema');
-const bcrypt=require('../../helpers/crypto');
-const jwt=require('jsonwebtoken');
+const express = require("express");
+const mongoFunctions = require("../../helpers/mongoFunctions");
+const router = express.Router();
+const validations = require("../../helpers/schema");
+const bcrypt = require("../../helpers/crypto");
+const jwt = require("jsonwebtoken");
 const { Auth } = require("../../middlewares/auth");
-const redis=require('../../helpers/redisFunctions');
-const { mongo } = require('mongoose');
+const redis = require("../../helpers/redisFunctions");
+const { mongo } = require("mongoose");
 const Async = require("../../middlewares/async");
-const rateLimit= require('../../helpers/custom_rateLimiter');
-const slowDown=require("../../middlewares/slow_down");
-
-
+const rateLimit = require("../../helpers/custom_rateLimiter");
+const slowDown = require("../../middlewares/slow_down");
 
 //get employee list
 
 //------------------------get emp by id------------------
 router.post(
-    "/get_emp_by_id",
-    Auth,Async((async (req, res) => {
-      let data = req.body;
-      var { error } = validations.employee_id(data);
-      if (error) return res.status(400).send(error.details[0].message);
-      const emp_find = req.employee;
-      if (emp_find.admin_type=== "1" || emp_find.admin_type=== "2" ) {
-        let emp = await mongoFunctions.find_one(
-          "EMPLOYEE",
-          {
-            organisation_id: emp_find.organisation_id,
-            employee_id: data.employee_id,
-          },
-          { two_fa_key: 0, fcm_token: 0, browserid: 0, updatedAt: 0 }
-        );
-        return res.status(200).send({ employee: emp });
-      }
-      return res.status(400).send("Not Admin");
-    })
-  ))
-  //-----------------get emp by lazy loading--------
-  router.post(
-    "/get_employee_list",
-    Auth,slowDown,Async(
-    async (req, res) => {
-        const emp = req.employee;
-        const LIMIT = 50;
-        const data = req.body;
-        const { error } = validations.skip(data);
-
-        if (error) return res.status(400).send(error.details[0].message);
-        let query={organisation_id:req.employee.organisation_id};
-        if (emp.admin_type === "1"){
-          query["work_info.admin_type"]={$ne:"1"};
-        }else if (emp.admin_type === "2"){
-          query["work_info.admin_type"]={$nin:["1","2"]};
-        }
-
-        // if (emp.admin_type === "1" || emp.admin_type === "2") {
-            // Logic for director or manager
-            // let employees = await mongoFunctions.lazy_loading(
-            //     "EMPLOYEE",
-            //     { organisation_id: emp.organisation_id,"work_info.admin_type":{$ne:"1"}},
-            //     { two_fa_key: 0, fcm_token: 0, browserid: 0, others: 0 },
-            //     { _id: -1 },
-            //     LIMIT,
-            //     data.skip
-            // );
-            // return res.status(200).send({ employees });
-        // } 
-        else if (emp.admin_type==="3") {
-          query["work_info.department_id"]= emp.department_id;
-          query["work_info.admin_type"]={$nin:["1","2"]};
-            // Logic for team incharge
-        }
-
-         else {
-            return res.status(403).send("Forbidden: Not Administrator");
-        }
-        //  Logic for director or manager
-            let employees = await mongoFunctions.lazy_loading(
-                "EMPLOYEE",
-               query,
-                { two_fa_key: 0, fcm_token: 0, browserid: 0, others: 0 },
-                { _id: -1 },
-                LIMIT,
-                data.skip
-            );
-            return res.status(200).send({ employees });
+  "/get_emp_by_id",
+  Auth,
+  Async(async (req, res) => {
+    console.log("get emp by id route hit");
+    let data = req.body;
+    var { error } = validations.employee_id(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    const emp_find = req.employee;
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director Or Manager Can Access Employee");
     }
-));
 
-  router.post("/get_project_by_id",Auth, Async(async (req, res)=>{
-    data=req.body;
-    var { error } =validations.get_project_by_id(data);
-      if (error) return res.status(400).send(error.details[0].message);
-    
-    // const userRole = req.employee.role_name.toLowerCase();
-    // if (userRole === 'team member' ) {
-    //   return res.status(403).send('Access denied: Not Admin');
-    // }
-    findProject=await mongoFunctions.find_one("PROJECTS",{organisation_id:req.employee.organisation_id,project_id:data.project_id});
-    if(!findProject) return res.status(400).send("Project not found")
-    return res.status(200).send(findProject)
-
-    }));
-
-    router.post("/get_projects",Auth,slowDown, Async(async (req, res)=>{
-
+    let emp = await mongoFunctions.find_one(
+      "EMPLOYEE",
+      {
+        organisation_id: emp_find.organisation_id,
+        employee_id: data.employee_id,
+      },
+      { two_fa_key: 0, fcm_token: 0, browserid: 0, updatedAt: 0 }
+    );
+    return res.status(200).send({ employee: emp });
+  })
+);
+//-----------------get emp by lazy loading--------
+router.post(
+  "/get_employee_list",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    console.log("get employee list route hit");
+    const emp = req.employee;
+    const LIMIT = 50;
     const data = req.body;
+    const { error } = validations.skip(data);
+
+    if (error) return res.status(400).send(error.details[0].message);
+    let query = { organisation_id: req.employee.organisation_id };
+    if (emp.admin_type === "1") {
+      query["work_info.admin_type"] = { $ne: "1" };
+    } else if (emp.admin_type === "2") {
+      query["work_info.admin_type"] = { $nin: ["1", "2"] };
+    } else if (emp.admin_type === "3") {
+      query["work_info.department_id"] = emp.department_id;
+      query["work_info.admin_type"] = { $nin: ["1", "2"] };
+      // Logic for team incharge
+    } else {
+      return res.status(403).send("Forbidden: Not Administrator");
+    }
+    //  Logic for director or manager
+    let employees = await mongoFunctions.lazy_loading(
+      "EMPLOYEE",
+      query,
+      { two_fa_key: 0, fcm_token: 0, browserid: 0, others: 0 },
+      { _id: -1 },
+      LIMIT,
+      data.skip
+    );
+    return res.status(200).send({ employees });
+  })
+);
+
+router.post(
+  "/get_project_by_id",
+  Auth,
+  Async(async (req, res) => {
+    console.log("get project by id route hit");
+    let data = req.body;
+    var { error } = validations.get_project_by_id(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    let findProject = await mongoFunctions.find_one("PROJECTS", {
+      organisation_id: req.employee.organisation_id,
+      project_id: data.project_id,
+    });
+    if (!findProject) return res.status(400).send("Project Not Found");
+    return res.status(200).send(findProject);
+  })
+);
+
+router.post(
+  "/get_projects",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    console.log("get projects route hit");
+
     const userRole = req.employee.admin_type;
     console.log(userRole);
     const organisationId = req.employee.organisation_id;
     const employeeId = req.employee.employee_id;
 
-    // Check user role
-    // if (userRole === 'team member') {
-    //     return res.status(403).send('Access denied: Not authorized');
-    // }
+    if (userRole === "1" || userRole === "2") {
+      const projects = await mongoFunctions.find("PROJECTS", {
+        organisation_id: organisationId,
+      });
+      console.log("successfully fetched projects");
+      return res.status(200).send(projects);
+    } else if (userRole === "3") {
+      // Get only the projects where the team incharge's employee ID is in the team array
 
-    if (userRole === '1' || userRole === '2') {
-        // Get all projects for director or manager
-        try {
-            const projects = await mongoFunctions.find('PROJECTS', { organisation_id: organisationId });
-            console.log(projects);
-            return res.status(200).send(projects);
-        } catch (err) {
-            return res.status(500).send('Server error');
-        }
-    } else if (userRole === '3') {
-        // Get only the projects where the team incharge's employee ID is in the team array
-        try {
-            const projects = await mongoFunctions.find('PROJECTS', {
-                organisation_id: organisationId,
-                team: { $elemMatch: { employee_id: employeeId }},
-                // 
-               }
-            );
-            return res.status(200).send(projects);
-        } catch (err) {
-            return res.status(500).send('Server error');
-        }
+      const projects = await mongoFunctions.find("PROJECTS", {
+        organisation_id: organisationId,
+        team: { $elemMatch: { employee_id: employeeId } },
+        //
+      });
+      console.log("successfully fetched projects");
+      return res.status(200).send(projects);
     } else {
-      // const projects = await mongoFunctions.find('TASKS', {
-      //   organisation_id: organisationId,
-      //   team: { $elemMatch: { employee_id: employeeId } }
-      const projects = await mongoFunctions.aggregate('TASKS', [
+      const projects = await mongoFunctions.aggregate("TASKS", [
         {
-            $match: {
-                organisation_id: organisationId,
-                team: { $elemMatch: { employee_id: employeeId }},
-                // { $elemMatch: { employee_id: employeeId }
-               
-            }
+          $match: {
+            organisation_id: organisationId,
+            team: { $elemMatch: { employee_id: employeeId } },
+            // { $elemMatch: { employee_id: employeeId }
+          },
         },
         {
-            $project: {
-                _id: 0, 
-                project_id: 1, 
-                project_name: 1 
-            }
+          $project: {
+            _id: 0,
+            project_id: 1,
+            project_name: 1,
+          },
         },
         {
-            $group: {
-                _id: "$project_id", 
-                project_name: { $first: "$project_name" } 
-            }
+          $group: {
+            _id: "$project_id",
+            project_name: { $first: "$project_name" },
+          },
         },
         {
-            $project: {
-                _id: 0, 
-                project_id: "$_id", 
-                project_name: 1 
-            }
-        }
-    ]);
+          $project: {
+            _id: 0,
+            project_id: "$_id",
+            project_name: 1,
+          },
+        },
+      ]);
 
-    // });
-    return res.status(200).send(projects);
+      console.log("successfully fetched projects");
+      return res.status(200).send(projects);
     }
-}));
-router.post("/all_leave_applications", Auth,slowDown,Async( async (req, res) => {
-  try {
-    const data = req.body;
+  })
+);
+router.post(
+  "/all_leave_applications",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    console.log("all leave applications route hit");
+    let data = req.body;
     const { error } = validations.get_all_leave_applications(data);
 
     if (error) {
@@ -196,20 +183,20 @@ router.post("/all_leave_applications", Auth,slowDown,Async( async (req, res) => 
     };
 
     // Role-based access control
-    if (req.employee.admin_type === '4') {
+    if (roleName === "4") {
       return res.status(403).send("Access denied: Not Admin");
-    } 
+    }
 
-    if (req.employee.admin_type === '1') {
+    if (roleName === "1") {
       query.leave_status = status;
       // No additional conditions for 'director'
-    } else if (req.employee.admin_type === '2') {
+    } else if (roleName === "2") {
       query.reporting_manager = req.employee.email;
-      query.leave_status=status;
+      query.leave_status = status;
       query["approved_by.manager.leave_status"] = status;
-    }else if (req.employee.admin_type === '3') {
-      query.department_id=req.employee.department_id;
-      query.leave_status=status;
+    } else if (roleName === "3") {
+      query.department_id = req.employee.department_id;
+      query.leave_status = status;
 
       // Optionally add conditions specific to 'team incharge'
       query["approved_by.team_incharge.leave_status"] = status;
@@ -227,24 +214,22 @@ router.post("/all_leave_applications", Auth,slowDown,Async( async (req, res) => 
     if (data.year) {
       const year = parseInt(data.year, 10);
       if (!isNaN(year)) {
-          const startOfYear = new Date(year, 0, 1); // January 1st of the given year
-          const endOfYear = new Date(year + 1, 0, 0, 23, 59, 59, 999); // December 31st of the given year
-  
-          query.createdAt = { $gte: startOfYear, $lte: endOfYear };
+        const startOfYear = new Date(year, 0, 1); // January 1st of the given year
+        const endOfYear = new Date(year + 1, 0, 0, 23, 59, 59, 999); // December 31st of the given year
+
+        query.createdAt = { $gte: startOfYear, $lte: endOfYear };
       } else {
-          return res.status(400).send("Invalid year format.");
+        return res.status(400).send("Invalid year format.");
       }
-  }
+    }
 
     if (data.leave_status && data.leave_status.length > 5) {
-      if (roleName === '2') {
+      if (roleName === "2") {
         query["approved_by.manager.leave_status"] = data.leave_status;
-      } else if (roleName === '3') {
+      } else if (roleName === "3") {
         query["approved_by.team_incharge.leave_status"] = data.leave_status;
-      }
-      else{
+      } else {
         query.leave_status = data.leave_status;
-
       }
     }
 
@@ -262,27 +247,21 @@ router.post("/all_leave_applications", Auth,slowDown,Async( async (req, res) => 
 
     // If employee_id is provided, fetch the employee profile
     if (data.employee_id && data.employee_id.length > 5) {
-      const employeeProfile = await mongoFunctions.find_one(
-        "EMPLOYEE",
-        { employee_id: data.employee_id },
-      );
+      const employeeProfile = await mongoFunctions.find_one("EMPLOYEE", {
+        employee_id: data.employee_id,
+      });
 
       if (employeeProfile) {
-        response.leaves= employeeProfile.leaves;
+        response.leaves = employeeProfile.leaves;
       } else {
-        return res.status(404).send("Employee not found.");
+        return res.status(404).send("Employee Not Found.");
       }
     }
 
     return res.status(200).send(response);
 
     // return res.status(200).send(leaveApplications);
+  })
+);
 
-  } catch (err) {
-    console.error("Error fetching leave applications:", err);
-    return res.status(500).send("Internal server error");
-  }
-}));
-
-
-  module.exports =router;
+module.exports = router;

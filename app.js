@@ -1,13 +1,13 @@
+require("dotenv").config();
 const express=require('express')
 // const globalErrorHandler = require('./middlewares/async');
-
 
 app=express()
 app.set('trust proxy', 1);
 
 app.use(express.json({ limit: "10mb" }));
 // app.use(error_handler);
-require("dotenv").config();
+
 
 
 require("./helpers/cors")(app);

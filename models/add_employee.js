@@ -1,4 +1,5 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const { employee_id } = require('../helpers/schema');
 
 const EMPLOYEE_Schema=new mongoose.Schema({
     organisation_id: { type: String, required: true,index: true},
@@ -9,7 +10,7 @@ const EMPLOYEE_Schema=new mongoose.Schema({
       first_name: { type: String},
       last_name: { type: String},
       nick_name: { type: String },
-      email: { type: String}
+      email: { type: String,index:true}
     },
     work_info: {
       department_id: { type: String },
@@ -97,4 +98,6 @@ const EMPLOYEE_Schema=new mongoose.Schema({
   { timestamps: true },
 );
 EMPLOYEE_Schema.index({ organisation_id: 1, employee_id: 1 }); 
+EMPLOYEE_Schema.index({ organisation_id: 1, "basic_info.email": 1 });
+EMPLOYEE_Schema.index({ organisation_id: 1, "basic_info.email": 1,employee_id:1 }); 
 exports.EMPLOYEE = mongoose.model('Employees', EMPLOYEE_Schema)

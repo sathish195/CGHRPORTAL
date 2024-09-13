@@ -3,11 +3,11 @@ const mongofunctions = require("./mongoFunctions");
 let client;
 
 if (process.env.REDIS_URL) {
-    client = RedisClient.createClient({
-      url: `redis://${process.env.REDIS_URL}:${process.env.REDIS_PORT}`,
-      password: process.env.REDIS_PASSWORD,
-    });
-  }
+  client = RedisClient.createClient({
+    url: `redis://${process.env.REDIS_URL}:${process.env.REDIS_PORT}`,
+    password: process.env.REDIS_PASSWORD,
+  });
+}
 client.on("error", (err) => {
   console.log("redis err--->", err);
 });
@@ -88,7 +88,7 @@ module.exports = {
     } else if (COLLECTION === "EMPLOYEE") {
       obj._id = undefined;
       obj.__v = undefined;
-      obj.images=undefined;
+      obj.images = undefined;
       // obj.createdAt = undefined;
       obj.updatedAt = undefined;
       await client.hSet(
