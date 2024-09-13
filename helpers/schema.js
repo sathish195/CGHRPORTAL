@@ -248,7 +248,7 @@ function add_employee_by_admin(data) {
     present_address: Joi.string()
       .min(10)
       .max(100)
-      .pattern(/^[A-Za-z0-9\s.,/-]+$/, "valid characters")
+      .pattern(/^[A-Za-z0-9\s.,/()-]+$/, "valid characters")
       .messages({
         "string.pattern.base":
           "present address can only contain letters, numbers, spaces, periods, commas, and hyphens.",
@@ -258,7 +258,7 @@ function add_employee_by_admin(data) {
     permanent_address: Joi.string()
       .min(10)
       .max(100)
-      .pattern(/^[A-Za-z0-9\s.,/-]+$/, "valid characters")
+      .pattern(/^[A-Za-z0-9\s.,/()-]+$/, "valid characters")
       .messages({
         "string.pattern.base":
           "permanent address can only contain letters, numbers, spaces, periods, commas, and hyphens.",
