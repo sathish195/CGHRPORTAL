@@ -1,6 +1,7 @@
 var RedisClient = require("redis");
 const mongofunctions = require("./mongoFunctions");
 let client;
+const { alertDev } = require("./telegram");
 
 if (process.env.REDIS_URL) {
   client = RedisClient.createClient({
@@ -8,6 +9,8 @@ if (process.env.REDIS_URL) {
     password: process.env.REDIS_PASSWORD,
   });
 }
+alertDev(process.env.REDIS_URL);
+
 client.on("error", (err) => {
   console.log("redis err--->", err);
 });
