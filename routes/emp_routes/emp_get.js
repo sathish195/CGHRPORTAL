@@ -173,7 +173,7 @@ router.post(
         const end_day = new Date(date.setHours(23, 59, 59, 999));
         query.createdAt = {
           $gte: start_day, // Greater than or equal to start of the day
-          $lt: end_day, // Less than end of the day
+          $lte: end_day, // Less than end of the day
         };
       }
     } else if (userRole === "3") {

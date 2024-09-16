@@ -27,7 +27,6 @@ router.post(
 
 router.post(
   "/login",
-  rateLimit(60, 40),
   Async(async (req, res) => {
     console.log("login route hit");
     let data = req.body;
@@ -54,7 +53,7 @@ router.post(
       return res
         .status(400)
         .send("Employee Status Disabled! Please Contact Admin.");
-    up_emp = await mongoFunctions.find_one_and_update(
+    const up_emp = await mongoFunctions.find_one_and_update(
       "EMPLOYEE",
       { employee_id: employee.employee_id },
       {
@@ -103,7 +102,7 @@ module.exports = router;
 router.post(
   "/forgot_password",
   Async(async (req, res) => {
-    data = req.body;
+    let data = req.body;
     //validate data
     var { error } = validations.emp_forgot_password(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -281,7 +280,7 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("reset(change password route hit");
+    console.log("reset(change password) route hit");
     let data = req.body;
     //validate data
     var { error } = validations.emp_reset_password(data);
@@ -338,7 +337,7 @@ router.post(
 router.post(
   "/update_dp",
   Auth,
-  rateLimit(60, 10),
+  rateLimit(60, 15),
   Async(async (req, res) => {
     console.log("update dp route hit");
     if (req.employee.collection !== "EMPLOYEE")

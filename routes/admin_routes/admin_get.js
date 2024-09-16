@@ -36,7 +36,14 @@ router.post(
         organisation_id: emp_find.organisation_id,
         employee_id: data.employee_id,
       },
-      { two_fa_key: 0, fcm_token: 0, browserid: 0, updatedAt: 0 }
+      {
+        two_fa_key: 0,
+        fcm_token: 0,
+        browserid: 0,
+        updatedAt: 0,
+        _id: 0,
+        password: 0,
+      }
     );
     return res.status(200).send({ employee: emp });
   })
