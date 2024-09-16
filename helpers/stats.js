@@ -157,39 +157,15 @@ async function recent_hires(organisation_id) {
 async function employees_with_birthday_today(organisation_id) {
   try {
     const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth(); // 0-based month
+    const currentMonth = today.getMonth() + 1; // 1-based month
     const currentDay = today.getDate();
 
-    // Construct the start and end of the range for today's month and day
-    const startOfDay = new Date(
-      currentYear,
-      currentMonth,
-      currentDay,
-      0,
-      0,
-      0,
-      0
-    );
-    const endOfDay = new Date(
-      currentYear,
-      currentMonth,
-      currentDay,
-      23,
-      59,
-      59,
-      999
-    );
-
-    // To match any year but the same month and day
-    const employeesWithBirthday = await mongoFunctions.find(
+    // Fetch all employees from the specified organisation
+    const allEmployees = await mongoFunctions.find(
       "EMPLOYEE",
       {
         organisation_id: organisation_id,
-        "personal_details.date_of_birth": {
-          $gte: startOfDay, // Start of the day
-          $lte: endOfDay, // End of the day
-        },
+        "personal_details.date_of_birth": { $exists: true }, // Ensure date_of_birth exists
       },
       { _id: -1 },
       {
@@ -202,7 +178,33 @@ async function employees_with_birthday_today(organisation_id) {
       }
     );
 
-    console.log(employeesWithBirthday); // Debug: Print employees with birthday today
+    
+
+    // Check if there are any employees
+    if (allEmployees.length === 0) {
+      console.log("No employees found.");
+      return [];
+    }
+
+    // Filter employees whose birthday is today
+    const employeesWithBirthday = allEmployees.filter((employee) => {
+      const birthDate = new Date(employee.personal_details.date_of_birth);
+
+      if (isNaN(birthDate.getTime())) {
+        console.error(
+          "Invalid birthDate:",
+          employee.personal_details.date_of_birth
+        );
+        return false;
+      }
+
+      const birthMonth = birthDate.getMonth() + 1; // 1-based month
+      const birthDay = birthDate.getDate();
+
+      return birthMonth === currentMonth && birthDay === currentDay;
+    });
+
+    // console.log("Employees with birthday today:", employeesWithBirthday); // Debug: Print filtered results
     return employeesWithBirthday;
   } catch (error) {
     console.error("Error fetching employees:", error);

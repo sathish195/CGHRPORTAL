@@ -305,6 +305,7 @@ router.post(
   rateLimit(60, 10),
   Async(async (req, res) => {
     console.log("update employee profile by admin route hit");
+    console.log(req.data);
     let data = req.body;
     var { error } = validations.add_employee_by_admin(data);
     if (error) return res.status(400).send(error.details[0].message);
