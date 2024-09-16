@@ -1,15 +1,15 @@
-const cors = require('cors');
-const helmet=require('helmet');
-const compression=require('compression');
-const rateLimit=require('express-rate-limit');
+const cors = require("cors");
+const helmet = require("helmet");
+const compression = require("compression");
+const rateLimit = require("express-rate-limit");
 
 const limiter = rateLimit({ 
   max: 100, 
-  windowMs: 1 * 60 * 1000,
+  windowMs: 1 * 60 * 1000, 
 }); 
 
 module.exports = (app) => {
-  app.use(cors({ origin: '*' ,methods: 'GET,HEAD,PUT,PATCH,POST,DELETE'}));
+  app.use(cors({ origin: "*", methods: "GET,HEAD,PUT,PATCH,POST,DELETE" }));
   console.log("allowed cors origins");
   app.use(helmet());
   // console.log(helmet)

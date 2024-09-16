@@ -19,14 +19,12 @@
 //     }
 //     console.log("Error processing");
 
-
 // module.exports={handle500Errors}
 
-
 module.exports = function (err, req, res, next) {
-    console.log(err,"error------>");
-    
-    // console.log(err.message,"errormsg----->");
+  console.log(err, "error------>");
 
-    res.status(500).send(err.message);
-  };
+  // console.log(err.message,"errormsg----->");
+
+  res.status(500).send(err.message);
+};

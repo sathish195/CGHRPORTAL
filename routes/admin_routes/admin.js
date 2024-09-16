@@ -1,547 +1,588 @@
-const express = require('express');
-const mongoFunctions = require('../../helpers/mongoFunctions');
-const router=express.Router();
-const validations=require('../../helpers/schema');
-const bcrypt=require('../../helpers/crypto');
-const jwt=require('jsonwebtoken');
+const express = require("express");
+const mongoFunctions = require("../../helpers/mongoFunctions");
+const router = express.Router();
+const validations = require("../../helpers/schema");
+const bcrypt = require("../../helpers/crypto");
+const jwt = require("jsonwebtoken");
 const { Auth } = require("../../middlewares/auth");
-const redis=require('../../helpers/redisFunctions');
-const stats=require('../../helpers/stats');
-const functions=require('../../helpers/functions');
-const { date } = require('joi');
-const { RFC_2822 } = require('moment');
+const redis = require("../../helpers/redisFunctions");
+const stats = require("../../helpers/stats");
+const functions = require("../../helpers/functions");
+const { date } = require("joi");
+const { RFC_2822 } = require("moment");
 const Async = require("../../middlewares/async");
-const rateLimit= require('../../helpers/custom_rateLimiter');
+const rateLimit = require("../../helpers/custom_rateLimiter");
 
-
-//forgot password
-router.post('/emp_reset_password',Auth,rateLimit(60,10),Async(async(req,res) => {
-  data=req.body;
-  var {error}=validations.emp_reset_password_by_admin(data);
-  if(error) return res.status(400).send(error.details[0].message);
-  //validate data
-  if (req.employee.admin_type !== "1" && req.employee.admin_type !== "2"){
-    return res.status(400).send("Access Denied..!!Not Admin Or Manager");
-  }
-  // var {error}=validations.emp_reset_password_by_admin(data);
-  // if(error) return res.status(400).send(error.details[0].message);
-  const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
-  if(!employee) return res.status(400).send('No Employee Found With The Given Email');
-  
-  if (
-      // employee &&
-      employee.work_info.employee_status.toLowerCase() === "disable" || employee.work_info.employee_status.toLowerCase() ==="terminated"
-      )
+//forgot password  route to reset employee's forgot password
+router.post(
+  "/emp_reset_password",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    console.log("employee reset password by admin route hit");
+    let data = req.body;
+    var { error } = validations.emp_reset_password_by_admin(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    //validate data
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
       return res
-          .status(400)
-          .send("Employee Status Disabled!");
-    const verifyPassword=bcrypt.compare_password(data.new_password,employee.password);
+        .status(403)
+        .send("Only Admin Or Manager Can Access This Endpoint");
+    }
+
+    const employee = await mongoFunctions.find_one("EMPLOYEE", {
+      "basic_info.email": data.email.toLowerCase(),
+    });
+    if (!employee)
+      return res.status(400).send("No Employee Found With The Given Email");
+
+    if (
+      // employee &&
+      employee.work_info.employee_status.toLowerCase() === "disable" ||
+      employee.work_info.employee_status.toLowerCase() === "terminated"
+    )
+      return res.status(400).send("Employee Status Disabled!");
+    const verifyPassword = bcrypt.compare_password(
+      data.new_password,
+      employee.password
+    );
     console.log(verifyPassword);
     console.log(employee.password);
     console.log(data.new_password);
-    if(verifyPassword) return res.status(400).send('Password Should Not Same As Your Old Password');
-    const hashedPassword=bcrypt.hash_password(data.new_password);
+    if (verifyPassword)
+      return res
+        .status(400)
+        .send("Password Should Not Same As Your Old Password");
+    const hashedPassword = bcrypt.hash_password(data.new_password);
     await mongoFunctions.find_one_and_update(
-        "EMPLOYEE",
-        { employee_id: employee.employee_id },
-        { password: hashedPassword }
+      "EMPLOYEE",
+      { employee_id: employee.employee_id },
+      { password: hashedPassword }
     );
     return res.status(200).send({
-    success: "Password Reset Done Successfully",
+      success: "Password Reset Done Successfully",
     });
-  // var OTP="654321";
-  // var otp=OTP;
-  // await redis.genOtp(employee.employee_id, otp, 120);
+  })
+);
 
-  //send otp
-  // return res.status(200).send({
-  // success: "Success",
-  // });  
-}));
 // Add new employee
 
 router.post(
-    "/add_employee",
-    Auth,Async((async (req, res) => {
-      let data = req.body;
-      var { error } = validations.add_employee_by_admin(data);
-      if (error) return res.status(400).send(error.details[0].message);
-      let org_data = await redis.redisGet(
-        "CRM_ORGANISATIONS",
-        req.employee.organisation_id,
-        true
-      );
-      if (!org_data) return res.status(400).send("Access Denied..!");
-      if (req.employee.admin_type !== "1" && req.employee.admin_type !== "2"){
-        return res.status(400).send("Only Director,Manager Can Add New Employee..!");
+  "/add_employee",
+  Auth,
+  Async(async (req, res) => {
+    console.log("add employee route hit");
+    let data = req.body;
+    var { error } = validations.add_employee_by_admin(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    let org_data = await redis.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) return res.status(400).send("Access Denied..!");
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Only Admin Or Manager Can Add New Employee");
+    }
+
+    let department_data = org_data.departments.find(
+      (e) => e.department_id === data.department_id
+    );
+    if (!department_data)
+      return res.status(400).send("Invalid Department id..!");
+
+    let role_data = org_data.roles.find((e) => e.role_id === data.role_id);
+    if (!role_data) return res.status(400).send("Invalid Role id..!");
+
+    let designation_data = org_data.designations.find(
+      (e) => e.designation_id === data.designation_id
+    );
+    if (!designation_data)
+      return res.status(400).send("Invalid Designation id..!");
+
+    employees = await mongoFunctions.find("EMPLOYEE", {
+      organisation_id: req.employee.organisation_id,
+    });
+    //
+    if (employees.length < 2 && role_data.admin_type !== "2") {
+      return res
+        .status(400)
+        .send(
+          "Director Must Have Added At Least One Manager Before Adding Another Employee."
+        );
+    }
+
+    // Check if the current admin is a Manager
+    if (req.employee.admin_type === "2" && role_data.admin_type === "2") {
+      // Managers cannot add other Managers
+      if (data.role_id === role_data.role_id) {
+        return res.status(400).send("A Manager Cannot Add Another Manager.");
       }
-    
-      let department_data = org_data.departments.find(
-        (e) => e.department_id === data.department_id
-      );
-      if (!department_data)
-        return res.status(400).send("Invalid Department id..!");
+    }
+    let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+      $or: [
+        {
+          employee_id: data.employee_id.toUpperCase(),
+        },
+        {
+          "basic_info.email": data.email.toLowerCase(),
+        },
+      ],
+    });
 
-      let role_data = org_data.roles.find(
-        (e) => e.role_id === data.role_id
-      );
-      if (!role_data) return res.status(400).send("Invalid Role id..!");
+    if (
+      find_emp &&
+      find_emp.employee_id.toUpperCase() === data.employee_id.toUpperCase()
+    ) {
+      return res.status(400).send("Employee Id Already Exists");
+    }
+    if (
+      find_emp &&
+      find_emp.basic_info.email &&
+      find_emp.basic_info.email.toLowerCase() ===
+        data.email.toLowerCase().trim()
+    ) {
+      return res.status(400).send("Email Id Already Exists");
+    }
 
-      let designation_data = org_data.designations.find(
-        (e) => e.designation_id === data.designation_id
-      );
-      if (!designation_data)
-        return res.status(400).send("Invalid Designation id..!");
-      // Check if the director has added at least one employee with the role "Manager"\\\\\\\\\
-      // let managerAddedByDirector = await mongoFunctions.find_one("EMPLOYEE", {
-      //   "work_info.reporting_manager": req.employee.email,
-      // });
+    // Assuming mongoFunctions is properly imported and set up
 
-      // Ensure the reporting manager is the director and that the director has added at least one manager
-      // if (data.reporting_manager !== req.employee.email) {
-      //   return res.status(400).send("Director must have added at least one Manager before adding another employee.");
-      // }
-      employees=await mongoFunctions.find('EMPLOYEE',{organisation_id:req.employee.organisation_id})
-      //
-      if (employees.length<2 && role_data.admin_type!=="2") {
-        return res.status(400).send("Director must have added at least one Manager before adding another employee.");
+    let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
+      $or: [
+        {
+          "contact_details.personal_email_address":
+            data.personal_email_address.toLowerCase(),
+        },
+
+        {
+          "identity_info.pan": data.identity_info.pan,
+        },
+        {
+          "identity_info.aadhaar": data.identity_info.aadhaar,
+        },
+        {
+          "identity_info.uan": data.identity_info.uan,
+        },
+        {
+          "identity_info.passport": data.identity_info.passport_number,
+        },
+        {
+          "contact_details.mobile_number": data.mobile_number,
+        },
+      ],
+    });
+    if (find_adhar) {
+      // Check for duplicate personal email address in contact_details
+      if (
+        find_adhar.contact_details.personal_email_address &&
+        find_adhar.contact_details.personal_email_address.toLowerCase() ===
+          data.personal_email_address.toLowerCase().trim()
+      ) {
+        return res.status(400).send("Personal Email Id Already Exists");
       }
 
-      // Check if the current admin is a Manager
-      if (req.employee.admin_type === "2" && role_data.admin_type=== "2") {
-        // Managers cannot add other Managers
-        if (data.role_id === role_data.role_id) {
-          return res.status(400).send("A Manager cannot add another Manager.");
-        }
+      if (
+        find_adhar.identity_info.aadhaar &&
+        find_adhar.identity_info.aadhaar.length > 0 &&
+        find_adhar.identity_info.aadhaar === data.identity_info.aadhaar
+      ) {
+        return res.status(400).send("Aadhar Number Already Exists");
       }
-      let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
-        $or: [
-          {
-                      employee_id: data.employee_id.toUpperCase()
-          },
-          {
-            "basic_info.email":data.email.toLowerCase()
-          },
-        ]});
+      if (
+        find_adhar.identity_info.uan &&
+        find_adhar.identity_info.uan.length > 0 &&
+        find_adhar.identity_info.uan === data.identity_info.uan
+      ) {
+        return res.status(400).send("Uan Number Already Exists");
+      }
 
-      if (find_emp&&find_emp.employee_id.toUpperCase()===data.employee_id.toUpperCase()) {
-        return res.status(400).send("Employee Id Already Exists");
+      if (
+        find_adhar.identity_info.passport_number &&
+        find_adhar.identity_info.passport_number.length > 0 &&
+        find_adhar.identity_info.passport_number ===
+          data.identity_info.passport_number
+      ) {
+        return res.status(400).send("Passport Number Already Exists");
       }
-      if (find_emp&& find_emp.basic_info.email && find_emp.basic_info.email.toLowerCase() === data.email.toLowerCase().trim()) {
+
+      if (
+        find_adhar.contact_details.mobile_number &&
+        find_adhar.contact_details.mobile_number.length > 0 &&
+        find_adhar.contact_details.mobile_number === data.mobile_number
+      ) {
+        return res.status(400).send("Mobile Number Already Exists");
+      }
+
+      if (
+        find_adhar.identity_info.pan &&
+        find_adhar.identity_info.pan.length > 0 &&
+        find_adhar.identity_info.pan === data.identity_info.pan
+      ) {
+        return res.status(400).send("PAN Number Already Exists");
+      }
+    }
+    const new_password = data.password;
+    let password_hash = await bcrypt.hash_password(new_password);
+    let new_emp_data = {
+      organisation_id: org_data.organisation_id,
+      organisation_name: org_data.organisation_name,
+      employee_id: data.employee_id.toUpperCase(),
+      password: password_hash,
+      basic_info: {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        nick_name: data.nick_name,
+        email: data.email.toLowerCase(),
+      },
+      work_info: {
+        department_id: data.department_id,
+        department_name: department_data.department_name,
+
+        role_id: data.role_id,
+        role_name: role_data.role_name,
+        admin_type: role_data.admin_type,
+
+        designation_id: data.designation_id,
+        designation_name: designation_data.designation_name,
+        employment_type: data.employment_type,
+        employee_status: data.employee_status,
+        source_of_hire: data.source_of_hire,
+        reporting_manager: data.reporting_manager,
+        date_of_join: data.date_of_join,
+      },
+
+      personal_details: {
+        date_of_birth: data.date_of_birth,
+        expertise: data.expertise,
+        gender: data.gender,
+        marital_status: data.marital_status,
+        about_me: data.about_me,
+      },
+      identity_info: data.identity_info,
+      contact_details: {
+        // work_phone_number: data.work_phone_number,
+        mobile_number: data.mobile_number,
+        personal_email_address: data.personal_email_address.toLowerCase(),
+        seating_location: data.seating_location,
+        present_address: data.present_address,
+        permanent_address: data.permanent_address,
+      },
+      work_experience: data.work_experience,
+      educational_details: data.educational_details,
+      dependent_details: data.dependent_details,
+      leaves:
+        role_data.leaves && role_data.leaves.length > 0
+          ? role_data.leaves.map((e) => ({
+              ...e,
+              used_leaves: 0,
+              remaining_leaves: e.total_leaves,
+            }))
+          : [],
+      images: {},
+      files: {},
+    };
+    let new_emp = await mongoFunctions.create_new_record(
+      "EMPLOYEE",
+      new_emp_data
+    );
+    if (!new_emp) {
+      return res.status(400).send("Failed To Add New Employee.");
+    }
+
+    // await redis.update_redis("EMPLOYEE", new_emp);
+    // console.log("added emp in redis");
+    //   await stats.update_emp(new_emp, true, true);
+    return res.status(200).send({
+      success: "Employee Added Successfully..!!",
+      // data: new_emp,
+    });
+  })
+);
+
+// Update employee profile
+router.post(
+  "/update_employee_profile",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    console.log("update employee profile by admin route hit");
+    console.log(req.data);
+    let data = req.body;
+    var { error } = validations.add_employee_by_admin(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    let org_data = await redis.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) return res.status(400).send("Access Denied..!");
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Admin Or Manager Can Update Employee Profile");
+    }
+    let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+      employee_id: data.employee_id.toUpperCase(),
+    });
+    if (!find_emp) {
+      return res.status(400).send("Employee Id Doesn't Exists");
+    }
+
+    let department_data = org_data.departments.find(
+      (e) => e.department_id === data.department_id
+    );
+    if (!department_data)
+      return res.status(400).send("Invalid Department id..!");
+
+    let role_data = org_data.roles.find((e) => e.role_id === data.role_id);
+    if (!role_data) return res.status(400).send("Invalid Role id..!");
+
+    let designation_data = org_data.designations.find(
+      (e) => e.designation_id === data.designation_id
+    );
+    if (!designation_data)
+      return res.status(400).send("Invalid Designation id..!");
+    let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
+      $or: [
+        {
+          "basic_info.email": data.email.toLowerCase(),
+          employee_id: { $ne: data.employee_id },
+        },
+        {
+          "contact_details.personal_email_address":
+            data.personal_email_address.toLowerCase(),
+          employee_id: { $ne: data.employee_id },
+        },
+
+        {
+          "identity_info.pan": data.identity_info.pan,
+          employee_id: { $ne: data.employee_id },
+        },
+        {
+          "identity_info.aadhaar": data.identity_info.aadhaar,
+          employee_id: { $ne: data.employee_id },
+        },
+        {
+          "identity_info.uan": data.identity_info.uan,
+          employee_id: { $ne: data.employee_id },
+        },
+        {
+          "identity_info.passport_number": data.identity_info.passport_number,
+          employee_id: { $ne: data.employee_id },
+        },
+        {
+          "contact_details.mobile_number": data.mobile_number,
+          employee_id: { $ne: data.employee_id },
+        },
+      ],
+    });
+    if (find_adhar) {
+      if (
+        find_adhar.basic_info.email &&
+        find_adhar.basic_info.email.toLowerCase() ===
+          data.email.toLowerCase().trim()
+      ) {
         return res.status(400).send("Email Id Already Exists");
-    }
-           
-          
-      
-      // Assuming mongoFunctions is properly imported and set up
+      }
 
-      let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
-        $or: [
-            {
-              "contact_details.personal_email_address": data.personal_email_address.toLowerCase(),
-              // employee_id: { $ne: data.employee_id }
-            },
-
-          {
-            "identity_info.pan": data.identity_info.pan,
-                        // organisation_id: org_data.organisation_id,
-          },
-          {
-            "identity_info.aadhaar":
-              data.identity_info.aadhaar,
-              // employee_id: { $ne: data.employee_id },
-            // organisation_id: org_data.organisation_id,
-          },
-          {
-            "identity_info.uan":
-              data.identity_info.uan,
-              // employee_id: { $ne: data.employee_id }
-            // organisation_id: org_data.organisation_id,
-          },
-          {
-            "identity_info.passport":
-              data.identity_info.passport_number,
-              // employee_id: { $ne: data.employee_id }
-            // organisation_id: org_data.organisation_id,
-          },
-          {
-            "contact_details.mobile_number": data.mobile_number,
-            // employee_id: { $ne: data.employee_id }
-          },
-          // {"contact_details.personal_mobile_number": data.personal_mobile_number,
-          //   // employee_id: { $ne: data.employee_id }
-          // },
-        ],
-      });
-      if (find_adhar) {
-      //   if (find_adhar.employee_id && find_adhar.employee_id === data.employee_id) {
-      //     return res.status(400).send("Employee Id Already Exists");
-      // }
-  
       // Check for duplicate personal email address in contact_details
-      if (find_adhar.contact_details.personal_email_address && find_adhar.contact_details.personal_email_address.toLowerCase() === data.personal_email_address.toLowerCase().trim()) {
-          return res.status(400).send("Personal Email Id Already Exists");
+      if (
+        find_adhar.contact_details.personal_email_address &&
+        find_adhar.contact_details.personal_email_address.toLowerCase() ===
+          data.personal_email_address.toLowerCase().trim()
+      ) {
+        return res.status(400).send("Personal Email Id Already Exists");
       }
 
-        if (find_adhar.identity_info.aadhaar && find_adhar.identity_info.aadhaar.length > 0 && find_adhar.identity_info.aadhaar === data.identity_info.aadhaar) {
-            return res.status(400).send("Aadhar Number Already Exists");
-        }
-        if (find_adhar.identity_info.uan && find_adhar.identity_info.uan.length > 0 && find_adhar.identity_info.uan === data.identity_info.uan) {
-            return res.status(400).send("Uan Number Already Exists");
-        }
-  
-        if (find_adhar.identity_info.passport_number && find_adhar.identity_info.passport_number.length > 0 && find_adhar.identity_info.passport_number === data.identity_info.passport_number) {
-            return res.status(400).send("Passport Number Already Exists");
-        }
-    
-        // if (find_adhar.contact_details.work_phone_number && find_adhar.contact_details.work_phone_number.length > 0 && find_adhar.contact_details.work_phone_number === data.work_phone_number) {
-        //     return res.status(400).send("Work Phone Number Already Exists");
-        // }
-    
-        if (find_adhar.contact_details.mobile_number && find_adhar.contact_details.mobile_number.length > 0 && find_adhar.contact_details.mobile_number === data.mobile_number) {
-            return res.status(400).send("Mobile Number Already Exists");
-        }
-    
-        if (find_adhar.identity_info.pan && find_adhar.identity_info.pan.length > 0 && find_adhar.identity_info.pan === data.identity_info.pan) {
-            return res.status(400).send("PAN Number Already Exists");
-        }
-    }
-      const new_password=data.password;
-      let password_hash = await bcrypt.hash_password(new_password);
-      let new_emp_data = {
-        organisation_id: org_data.organisation_id,
-        organisation_name: org_data.organisation_name,
-        employee_id: data.employee_id.toUpperCase(),
-        password:password_hash,
-        basic_info: {
-          first_name: data.first_name,
-          last_name: data.last_name,
-          nick_name: data.nick_name,
-          email: data.email.toLowerCase(),
-        },
-        work_info: {
-          department_id: data.department_id,
-          department_name: department_data.department_name,
-
-          role_id: data.role_id,
-          role_name: role_data.role_name,
-          admin_type: role_data.admin_type,
-
-          designation_id: data.designation_id,
-          designation_name: designation_data.designation_name,
-          employment_type: data.employment_type,
-          employee_status: data.employee_status,
-          source_of_hire: data.source_of_hire,
-          reporting_manager: data.reporting_manager,
-          date_of_join: data.date_of_join,
-        },
-
-        personal_details: {
-          date_of_birth: data.date_of_birth,
-          expertise: data.expertise,
-          gender: data.gender,
-          marital_status: data.marital_status,
-          about_me: data.about_me,
-        },
-        identity_info: data.identity_info,
-        contact_details: {
-          // work_phone_number: data.work_phone_number,
-          mobile_number: data.mobile_number,
-          personal_email_address: data.personal_email_address.toLowerCase(),
-          seating_location: data.seating_location,
-          present_address: data.present_address,
-          permanent_address: data.permanent_address,
-        },
-        work_experience: data.work_experience,
-        educational_details: data.educational_details,
-        dependent_details: data.dependent_details,
-        leaves:
-          role_data.leaves && role_data.leaves.length > 0
-            ? role_data.leaves.map((e) => ({
-                ...e,
-                used_leaves: 0,
-                remaining_leaves: e.total_leaves,
-              }))
-            : [],
-        images: {},
-        files: {},
-      };
-      let new_emp = await mongoFunctions.create_new_record(
-        "EMPLOYEE",
-        new_emp_data
-      );
-
-        await redis.update_redis("EMPLOYEE", new_emp);
-        console.log("added emp in redis");
-    //   await stats.update_emp(new_emp, true, true);
-      return res.status(200).send({
-        success: "Success",
-        // data: new_emp,
-      });
-    })
-  ))
-
-  // Update employee profile
-  router.post(
-    "/update_employee_profile",
-    Auth,rateLimit(60,10),Async((async (req, res) => {
-      let data = req.body;
-      var { error } = validations.add_employee_by_admin(data);
-      if (error) return res.status(400).send(error.details[0].message);
-      let org_data = await redis.redisGet(
-        "CRM_ORGANISATIONS",
-        req.employee.organisation_id,
-        true
-      );
-      if (!org_data) return res.status(400).send("Access Denied..!");
-      if (req.employee.admin_type !== "1" && req.employee.admin_type !== "2"){
-        return res.status(400).send("Only Director or Manager Can Update Status Of New Employee..!");
+      if (
+        find_adhar.identity_info.aadhaar &&
+        find_adhar.identity_info.aadhaar.length > 0 &&
+        find_adhar.identity_info.aadhaar === data.identity_info.aadhaar
+      ) {
+        return res.status(400).send("Aadhar Number Already Exists");
       }
-      let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
-    
-        employee_id: data.employee_id.toUpperCase(),
-        // organisation_id: org_data.organisation_id,
-        });
-      if (!find_emp){
-            return res.status(400).send("Employee Id Doesn't exists");
-       }
-    
-      let department_data = org_data.departments.find(
-        (e) => e.department_id === data.department_id
-      );
-      if (!department_data)
-        return res.status(400).send("Invalid Department id..!");
-
-      let role_data = org_data.roles.find(
-        (e) => e.role_id === data.role_id
-      );
-      if (!role_data) return res.status(400).send("Invalid Role id..!");
-
-      let designation_data = org_data.designations.find(
-        (e) => e.designation_id === data.designation_id
-      );
-      if (!designation_data)
-        return res.status(400).send("Invalid Designation id..!");
-      let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
-        $or: [
-          {
-            "basic_info.email":data.email.toLowerCase(),
-            employee_id: { $ne: data.employee_id }
-          },
-            {
-              "contact_details.personal_email_address": data.personal_email_address.toLowerCase(),
-              employee_id: { $ne: data.employee_id }
-              // employee_id: { $ne: data.employee_id }
-            },
-
-          {
-            "identity_info.pan": data.identity_info.pan,
-            employee_id: { $ne: data.employee_id }
-                        // organisation_id: org_data.organisation_id,
-          },
-          {
-            "identity_info.aadhaar":
-              data.identity_info.aadhaar,
-              employee_id: { $ne: data.employee_id },
-            // organisation_id: org_data.organisation_id,
-          },
-          {
-            "identity_info.uan":
-              data.identity_info.uan,
-              employee_id: { $ne: data.employee_id }
-            // organisation_id: org_data.organisation_id,
-          },
-          {
-            "identity_info.passport_number":
-              data.identity_info.passport_number,
-              employee_id: { $ne: data.employee_id }
-            // organisation_id: org_data.organisation_id,
-          },
-          // {
-          //   "contact_details.work_phone_number": data.work_phone_number,
-          //   employee_id: { $ne: data.employee_id }
-          // },
-          {"contact_details.mobile_number": data.mobile_number,
-            employee_id: { $ne: data.employee_id }
-          },
-        ],
-      });
-      if (find_adhar) {
-        if (find_adhar.basic_info.email && find_adhar.basic_info.email.toLowerCase() === data.email.toLowerCase().trim()) {
-          return res.status(400).send("Email Id Already Exists");
-      }
-  
-      // Check for duplicate personal email address in contact_details
-      if (find_adhar.contact_details.personal_email_address && find_adhar.contact_details.personal_email_address.toLowerCase() === data.personal_email_address.toLowerCase().trim()) {
-          return res.status(400).send("Personal Email Id Already Exists");
+      if (
+        find_adhar.identity_info.uan &&
+        find_adhar.identity_info.uan.length > 0 &&
+        find_adhar.identity_info.uan === data.identity_info.uan
+      ) {
+        return res.status(400).send("Uan Number Already Exists");
       }
 
-        if (find_adhar.identity_info.aadhaar && find_adhar.identity_info.aadhaar.length > 0 && find_adhar.identity_info.aadhaar === data.identity_info.aadhaar) {
-            return res.status(400).send("Aadhar Number Already Exists");
-        }
-        if (find_adhar.identity_info.uan && find_adhar.identity_info.uan.length > 0 && find_adhar.identity_info.uan === data.identity_info.uan) {
-            return res.status(400).send("Uan Number Already Exists");
-        }
-  
-        if (find_adhar.identity_info.passport_number && find_adhar.identity_info.passport_number.length > 0 && find_adhar.identity_info.passport_number === data.identity_info.passport_number) {
-            return res.status(400).send("Passport Number Already Exists");
-        }
-    
-        // if (find_adhar.contact_details.work_phone_number && find_adhar.contact_details.work_phone_number.length > 0 && find_adhar.contact_details.work_phone_number === data.work_phone_number) {
-        //     return res.status(400).send("Work Phone Number Already Exists");
-        // }
-    
-        if (find_adhar.contact_details.mobile_number && find_adhar.contact_details.mobile_number.length > 0 && find_adhar.contact_details.mobile_number === data.mobile_number) {
-            return res.status(400).send("Mobile Number Already Exists");
-        }
-    
-        if (find_adhar.identity_info.pan && find_adhar.identity_info.pan.length > 0 && find_adhar.identity_info.pan === data.identity_info.pan) {
-            return res.status(400).send("PAN Number Already Exists");
-        }
+      if (
+        find_adhar.identity_info.passport_number &&
+        find_adhar.identity_info.passport_number.length > 0 &&
+        find_adhar.identity_info.passport_number ===
+          data.identity_info.passport_number
+      ) {
+        return res.status(400).send("Passport Number Already Exists");
+      }
+
+      if (
+        find_adhar.contact_details.mobile_number &&
+        find_adhar.contact_details.mobile_number.length > 0 &&
+        find_adhar.contact_details.mobile_number === data.mobile_number
+      ) {
+        return res.status(400).send("Mobile Number Already Exists");
+      }
+
+      if (
+        find_adhar.identity_info.pan &&
+        find_adhar.identity_info.pan.length > 0 &&
+        find_adhar.identity_info.pan === data.identity_info.pan
+      ) {
+        return res.status(400).send("PAN Number Already Exists");
+      }
     }
 
+    let new_emp_data = {
+      organisation_id: org_data.organisation_id,
+      organisation_name: org_data.organisation_name,
+      employee_id: data.employee_id.toUpperCase(),
+      basic_info: {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        nick_name: data.nick_name,
+        email: data.email.toLowerCase(),
+      },
+      work_info: {
+        department_id: data.department_id,
+        department_name: department_data.department_name,
 
-      let new_emp_data = {
-        organisation_id: org_data.organisation_id,
-        organisation_name: org_data.organisation_name,
-        employee_id: data.employee_id.toUpperCase(),
-        basic_info: {
-          first_name: data.first_name,
-          last_name: data.last_name,
-          nick_name: data.nick_name,
-          email: data.email.toLowerCase(),
-        },
-        work_info: {
-          department_id: data.department_id,
-          department_name: department_data.department_name,
+        role_id: data.role_id,
+        role_name: role_data.role_name,
+        admin_type: role_data.admin_type,
 
-          role_id: data.role_id,
-          role_name: role_data.role_name,
-          admin_type: role_data.admin_type,
+        designation_id: data.designation_id,
+        designation_name: designation_data.designation_name,
+        employment_type: data.employment_type,
+        employee_status: data.employee_status,
+        source_of_hire: data.source_of_hire,
+        reporting_manager: data.reporting_manager,
+        date_of_join: data.date_of_join,
+      },
 
-          designation_id: data.designation_id,
-          designation_name: designation_data.designation_name,
-          employment_type: data.employment_type,
-          employee_status: data.employee_status,
-          source_of_hire: data.source_of_hire,
-          reporting_manager: data.reporting_manager,
-          date_of_join: data.date_of_join,
-        },
+      personal_details: {
+        date_of_birth: data.date_of_birth,
+        expertise: data.expertise,
+        gender: data.gender,
+        marital_status: data.marital_status,
+        about_me: data.about_me,
+      },
+      identity_info: data.identity_info,
+      contact_details: {
+        // work_phone_number: data.work_phone_number,
+        mobile_number: data.mobile_number,
+        personal_email_address: data.personal_email_address.toLowerCase(),
+        seating_location: data.seating_location,
+        present_address: data.present_address,
+        permanent_address: data.permanent_address,
+      },
+      work_experience: data.work_experience,
+      educational_details: data.educational_details,
+      dependent_details: data.dependent_details,
+      leaves:
+        role_data.leaves && role_data.leaves.length > 0
+          ? role_data.leaves.map((e) => ({
+              ...e,
+              used_leaves: 0,
+              remaining_leaves: e.total_leaves,
+            }))
+          : [],
+    };
+    let new_emp = await mongoFunctions.find_one_and_update(
+      "EMPLOYEE",
+      { employee_id: data.employee_id },
+      { $set: new_emp_data }
+    );
 
-        personal_details: {
-          date_of_birth: data.date_of_birth,
-          expertise: data.expertise,
-          gender: data.gender,
-          marital_status: data.marital_status,
-          about_me: data.about_me,
-        },
-        identity_info: data.identity_info,
-        contact_details: {
-          // work_phone_number: data.work_phone_number,
-          mobile_number: data.mobile_number,
-          personal_email_address: data.personal_email_address.toLowerCase(),
-          seating_location: data.seating_location,
-          present_address: data.present_address,
-          permanent_address: data.permanent_address,
-        },
-        work_experience: data.work_experience,
-        educational_details: data.educational_details,
-        dependent_details: data.dependent_details,
-        leaves:
-          role_data.leaves && role_data.leaves.length > 0
-            ? role_data.leaves.map((e) => ({
-                ...e,
-                used_leaves: 0,
-                remaining_leaves: e.total_leaves,
-              }))
-            : [],
-        // images: {},
-        // files: {},
-        // permissions:{},
-      };
-      let new_emp = await mongoFunctions.find_one_and_update(
-        "EMPLOYEE",
-       {employee_id: data.employee_id},
-        { $set: new_emp_data },
-      );
-
-      // await redis.update_redis("EMPLOYEE", new_emp);
-      // console.log("updated emp in redis");
+    // await redis.update_redis("EMPLOYEE", new_emp);
+    // console.log("updated emp in redis");
     //   await stats.update_emp(new_emp, true, true);
-      return res.status(200).send({
-        success: "Success",
-        // data: new_emp,
-      });
-    })
-  ))
+    return res.status(200).send({
+      success: "Employee Profile Updated Successfully..!",
+      // data: new_emp,
+    });
+  })
+);
 
-  router.post('/add_update_project',Auth,rateLimit(60,10), Async(async (req, res) => {
-    const data = req.body;
-  
+router.post(
+  "/add_update_project",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    console.log("add update project route hit");
+    let data = req.body;
+
     // Validate request data
     const { error } = validations.add_project(data);
     if (error) return res.status(400).send(error.details[0].message);
-  
+
     // Check user role
-    const userRole = req.employee.admin_type;
-    if (userRole !== '1' && userRole !== '2') {
-      return res.status(403).send('Access denied: Not Admin or Manager');
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Access denied: Not Admin or Manager");
     }
-  
+
     if (data.project_id && data.project_id.length > 9) {
       // Check if project ID exists
-      const findId = await mongoFunctions.find_one('PROJECTS', {
+      const findId = await mongoFunctions.find_one("PROJECTS", {
         organisation_id: req.employee.organisation_id,
         project_id: data.project_id,
       });
-  
-      if (!findId) return res.status(400).send('Project ID does not exist');
-  
-   
+
+      if (!findId) return res.status(400).send("Project ID Does Not Exist");
+
       // Update project
-      const project_data_up = await mongoFunctions.find_one_and_update(
-        'PROJECTS',
+      let project_data_up = await mongoFunctions.find_one_and_update(
+        "PROJECTS",
         {
           organisation_id: req.employee.organisation_id,
           project_id: data.project_id,
         },
-            {
-                $set: {
-                  start_date: data.start_date,
-                  project_name: data.project_name.toLowerCase(),
-                  end_date: data.end_date,
-                  status: data.status,
-                  description: data.description,
-                  project_status: data.project_status,
-                },
-                $push: {
-                  modified_by: {
-                    employee_id: req.employee.employee_id,
-                    employee_email: req.employee.email,
-                    modifiedAt: new Date(),
-                    prevStatus: findId.status,
-                    currentStatus: data.status,
-                  },
-                },
-              },
-              { new: true } // Optionally return the updated document
-            );
-  
-      if (!project_data_up) return res.status(400).send('Project Update Failed');
-      let update_name_in_task = await mongoFunctions.update_many(
+        {
+          $set: {
+            start_date: data.start_date,
+            project_name: data.project_name.toLowerCase(),
+            end_date: data.end_date,
+            status: data.status,
+            description: data.description,
+            project_status: data.project_status,
+          },
+          $push: {
+            modified_by: {
+              employee_id: req.employee.employee_id,
+              employee_email: req.employee.email,
+              modifiedAt: new Date(),
+              prevStatus: findId.status,
+              currentStatus: data.status,
+            },
+          },
+        },
+        { new: true } // Optionally return the updated document
+      );
+      console.log("project details updated");
+
+      if (!project_data_up)
+        return res.status(400).send("Project Update Failed");
+      await mongoFunctions.update_many(
         "TASKS",
         { project_id: data.project_id },
         { $set: { project_name: data.project_name } }
       );
-      return res.status(200).send('Project Updated Successfully');
+      return res.status(200).send("Project Updated Successfully");
     } else {
       // Check if project name already exists
-      const findProject = await mongoFunctions.find_one('PROJECTS', {
+      const findProject = await mongoFunctions.find_one("PROJECTS", {
         project_name: data.project_name.toLowerCase(),
       });
-  
-      if (findProject) return res.status(400).send('Project Name Already Exists');
-  
+
+      if (findProject)
+        return res.status(400).send("Project Name Already Exists");
+
       const new_project_data = {
         organisation_id: req.employee.organisation_id,
         project_id: functions.get_random_string("PR", 9, true),
@@ -551,277 +592,322 @@ router.post(
         description: data.description,
         status: data.status,
         project_status: data.project_status,
-        created_by: { 
+        created_by: {
           employee_id: req.employee.employee_id,
           email: req.employee.email,
         },
       };
-  
-      // Create new project
-      await mongoFunctions.create_new_record('PROJECTS', new_project_data);
-  
-      return res.status(201).send('Project created successfully');
-    }
-  }));
 
-  router.post('/add_remove_team',Auth,rateLimit(60,10), Async(async (req, res) => {
-    const data = req.body;
+      // Create new project
+      await mongoFunctions.create_new_record("PROJECTS", new_project_data);
+      console.log("new project created");
+
+      return res.status(201).send("Project created successfully");
+    }
+  })
+);
+
+router.post(
+  "/add_remove_team",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    console.log("add remove team route hit");
+    let data = req.body;
 
     // Validate request data
     const { error } = validations.add_remove_team(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // if (!data.project_id) {
-    //     return res.status(400).send('Project ID is required');
-    // }
     const userRole = req.employee.admin_type;
 
     if (data.task_id) {
-        if (data.task_id.length === 0) {
-            // If task_id is empty, only directors and managers can modify project team
-            if (userRole !== '1' && userRole !== '2') {
-                return res.status(403).send('Access denied: Not Authorized');
-            }
-        } else if (data.task_id.length > 9) {
-            // If task_id is provided and length > 9, only team incharges can modify task team
-            if (userRole !== '3' && userRole !== '2') {
-                return res.status(403).send('Access denied: Not authorized');
-            }
-        } else {
-            return res.status(400).send('Invalid task_id length');
+      if (data.task_id.length === 0) {
+        // If task_id is empty, only directors and managers can modify project team
+        const admin_types = ["1", "2"];
+        if (!admin_types.includes(req.employee.admin_type)) {
+          return res.status(403).send("Access denied: Not Authorized");
         }
+      } else if (data.task_id.length > 9) {
+        // If task_id is provided and length > 9, only team incharges can modify task team
+        const admin_types = ["3", "2"];
+        if (!admin_types.includes(req.employee.admin_type)) {
+          return res.status(403).send("Access denied: Not Authorized");
+        }
+      } else {
+        return res.status(400).send("Invalid Task_Id Length");
+      }
     } else {
-        if (userRole === '3') {
-            return res.status(403).send('Access denied: Not authorized');
-        }
+      if (userRole === "3") {
+        return res.status(403).send("Access denied: Not authorized");
+      }
     }
 
     // Find the project
-    const project = await mongoFunctions.find_one('PROJECTS', { project_id: data.project_id });
-    if (!project) return res.status(400).send('Project not found');
+    const project = await mongoFunctions.find_one("PROJECTS", {
+      project_id: data.project_id,
+    });
+    if (!project) return res.status(400).send("Project Not Found");
 
     // Check if task_id is provided and belongs to the project
     if (data.task_id && data.task_id.length > 9) {
-        const task = await mongoFunctions.find_one('TASKS', { task_id: data.task_id, project_id: data.project_id });
-        if (!task) return res.status(400).send('Task does not belong to the project');
+      const task = await mongoFunctions.find_one("TASKS", {
+        task_id: data.task_id,
+        project_id: data.project_id,
+      });
+      if (!task)
+        return res.status(400).send("Task Does Not Belong To The Project");
     }
 
-    const employeeIds = Array.isArray(data.employee_id) ? data.employee_id : [data.employee_id];
+    const employeeIds = Array.isArray(data.employee_id)
+      ? data.employee_id
+      : [data.employee_id];
     console.log(employeeIds);
 
-    if (data.action.toLowerCase() === 'add') {
-        for (const employeeId of employeeIds) {
-          const employee=await mongoFunctions.find_one('EMPLOYEE', { employee_id: employeeId });
-          if (!employee) return res.status(400).send(`Employee with ID ${employeeId} not found`);
-            if (data.task_id && data.task_id.length > 9) {
-                // Add team member to task
-                const task = await mongoFunctions.find_one('TASKS', { project_id: data.project_id, task_id: data.task_id });
-              //  if (task.team.some(member => member.employee_id === employeeId)) {
-              //       return res.status(400).send(`Employee ${employeeId} is already added to the task team`);
-              //   }
-            const existingEmployeeIds = employeeIds.filter(employeeId =>
-                task.team.some(member => member.employee_id === employeeId)
-            );
+    if (data.action.toLowerCase() === "add") {
+      for (const employeeId of employeeIds) {
+        const employee = await mongoFunctions.find_one("EMPLOYEE", {
+          employee_id: employeeId,
+        });
+        if (!employee)
+          return res
+            .status(400)
+            .send(`Employee with ID ${employeeId} not found`);
+        if (data.task_id && data.task_id.length > 9) {
+          // Add team member to task
+          const task = await mongoFunctions.find_one("TASKS", {
+            project_id: data.project_id,
+            task_id: data.task_id,
+          });
+          const existingEmployeeIds = employeeIds.filter((employeeId) =>
+            task.team.some((member) => member.employee_id === employeeId)
+          );
 
-            if (existingEmployeeIds.length > 0) {
-                return res.status(400).send(`Employees with IDs ${existingEmployeeIds.join(', ')} are already added to the task team.`);
-            }
-                const team={
-                  employee_id: employeeId,
-                  employee_name:employee.basic_info.first_name + ' '+employee.basic_info.last_name,
-                  date_time: new Date(),
-                }
-                
-
-                const newAssignTrack = {
-                    assigned_by: {
-                        employee_id: req.employee.employee_id,
-                        employee_email: req.employee.email,
-                        date_time: new Date(),
-                    },
-                    assigned_to: {
-                        employee_id: employeeId,
-                        employee_name:employee.basic_info.first_name + ' '+employee.basic_info.last_name,
-                        date_time: new Date(),
-                    },
-                };
-
-                await mongoFunctions.find_one_and_update(
-                    'TASKS',
-                    { project_id: data.project_id, task_id: data.task_id },
-                    { 
-                        $push: { 
-                            team: team,
-                            assign_track: newAssignTrack 
-                        }
-                    }
-                );
-            } else {
-                // Add team member to project
-                // if (project.team.some(member => member.employee_id === employeeId)) {
-                //     return res.status(400).send(`Employee ${employeeId} is already added to the project team`);
-                // }
-                const existingEmployeeIds = employeeIds.filter(employeeId =>
-                  project.team.some(member => member.employee_id === employeeId)
+          if (existingEmployeeIds.length > 0) {
+            return res
+              .status(400)
+              .send(
+                `Employees with IDs ${existingEmployeeIds.join(
+                  ", "
+                )} are already added to the task team.`
               );
-  
-              if (existingEmployeeIds.length > 0) {
-                  return res.status(400).send(`Employees with IDs ${existingEmployeeIds.join(', ')} are already added to the project team.`);
-              }
+          }
+          const team = {
+            employee_id: employeeId,
+            employee_name:
+              employee.basic_info.first_name +
+              " " +
+              employee.basic_info.last_name,
+            date_time: new Date(),
+          };
 
-                const newAssignTrack = {
-                    assigned_by: {
-                        employee_id: req.employee.employee_id,
-                        employee_email: req.employee.email,
-                        date_time: new Date(),
-                    },
-                    assigned_to: {
-                        employee_id: employeeId,
-                        employee_name:employee.basic_info.first_name + ' '+employee.basic_info.last_name,
-                        date_time: new Date(),
-                    },
-                };
-                const team={
-                  employee_id: employeeId,
-                  employee_name:employee.basic_info.first_name + ' '+employee.basic_info.last_name,
-                  date_time: new Date(),
-                }
+          const newAssignTrack = {
+            assigned_by: {
+              employee_id: req.employee.employee_id,
+              employee_email: req.employee.email,
+              date_time: new Date(),
+            },
+            assigned_to: {
+              employee_id: employeeId,
+              employee_name:
+                employee.basic_info.first_name +
+                " " +
+                employee.basic_info.last_name,
+              date_time: new Date(),
+            },
+          };
 
-                await mongoFunctions.find_one_and_update(
-                    'PROJECTS',
-                    { project_id: data.project_id },
-                    { 
-                        $push: { 
-                            team: team,
-                            assign_track: newAssignTrack 
-                        }
-                    }
-                );
+          await mongoFunctions.find_one_and_update(
+            "TASKS",
+            { project_id: data.project_id, task_id: data.task_id },
+            {
+              $push: {
+                team: team,
+                assign_track: newAssignTrack,
+              },
             }
-        }
+          );
+        } else {
+          const existingEmployeeIds = employeeIds.filter((employeeId) =>
+            project.team.some((member) => member.employee_id === employeeId)
+          );
 
-        return res.status(200).send('Team added successfully');
-    } else if (data.action.toLowerCase() === 'remove') {
-        for (const employeeId of employeeIds) {
-            if (data.task_id && data.task_id.length > 9) {
-                // Remove team member from task
-                await mongoFunctions.find_one_and_update(
-                    'TASKS',
-                    { project_id: data.project_id, task_id: data.task_id },
-                    { $pull: { team: { employee_id: employeeId } } }
-                );
-            } else {
-                // Remove team member from project
-                await mongoFunctions.find_one_and_update(
-                    'PROJECTS',
-                    { project_id: data.project_id },
-                    { $pull: { team: { employee_id: employeeId } } }
-                );
+          if (existingEmployeeIds.length > 0) {
+            return res
+              .status(400)
+              .send(
+                `Employees with IDs ${existingEmployeeIds.join(
+                  ", "
+                )} are already added to the project team.`
+              );
+          }
+
+          const newAssignTrack = {
+            assigned_by: {
+              employee_id: req.employee.employee_id,
+              employee_email: req.employee.email,
+              date_time: new Date(),
+            },
+            assigned_to: {
+              employee_id: employeeId,
+              employee_name:
+                employee.basic_info.first_name +
+                " " +
+                employee.basic_info.last_name,
+              date_time: new Date(),
+            },
+          };
+          const team = {
+            employee_id: employeeId,
+            employee_name:
+              employee.basic_info.first_name +
+              " " +
+              employee.basic_info.last_name,
+            date_time: new Date(),
+          };
+
+          await mongoFunctions.find_one_and_update(
+            "PROJECTS",
+            { project_id: data.project_id },
+            {
+              $push: {
+                team: team,
+                assign_track: newAssignTrack,
+              },
             }
+          );
         }
+      }
+      console.log("team added succesfully");
 
-        return res.status(200).send('Team member removed successfully');
+      return res.status(200).send("Team Added Successfully");
+    } else if (data.action.toLowerCase() === "remove") {
+      for (const employeeId of employeeIds) {
+        if (data.task_id && data.task_id.length > 9) {
+          // Remove team member from task
+          await mongoFunctions.find_one_and_update(
+            "TASKS",
+            { project_id: data.project_id, task_id: data.task_id },
+            { $pull: { team: { employee_id: employeeId } } }
+          );
+        } else {
+          // Remove team member from project
+          await mongoFunctions.find_one_and_update(
+            "PROJECTS",
+            { project_id: data.project_id },
+            { $pull: { team: { employee_id: employeeId } } }
+          );
+        }
+      }
+
+      return res.status(200).send("Team Member Removed Successfully");
     } else {
-        return res.status(400).send('Invalid action');
+      return res.status(400).send("Invalid Action");
     }
-}));
+  })
+);
 
-  
-module.exports=router;
+module.exports = router;
 
+router.post(
+  "/add_update_task",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    console.log("add update task route hit");
+    let data = req.body;
 
-  router.post('/add_update_task',Auth,rateLimit(60,10), Async(async (req, res) => {
-    const data = req.body;
-  
     // Validate request data
     const { error } = validations.add_update_task(data);
     if (error) return res.status(400).send(error.details[0].message);
-  
+
     // Check user role
     const userRole = req.employee.admin_type;
-    if (userRole !== '3' && userRole !== '2') {
-      return res.status(403).send('Access denied: Not Team Incharge Or Manager');
+    const admin_types = ["3", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Access denied: Not Team Incharge Or Manager");
     }
-    const findId = await mongoFunctions.find_one('PROJECTS', {
+    const findId = await mongoFunctions.find_one("PROJECTS", {
       organisation_id: req.employee.organisation_id,
       project_id: data.project_id,
       // team: { $elemMatch: { employee_id: req.employee.employee_id } }
     });
-  
-    if (userRole === '3') {
-      const findId = await mongoFunctions.find_one('PROJECTS', {
+
+    if (userRole === "3") {
+      const findId = await mongoFunctions.find_one("PROJECTS", {
         organisation_id: req.employee.organisation_id,
         project_id: data.project_id,
-        team: { $elemMatch: { employee_id: req.employee.employee_id } }
+        team: { $elemMatch: { employee_id: req.employee.employee_id } },
         // req.employee.employee_id,
         // { $elemMatch: { employee_id: req.employee.employee_id } }
       });
 
-    if (!findId) return res.status(400).send('Project ID does not exist');
-  }
+      if (!findId) return res.status(400).send("Project ID Does Not Exist");
+    }
 
-  
     if (data.task_id && data.task_id.length > 9) {
       // Check if task ID exists
-      const findId = await mongoFunctions.find_one('TASKS', {
+      const findId = await mongoFunctions.find_one("TASKS", {
         organisation_id: req.employee.organisation_id,
         task_id: data.task_id,
       });
-  
-      if (!findId) return res.status(400).send('Task ID does not exist');
-  
-   
+
+      if (!findId) return res.status(400).send("Task ID Does Not Exist");
+
       // Update task
       const task_data_up = await mongoFunctions.find_one_and_update(
-        'TASKS',
+        "TASKS",
         {
           organisation_id: req.employee.organisation_id,
           task_id: data.task_id,
         },
-            {
-                $set: {
-                  task_name: data.task_name.toLowerCase(),
-                  status: data.status,
-                  description: data.description,
-                  task_status: data.task_status,
-                  due_date: data.due_date,
-                  priority: data.priority,
-                  completed_date: data.completed_date ? data.completed_date : new Date() ,
-                },
-                $push: {
-                  modified_by: {
-                    employee_id: req.employee.employee_id,
-                    employee_email: req.employee.email,
-                    modifiedAt: new Date(),
-                    prevStatus: findId.status,
-                    currentStatus: data.status,
-                  },
-                },
-              },
-              { new: true } // Optionally return the updated document
-            );
-  
-      if (!task_data_up) return res.status(400).send('Task Update Failed');
+        {
+          $set: {
+            task_name: data.task_name.toLowerCase(),
+            status: data.status,
+            description: data.description,
+            task_status: data.task_status,
+            due_date: data.due_date,
+            priority: data.priority,
+            completed_date: data.completed_date
+              ? data.completed_date
+              : new Date(),
+          },
+          $push: {
+            modified_by: {
+              employee_id: req.employee.employee_id,
+              employee_email: req.employee.email,
+              modifiedAt: new Date(),
+              prevStatus: findId.status,
+              currentStatus: data.status,
+            },
+          },
+        },
+        { new: true } // Optionally return the updated document
+      );
+
+      console.log("task updated successfully");
+
+      if (!task_data_up) return res.status(400).send("Task Update Failed");
       if (findId.status !== data.status) {
-        const s = await stats.update_stats(req.employee.employee_id, req.employee.organisation_id,findId.status, task_data_up.status);
+        const s = await stats.update_stats(
+          req.employee.employee_id,
+          req.employee.organisation_id,
+          findId.status,
+          task_data_up.status
+        );
         console.log(s);
       }
-  
-  
-      return res.status(200).send('Task Updated Successfully');
+
+      return res.status(200).send("Task Updated Successfully");
     } else {
-      // Check if task name already exists
-      // const findTask = await mongoFunctions.find_one('TASKS', {
-      //   task_name: data.task_name.toLowerCase(),
-      // });
-  
-      // if (findTask) return res.status(400).send('Task Name Already Exists');
-  
       const new_task_data = {
         organisation_id: req.employee.organisation_id,
         task_id: functions.get_random_string("TA", 9, true),
         project_id: data.project_id,
-        project_name:findId.project_name,
+        project_name: findId.project_name,
         task_name: data.task_name.toLowerCase(),
         // start_date: data.start_date,
         // end_date: data.end_date,
@@ -830,152 +916,192 @@ module.exports=router;
         priority: data.priority,
         status: data.status,
         task_status: data.task_status,
-        created_by: { 
+        created_by: {
           employee_id: req.employee.employee_id,
           email: req.employee.email,
         },
       };
-  
+
       // Create new project
-      await mongoFunctions.create_new_record('TASKS', new_task_data);
-      await stats.add_stats(req.employee.employee_id, req.employee.organisation_id,new_task_data.status);
-  
-      return res.status(201).send('Task Created successfully');
+      const task_add = await mongoFunctions.create_new_record(
+        "TASKS",
+        new_task_data
+      );
+      if (!task_add) {
+        return res.status(400).send("Failed To Add New Task..");
+      }
+      await stats.add_stats(
+        req.employee.employee_id,
+        req.employee.organisation_id,
+        new_task_data.status
+      );
+
+      return res.status(201).send("Task Created Successfully");
     }
-  }));
-  router.post("/update_project",Auth,rateLimit(60,10),Async(async(req, res)=>{
-    const data = req.body;
+  })
+);
+router.post(
+  "/update_project",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    console.log("update project route hit");
+    let data = req.body;
     const { error } = validations.update_project(data);
-    if(error) return res.status(400).send(error.details[0].message);
+    if (error) return res.status(400).send(error.details[0].message);
     const userRole = req.employee.admin_type;
-    if(userRole!=='3'){
-      return res.status(403).send('Access denied: Not Team Incharge');
+    if (userRole !== "3") {
+      return res.status(403).send("Access denied: Not Team Incharge");
     }
-    const findId = await mongoFunctions.find_one('PROJECTS',{
+    const findId = await mongoFunctions.find_one("PROJECTS", {
       organisation_id: req.employee.organisation_id,
       project_id: data.project_id,
-      team: { $elemMatch: { employee_id: req.employee.employee_id } }
+      team: { $elemMatch: { employee_id: req.employee.employee_id } },
     });
-    if(!findId) return res.status(400).send('Project ID does not exist');
+    if (!findId) return res.status(400).send("Project ID Does Not Exist");
     const project_data_up = await mongoFunctions.find_one_and_update(
-      'PROJECTS',
+      "PROJECTS",
       {
         organisation_id: req.employee.organisation_id,
         project_id: data.project_id,
       },
-          {
-              $set: {
-                status: data.status,
-              },
-              $push: {
-                modified_by: {
-                  employee_id: req.employee.employee_id,
-                  employee_email: req.employee.email,
-                  modifiedAt: new Date(),
-                  prevStatus: findId.status,
-                  currentStatus: data.status,
-                },
-              },
-            },
-            { new: true } // Optionally return the updated document
-          );
-          if(!project_data_up) return res.status(400).send('Project Update Failed');
-          return res.status(200).send('Project Updated Successfully');
-  }));
+      {
+        $set: {
+          status: data.status,
+        },
+        $push: {
+          modified_by: {
+            employee_id: req.employee.employee_id,
+            employee_email: req.employee.email,
+            modifiedAt: new Date(),
+            prevStatus: findId.status,
+            currentStatus: data.status,
+          },
+        },
+      },
+      { new: true } // Optionally return the updated document
+    );
+    console.log("project updated successfully");
+    if (!project_data_up) return res.status(400).send("Project Update Failed");
+    return res.status(200).send("Project Updated Successfully");
+  })
+);
 
-  router.post("/update_leave_application",Auth,rateLimit(60,10),Async(async(req, res) => {
-    const data = req.body;
+router.post(
+  "/update_leave_application",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    console.log("update leave application by tl,manager route hit");
+    let data = req.body;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
-    const userRole = req.employee.role_name.toLowerCase();
-    if (req.employee.admin_type=== '4' || req.employee.admin_type==='1') {
-      return res.status(400).send('Access denied: Not Team Incharge or Manager');
-    };
-    const findId = await mongoFunctions.find_one('LEAVE', {
+    const admin_types = ["3", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Access denied: Not Team Incharge or Manager");
+    }
+    const findId = await mongoFunctions.find_one("LEAVE", {
+      organisation_id: req.employee.organisation_id,
       leave_application_id: data.leave_application_id,
       // leave_status: data.leave_status
     });
-    if (!findId) return res.status(400).send('No Leave Application Found');
+    if (!findId) return res.status(400).send("No Leave Application Found");
     console.log(findId);
-    const findEmployee= await mongoFunctions.find_one('EMPLOYEE', {
-     employee_id: findId.employee_id,
-     "leaves.leave_id": findId.leave_type_id
+    const findEmployee = await mongoFunctions.find_one("EMPLOYEE", {
+      organisation_id: req.employee.organisation_id,
+      employee_id: findId.employee_id,
+      "leaves.leave_id": findId.leave_type_id,
     });
     console.log(findEmployee);
-    if (!findEmployee) return res.status(400).send('No Employee Found for the given application');
-    const leaveRecord = findEmployee.leaves.find(leave => leave.leave_id === findId.leave_type_id);
+    if (!findEmployee)
+      return res
+        .status(400)
+        .send("No Employee Found for the given application");
+    const leaveRecord = findEmployee.leaves.find(
+      (leave) => leave.leave_id === findId.leave_type_id
+    );
     if (!leaveRecord) {
-      return res.status(400).send('No leave record found for the given leave type');
-  }
-
-    if (leaveRecord&& leaveRecord.remaining_leaves <= 0) {
-      return res.status(400).send('Limit Exceeded: Employee Has No Remaining Leaves');
+      return res
+        .status(400)
+        .send("No Leave Record Found For The Given Leave Type");
     }
-    
-    let approved_by=findId.approved_by;
-    if (req.employee.admin_type==="3"){
-      approved_by.team_incharge={
+
+    if (leaveRecord && leaveRecord.remaining_leaves <= 0) {
+      return res
+        .status(400)
+        .send("Limit Exceeded: Employee Has No Remaining Leaves");
+    }
+
+    let approved_by = findId.approved_by;
+    if (req.employee.admin_type === "3") {
+      approved_by.team_incharge = {
         employee_id: req.employee.employee_id,
         email: req.employee.email,
         approvedAt: new Date(),
         leave_status: data.leave_status,
-        }
+      };
     }
-    if (req.employee.admin_type==="2"){
-      approved_by.manager={
+    if (req.employee.admin_type === "2") {
+      approved_by.manager = {
         employee_id: req.employee.employee_id,
-       email:req.employee.email,
+        email: req.employee.email,
         approvedAt: new Date(),
         leave_status: data.leave_status,
-        }
+      };
     }
-   
-    
-    const leave_data_up = await mongoFunctions.find_one_and_update(
-      'LEAVE',
+
+    let leave_data_up = await mongoFunctions.find_one_and_update(
+      "LEAVE",
       {
+        organisation_id: req.employee.organisation_id,
         leave_application_id: data.leave_application_id,
       },
       {
         $set: {
-          "approved_by":approved_by
+          approved_by: approved_by,
+        },
       }
-      });
-      let overallStatus="Pending"
-      const statuses = [
-        leave_data_up.approved_by.manager?.leave_status,
-        leave_data_up.approved_by.team_incharge?.leave_status,
-        leave_data_up.approved_by.hr?.leave_status
-      ];
+    );
+    const statuses = [
+      leave_data_up.approved_by.manager?.leave_status,
+      leave_data_up.approved_by.team_incharge?.leave_status,
+    ];
     
-      // Determine the overall status based on the statuses array
-      for (const status of statuses) {
-        if (status === 'Rejected') {
-          overallStatus = 'Rejected';
-          break; 
-        } else if (status === 'Pending') {
-          overallStatus = 'Pending';
-        } else if (status === 'Approved') {
-          
-            overallStatus = 'Approved'; 
+    let overallStatus = "Approved"; 
+    
+    for (const status of statuses) {
+      if (status === "Rejected") {
+        overallStatus = "Rejected";
+        break; 
+      } else if (status === "Pending") {
+        overallStatus = "Pending";
+      }
+    }
+    console.log(overallStatus);
+
+    let updated_leave_data = await mongoFunctions.find_one_and_update(
+      "LEAVE",
+      {
+        organisation_id: req.employee.organisation_id,
+        leave_application_id: data.leave_application_id,
+      },
+      { $set: { leave_status: overallStatus } }
+    );
+    if (updated_leave_data.leave_status === "Approved") {
+      const h = await mongoFunctions.find_one_and_update(
+        "EMPLOYEE",
+        {
+          organisation_id: req.employee.organisation_id,
+          employee_id: findId.employee_id,
+          "leaves.leave_id": findId.leave_type_id,
+        },
+        {
+          $inc: { "leaves.$.remaining_leaves": -findId.days_taken },
         }
-      };
-      console.log(overallStatus);
-    
-      updated_leave_data = await mongoFunctions.find_one_and_update("LEAVE",{"organisation_id":req.employee.organisation_id,"leave_application_id":data.leave_application_id},{$set:{"leave_status":overallStatus}});
-      if (updated_leave_data.leave_status === "Approved") {
-        const h = await mongoFunctions.find_one_and_update(
-          "EMPLOYEE",
-          {
-            organisation_id: req.employee.organisation_id,
-            employee_id: findId.employee_id,
-            "leaves.leave_id": findId.leave_type_id
-          },
-          {
-            $inc: { "leaves.$.remaining_leaves": -findId.days_taken }  
-          }
-        );
-        console.log(h);
+      );
+      console.log(h.leaves);
       //   await mongoFunctions.find_one_and_update(
       //     "LEAVE",
       //     {
@@ -986,20 +1112,20 @@ module.exports=router;
       //         $set: { leaves: h.leaves } // Replace the entire leaves array with h.leaves
       //     }
       // );
-      }
-      
-      if (updated_leave_data.leave_status === "Rejected") {
-        const l = await mongoFunctions.find_one_and_update(
-          "LEAVE",
-          {
-            organisation_id: req.employee.organisation_id,
-            employee_id: findId.employee_id
-          },
-          {
-            $set: { lop_leaves: findId.days_taken }  // Set the LOP leaves
-          }
-        );
-        console.log(l);
+    }
+
+    if (updated_leave_data.leave_status === "Rejected") {
+      const l = await mongoFunctions.find_one_and_update(
+        "LEAVE",
+        {
+          organisation_id: req.employee.organisation_id,
+          employee_id: findId.employee_id,
+        },
+        {
+          $set: { lop_leaves: findId.days_taken }, // Set the LOP leaves
+        }
+      );
+      console.log(l.leaves);
       //   await mongoFunctions.find_one_and_update(
       //     "LEAVE",
       //     {
@@ -1010,138 +1136,161 @@ module.exports=router;
       //         $set: { leaves: l.leaves } // Replace the entire leaves array with h.leaves
       //     }
       // );
-      }
-      
-      
-      
+    }
 
-    
-    return res.status(200).send("Leave Status Updated Successfully")
-
-  }))
-  router.post("/update_leave_status",Auth,rateLimit(60,10),Async(async(req, res) => {
-    const data = req.body;
+    return res.status(200).send("Leave Status Updated Successfully");
+  })
+);
+router.post(
+  "/update_leave_status",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    console.log("updated leave status by admin route hit");
+    let data = req.body;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
-    const userRole = req.employee.role_name.toLowerCase();
-    if (req.employee.admin_type=== '4' || req.employee.admin_type=== '3'  || req.employee.admin_type=== '2' ) {
-      return res.status(400).send('Access denied: Not Admin');
-    };
-    const findId = await mongoFunctions.find_one('LEAVE', {
+    if (req.employee.admin_type !== "1") {
+      return res.status(400).send("Access denied: Not Admin");
+    }
+    const findId = await mongoFunctions.find_one("LEAVE", {
+      organisation_id: req.employee.organisation_id,
       leave_application_id: data.leave_application_id,
       // leave_status:reject
       // leave_status: data.leave_status
     });
-    if (!findId) return res.status(400).send('No Leave Application Found');
-    if (findId && findId.leave_status===data.leave_status) return res.status(400).send('Leave Application Is Already In The Given Status'); 
+    if (!findId) return res.status(400).send("No Leave Application Found");
+    if (findId && findId.leave_status === data.leave_status)
+      return res
+        .status(400)
+        .send("Leave Application Is Already In The Given Status");
     console.log(findId);
-    const findEmployee= await mongoFunctions.find_one('EMPLOYEE', {
-     employee_id: findId.employee_id,
-     "leaves.leave_id": findId.leave_type_id
+    const findEmployee = await mongoFunctions.find_one("EMPLOYEE", {
+      organisation_id: req.employee.organisation_id,
+      employee_id: findId.employee_id,
+      "leaves.leave_id": findId.leave_type_id,
     });
     // console.log(findEmployee);
-    if (!findEmployee) return res.status(400).send('No Employee Found for the given application');
-    const leaveRecord = findEmployee.leaves.find(leave => leave.leave_id === findId.leave_type_id);
+    if (!findEmployee)
+      return res
+        .status(400)
+        .send("No Employee Found For The Given Application");
+    const leaveRecord = findEmployee.leaves.find(
+      (leave) => leave.leave_id === findId.leave_type_id
+    );
     if (!leaveRecord) {
-      return res.status(400).send('No leave record found for the given leave type');
-  }
-
-    if (leaveRecord&& leaveRecord.remaining_leaves <= 0) {
-      return res.status(400).send('Limit Exceeded: Employee Has No Remaining Leaves');
+      return res
+        .status(400)
+        .send("No Leave Record Found For The Given Leave Type");
     }
-    
-    const leave_data_up = await mongoFunctions.find_one_and_update(
-      'LEAVE',
+
+    if (leaveRecord && leaveRecord.remaining_leaves <= 0) {
+      return res
+        .status(400)
+        .send("Limit Exceeded: Employee Has No Remaining Leaves");
+    }
+
+    let leave_data_up = await mongoFunctions.find_one_and_update(
+      "LEAVE",
       {
+        organisation_id: req.employee.organisation_id,
         leave_application_id: data.leave_application_id,
       },
       {
         $set: {
-          "leave_status":data.leave_status,
+          leave_status: data.leave_status,
+        },
       }
-      });
-      
-      if (findId.leave_status==="Pending" && leave_data_up.leave_status === "Approved") {
-        const h = await mongoFunctions.find_one_and_update(
-          "EMPLOYEE",
-          {
-            organisation_id: req.employee.organisation_id,
-            employee_id: findId.employee_id,
-            "leaves.leave_id": findId.leave_type_id
-          },
-          {
-            $inc: { "leaves.$.remaining_leaves": -findId.days_taken }  
-          }
-        );
-        console.log(h);
-      }
-      
-      if (findId.leave_status==="Pending" && leave_data_up.leave_status === "Rejected") {
-        const l = await mongoFunctions.find_one_and_update(
-          "LEAVE",
-          {
-            organisation_id: req.employee.organisation_id,
-            employee_id: findId.employee_id
-          },
-          {
-            $inc: { lop_leaves: +findId.days_taken }  // Set the LOP leaves
-          }
-        );
-        console.log(l);
-      }
-      if (findId.leave_status==="Approved" && leave_data_up.leave_status === "Rejected") {
-        const l = await mongoFunctions.find_one_and_update(
-          "LEAVE",
-          {
-            organisation_id: req.employee.organisation_id,
-            employee_id: findId.employee_id
-          },
-          {
-            $inc: { lop_leaves: +findId.days_taken }  // Set the LOP leaves
-          }
-        );
-        console.log(l);
-      const h = await mongoFunctions.find_one_and_update(
+    );
+
+    if (
+      findId.leave_status === "Pending" &&
+      leave_data_up.leave_status === "Approved"
+    ) {
+      await mongoFunctions.find_one_and_update(
         "EMPLOYEE",
         {
           organisation_id: req.employee.organisation_id,
           employee_id: findId.employee_id,
-          "leaves.leave_id": findId.leave_type_id
+          "leaves.leave_id": findId.leave_type_id,
         },
         {
-          $inc: { "leaves.$.remaining_leaves": +findId.days_taken }  
+          $inc: { "leaves.$.remaining_leaves": -findId.days_taken },
         }
       );
-      console.log(h);
-      }
-      // if (findId.leave_status==="Rejected" && leave_data_up.leave_status === "Approved") {
-      //   const l = await mongoFunctions.find_one_and_update(
-      //     "LEAVE",
-      //     {
-      //       organisation_id: req.employee.organisation_id,
-      //       employee_id: findId.employee_id
-      //     },
-      //     {
-      //       $inc: { lop_leaves: -findId.days_taken }  // Set the LOP leaves
-      //     }
-      //   );
-      //   console.log(l);
-      // }
-      // const h = await mongoFunctions.find_one_and_update(
-      //     "EMPLOYEE",
-      //     {
-      //       organisation_id: req.employee.organisation_id,
-      //       employee_id: findId.employee_id,
-      //       "leaves.leave_id": findId.leave_type_id
-      //     },
-      //     {
-      //       $inc: { "leaves.$.remaining_leaves": -findId.days_taken }  
-      //     }
-      //   );
-      //   console.log(h);
-      
-      return res.status(200).send("Leave Status Updated Successfully");
+      console.log("updated count for pending to approved status");
+    }
 
-    }))
+    if (
+      findId.leave_status === "Pending" &&
+      leave_data_up.leave_status === "Rejected"
+    ) {
+      await mongoFunctions.find_one_and_update(
+        "LEAVE",
+        {
+          organisation_id: req.employee.organisation_id,
+          employee_id: findId.employee_id,
+        },
+        {
+          $inc: { lop_leaves: +findId.days_taken }, // Set the LOP leaves
+        }
+      );
+      console.log("updated count for pending to rejected status");
+    }
+    if (
+      findId.leave_status === "Approved" &&
+      leave_data_up.leave_status === "Rejected"
+    ) {
+      await mongoFunctions.find_one_and_update(
+        "LEAVE",
+        {
+          organisation_id: req.employee.organisation_id,
+          employee_id: findId.employee_id,
+        },
+        {
+          $inc: { lop_leaves: +findId.days_taken }, // Set the LOP leaves
+        }
+      );
 
+      await mongoFunctions.find_one_and_update(
+        "EMPLOYEE",
+        {
+          organisation_id: req.employee.organisation_id,
+          employee_id: findId.employee_id,
+          "leaves.leave_id": findId.leave_type_id,
+        },
+        {
+          $inc: { "leaves.$.remaining_leaves": +findId.days_taken },
+        }
+      );
+      console.log("updated count for approved to rejected status");
+    }
+    // if (findId.leave_status==="Rejected" && leave_data_up.leave_status === "Approved") {
+    //   const l = await mongoFunctions.find_one_and_update(
+    //     "LEAVE",
+    //     {
+    //       organisation_id: req.employee.organisation_id,
+    //       employee_id: findId.employee_id
+    //     },
+    //     {
+    //       $inc: { lop_leaves: -findId.days_taken }  // Set the LOP leaves
+    //     }
+    //   );
+    //   console.log(l);
+    // }
+    // const h = await mongoFunctions.find_one_and_update(
+    //     "EMPLOYEE",
+    //     {
+    //       organisation_id: req.employee.organisation_id,
+    //       employee_id: findId.employee_id,
+    //       "leaves.leave_id": findId.leave_type_id
+    //     },
+    //     {
+    //       $inc: { "leaves.$.remaining_leaves": -findId.days_taken }
+    //     }
+    //   );
+    //   console.log(h);
 
+    return res.status(200).send("Leave Status Updated Successfully");
+  })
+);

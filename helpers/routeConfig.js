@@ -1,9 +1,9 @@
 const express = require("express");
-const employee= require("../routes/emp_routes/emp");
-const organisation= require("../routes/org_routes/org");
-const employee_get= require("../routes/emp_routes/emp_get");
-const admin_get= require("../routes/admin_routes/admin_get");
-const admin=require("../routes/admin_routes/admin");
+const employee = require("../routes/emp_routes/emp");
+const organisation = require("../routes/org_routes/org");
+const employee_get = require("../routes/emp_routes/emp_get");
+const admin_get = require("../routes/admin_routes/admin_get");
+const admin = require("../routes/admin_routes/admin");
 const error = require("../middlewares/error");
 // const async=require("../middlewares/aync");
 module.exports = (app) => {
@@ -20,6 +20,6 @@ module.exports = (app) => {
   app.use("/org", organisation);
   app.use("/emp_get", employee_get);
   app.use("/admin_get", admin_get);
-  app.use("/admin",admin);
+  app.use("/admin", admin);
   // app.use(async);
 };

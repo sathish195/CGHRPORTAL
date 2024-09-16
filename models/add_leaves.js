@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const leave_Schema = new mongoose.Schema(
   {
-    leave_application_id: { type: String, required: true, unique: true },
-    organisation_id: { type: String, required: true },
-    employee_id: { type: String, required: true },
+    leave_application_id: { type: String, required: true, unique: true ,index:true},
+    organisation_id: { type: String, required: true,index:true },
+    employee_id: { type: String, required: true,index:true },
     department_id:{ type:String, required: true},
     leave_type_id: { type: String, required: true },
     leave_type: { type: String, required: true },
@@ -27,5 +27,7 @@ const leave_Schema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+leave_Schema.index({ organisation_id: 1, employee_id: 1 });
+leave_Schema.index({ organisation_id: 1, leave_application_id: 1 });
 
 exports.LEAVE = mongoose.model("LEAVE", leave_Schema);
