@@ -42,7 +42,7 @@ router.post(
         browserid: 0,
         updatedAt: 0,
         _id: 0,
-        password: 0,
+        // password: 0,
       }
     );
     return res.status(200).send({ employee: emp });
