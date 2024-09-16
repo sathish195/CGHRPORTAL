@@ -1064,22 +1064,19 @@ router.post(
         },
       }
     );
-    let overallStatus = "Pending";
     const statuses = [
       leave_data_up.approved_by.manager?.leave_status,
       leave_data_up.approved_by.team_incharge?.leave_status,
-      
     ];
-
-    // Determine the overall status based on the statuses array
+    
+    let overallStatus = "Approved"; 
+    
     for (const status of statuses) {
       if (status === "Rejected") {
         overallStatus = "Rejected";
-        break;
+        break; 
       } else if (status === "Pending") {
         overallStatus = "Pending";
-      } else {
-        overallStatus = "Approved";
       }
     }
     console.log(overallStatus);
