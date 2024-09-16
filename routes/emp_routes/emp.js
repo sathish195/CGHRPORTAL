@@ -697,7 +697,13 @@ router.post(
       leave_status: "Pending",
       // leaves:find_emp.leaves,
     };
-    await mongoFunctions.create_new_record("LEAVE", leave_record_obj);
+    const leave_record = await mongoFunctions.create_new_record(
+      "LEAVE",
+      leave_record_obj
+    );
+    if (!leave_record) {
+      return res.status(400).send("Failed To Add Leave Record.");
+    }
     return res.status(200).send({
       success: "Leave Applied Successfully...!",
     });

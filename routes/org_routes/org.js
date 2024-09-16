@@ -818,7 +818,6 @@ router.post(
       { _id: -1 },
       projection
     );
-    console.log(teamMembers);
 
     if (!teamMembers || teamMembers.length === 0) {
       return res.status(404).send("No team members found.");

@@ -110,7 +110,7 @@ router.post(
       return res
         .status(400)
         .send(
-          "Director must have added at least one Manager before adding another employee."
+          "Director Must Have Added At Least One Manager Before Adding Another Employee."
         );
     }
 
@@ -118,7 +118,7 @@ router.post(
     if (req.employee.admin_type === "2" && role_data.admin_type === "2") {
       // Managers cannot add other Managers
       if (data.role_id === role_data.role_id) {
-        return res.status(400).send("A Manager cannot add another Manager.");
+        return res.status(400).send("A Manager Cannot Add Another Manager.");
       }
     }
     let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
@@ -287,6 +287,9 @@ router.post(
       "EMPLOYEE",
       new_emp_data
     );
+    if (!new_emp) {
+      return res.status(400).send("Failed To Add New Employee.");
+    }
 
     // await redis.update_redis("EMPLOYEE", new_emp);
     // console.log("added emp in redis");
@@ -920,7 +923,13 @@ router.post(
       };
 
       // Create new project
-      await mongoFunctions.create_new_record("TASKS", new_task_data);
+      const task_add = await mongoFunctions.create_new_record(
+        "TASKS",
+        new_task_data
+      );
+      if (!task_add) {
+        return res.status(400).send("Failed To Add New Task..");
+      }
       await stats.add_stats(
         req.employee.employee_id,
         req.employee.organisation_id,
