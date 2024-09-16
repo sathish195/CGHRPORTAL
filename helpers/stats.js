@@ -178,8 +178,6 @@ async function employees_with_birthday_today(organisation_id) {
       }
     );
 
-    
-
     // Check if there are any employees
     if (allEmployees.length === 0) {
       console.log("No employees found.");
@@ -258,7 +256,7 @@ async function add_stats(employee_id, organisation_id, status) {
         "status_track.status": status,
       },
       {
-        $inc: { "status_track.$[elem].count": 1 }, // Increment the count field by 1 for the matched status
+        $inc: { "status_track.$[elem].count": 1 },
       },
       {
         arrayFilters: [{ "elem.status": status }], // Match status in the array
