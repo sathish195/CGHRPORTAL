@@ -145,6 +145,15 @@ const validate_dob = (value, helpers) => {
 
   return value; // Return the validated value
 };
+const validateDates = (value, helpers) => {
+  const { from_date, to_date } = value;
+
+  if (to_date < from_date) {
+    return helpers.message('"to_date" must be greater than or equal to "from_date"');
+  }
+
+  return value;
+};
 function add_employee_by_admin(data) {
   const work_experience_obj = Joi.object({
     company_name: Joi.string().min(3).max(30).required(),
@@ -161,8 +170,8 @@ function add_employee_by_admin(data) {
         "string.pattern.base":
           "job description can only contain letters, numbers, spaces, periods, commas, and hyphens.",
       }),
-    experience: Joi.number().positive().required(),
-  });
+    // experience: Joi.number().positive().required(),
+  }).custom(validateDates, 'date comparison validation');
   const educational_details_obj = Joi.object({
     institute_name: Joi.string().trim().min(2).max(50).required(),
     degree: Joi.string().min(3).max(15).required(),
@@ -313,7 +322,7 @@ function edit_profile(data) {
           "can only contain letters, numbers, spaces, periods, commas, and hyphens.",
       })
       .trim(),
-    experience: Joi.number().positive().required(),
+    // experience: Joi.number().positive().required(),
   });
   const educational_details_obj = Joi.object({
     institute_name: Joi.string().min(5).max(30).required(),

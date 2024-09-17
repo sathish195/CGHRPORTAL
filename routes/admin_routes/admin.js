@@ -121,6 +121,9 @@ router.post(
         return res.status(400).send("A Manager Cannot Add Another Manager.");
       }
     }
+    if (!Array.isArray(data.educational_details) || data.educational_details.length === 0) {
+      return res.status(400).send("Educational Details Must be Filled");
+    }
     let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
