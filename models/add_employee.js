@@ -54,7 +54,7 @@ const EMPLOYEE_Schema=new mongoose.Schema({
         from_date: { type: Date },
         to_date: { type: Date },
         job_description: { type: String },
-        experience: { type: String }
+        // experience: { type: String }
       }],
       default: [] 
     },

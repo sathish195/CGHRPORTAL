@@ -65,7 +65,6 @@ router.post(
     });
   })
 );
-
 // Add new employee
 
 router.post(
@@ -120,6 +119,12 @@ router.post(
       if (data.role_id === role_data.role_id) {
         return res.status(400).send("A Manager Cannot Add Another Manager.");
       }
+    }
+    if (
+      !Array.isArray(data.educational_details) ||
+      data.educational_details.length === 0
+    ) {
+      return res.status(400).send("Educational Details Must be Filled");
     }
     let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
@@ -1068,13 +1073,13 @@ router.post(
       leave_data_up.approved_by.manager?.leave_status,
       leave_data_up.approved_by.team_incharge?.leave_status,
     ];
-    
-    let overallStatus = "Approved"; 
-    
+
+    let overallStatus = "Approved";
+
     for (const status of statuses) {
       if (status === "Rejected") {
         overallStatus = "Rejected";
-        break; 
+        break;
       } else if (status === "Pending") {
         overallStatus = "Pending";
       }
