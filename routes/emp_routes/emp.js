@@ -746,11 +746,11 @@ router.post(
         $lte: end_day,
       },
     });
-    let emp_in_time = now;
-    let emp_out_time = now;
+    const time_zone = "UTC+5:30";
+    let emp_in_time = await functions.get_time_of_emp_time_zone(time_zone);
 
-    const checkin_time = "10:00 AM";
-    const checkout_time = "7:00 PM";
+    const checkin_time = "10:00";
+    const checkout_time = "7:00";
     let actual_in_time = await functions.get_full_date_time(checkin_time);
     let actual_out_time = await functions.get_full_date_time(checkout_time);
 
@@ -779,7 +779,7 @@ router.post(
           );
           return res.status(200).send({
             success: "Checkin Successful",
-            data: attendance_obj.checkin[0],
+            data: attendance_obj.checkin[attendance_obj.checkin.length - 1],
           });
         }
       } else {
@@ -787,6 +787,7 @@ router.post(
           actual_in_time,
           emp_in_time
         );
+        let grace_time = 15;
         let check_in_obj = {
           in_time: emp_in_time,
           latitude: data.latitude,
@@ -809,22 +810,24 @@ router.post(
             checkin: [check_in_obj],
             checkout: [],
             leave: {},
-            grace_time: user_shift_obj.grace_time,
+            grace_time: grace_time,
             late_by: time_diff,
-            late_checkin: time_diff < 0,
+            late_checkin: time_diff < 15,
           }
         );
 
         return res.status(200).send({
           success: "Checkin Successful",
-          data: new_attendance_obj.checkin[0],
+          data: new_attendance_obj.checkin[
+            new_attendance_obj.checkin.length - 1
+          ],
         });
       }
     } else if (data.type === "checkout") {
       if (today_record) {
         if (today_record.checkin.length > today_record.checkout.length) {
           let check_out_obj = {
-            out_time: emp_out_time,
+            out_time: emp_in_time,
             latitude: data.latitude,
             longitude: data.longitude,
             location: data.location,

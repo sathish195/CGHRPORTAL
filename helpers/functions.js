@@ -28,6 +28,32 @@ module.exports = {
     const diffInMinutes = diffInMs / (1000 * 60);
     return diffInMinutes;
   },
+  get_time_of_emp_time_zone: async () => {
+    // Indian Standard Time (IST) offset
+    const offsetHours = 5;
+    const offsetMinutes = 30;
+
+    // Get the current UTC time
+    const now = new Date();
+
+    // Calculate the offset in milliseconds
+    const offsetInMs = (offsetHours * 60 + offsetMinutes) * 60 * 1000;
+
+    // Create a new date object adjusted by the offset
+    const localTime = new Date(now.getTime() + offsetInMs);
+
+    // Format year, month, day, hours, minutes, and seconds with leading zeros if needed
+    const year = localTime.getUTCFullYear();
+    const month = String(localTime.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(localTime.getUTCDate()).padStart(2, "0");
+    const hours = String(localTime.getUTCHours()).padStart(2, "0");
+    const minutes = String(localTime.getUTCMinutes()).padStart(2, "0");
+    const seconds = String(localTime.getUTCSeconds()).padStart(2, "0");
+
+    // Return formatted date and time string
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+},
+
   get_full_date_time: async (time_string) => {
     const [hours, minutes] = time_string.split(":").map(Number);
     const now = new Date();

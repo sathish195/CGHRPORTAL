@@ -340,31 +340,41 @@ async function update_stats(
 
 async function calculate_working_minutes(attendance) {
   const { checkin, checkout, attendance_id } = attendance;
+
   if (checkin.length === checkout.length) {
-    let total_time_minutes = 0;
+    let totalTimeMinutes = 0;
+
     for (let i = 0; i < checkin.length; i++) {
-      const checkinTime = checkin[i].in_time;
-      const checkoutTime = checkout[i].out_time;
-      if (checkinTime && checkoutTime) {
+      const checkinTime = new Date(checkin[i].in_time);
+      const checkoutTime = new Date(checkout[i].out_time);
+
+      // Ensure both times are valid dates
+      if (!isNaN(checkinTime) && !isNaN(checkoutTime)) {
         const diffInMs = checkoutTime - checkinTime;
-        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-        total_time_minutes += diffInMinutes;
+
+        // Only add positive differences
+        if (diffInMs > 0) {
+          const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+          totalTimeMinutes += diffInMinutes;
+        }
       }
     }
-    if (total_time_minutes > 0) {
+
+    console.log(totalTimeMinutes);
+
+    if (totalTimeMinutes > 0) {
       await mongofunctions.find_one_and_update(
         "ATTENDANCE",
         { attendance_id: attendance_id },
-        {
-          total_working_minutes: total_time_minutes,
-        }
+        { total_working_minutes: totalTimeMinutes }
       );
-      return true;
     }
+
     return true;
   }
-  return true;
+  return false;
 }
+
 
 module.exports = {
   recent_hires,
