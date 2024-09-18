@@ -149,7 +149,9 @@ const validateDates = (value, helpers) => {
   const { from_date, to_date } = value;
 
   if (to_date < from_date) {
-    return helpers.message('"to_date" must be greater than or equal to "from_date"');
+    return helpers.message(
+      '"to_date" must be greater than or equal to "from_date"'
+    );
   }
 
   return value;
@@ -171,7 +173,7 @@ function add_employee_by_admin(data) {
           "job description can only contain letters, numbers, spaces, periods, commas, and hyphens.",
       }),
     // experience: Joi.number().positive().required(),
-  }).custom(validateDates, 'date comparison validation');
+  }).custom(validateDates, "date comparison validation");
   const educational_details_obj = Joi.object({
     institute_name: Joi.string().trim().min(2).max(50).required(),
     degree: Joi.string().min(3).max(15).required(),
@@ -405,7 +407,9 @@ function add_project(data) {
 function add_remove_team(data) {
   const schema = Joi.object({
     action: Joi.string().valid("remove", "add").required(),
-    employee_id: Joi.array().min(1).required(),
+    employee_id: Joi.array().min(1).required().messages({
+      'array.min': 'You Must Provide At Least One Employee Id To Remove From Team.',
+    }),
     project_id: Joi.string().min(5).max(12).required(),
     task_id: Joi.string().optional().allow(""),
   });
@@ -570,6 +574,19 @@ function get_team(data) {
   return schema.validate(data);
 }
 
+//checkin and checkout
+
+function checkin_checkout(data) {
+  const schema = Joi.object({
+    type: Joi.string().valid("checkin", "checkout").required(),
+    latitude: Joi.string().min(5).max(15).required(),
+    longitude: Joi.string().min(5).max(15).required(),
+    location: Joi.string().required(),
+    ip: Joi.string().ip().required(),
+  });
+  return schema.validate(data);
+}
+
 // Export the functions
 module.exports = {
   emp_login,
@@ -601,4 +618,5 @@ module.exports = {
   get_employee_leave_applications,
   get_team,
   emp_reset_password_by_admin,
+  checkin_checkout,
 };

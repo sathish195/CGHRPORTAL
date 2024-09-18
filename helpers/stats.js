@@ -3,6 +3,7 @@ const mongofunctions = require("./mongoFunctions");
 const redis = require("./redisFunctions");
 const moment = require("moment");
 const { employee_id } = require("./schema");
+const { calculate_leave_days } = require("./functions");
 
 module.exports = {
   update_emp: async (obj, add = true, new_emp = true) => {
@@ -335,10 +336,40 @@ async function update_stats(
     };
   }
 }
+//calculate working minutes
+
+async function calculate_working_minutes(attendance) {
+  const { checkin, checkout, attendance_id } = attendance;
+  if (checkin.length === checkout.length) {
+    let total_time_minutes = 0;
+    for (let i = 0; i < checkin.length; i++) {
+      const checkinTime = checkin[i].in_time;
+      const checkoutTime = checkout[i].out_time;
+      if (checkinTime && checkoutTime) {
+        const diffInMs = checkoutTime - checkinTime;
+        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+        total_time_minutes += diffInMinutes;
+      }
+    }
+    if (total_time_minutes > 0) {
+      await mongofunctions.find_one_and_update(
+        "ATTENDANCE",
+        { attendance_id: attendance_id },
+        {
+          total_working_minutes: total_time_minutes,
+        }
+      );
+      return true;
+    }
+    return true;
+  }
+  return true;
+}
 
 module.exports = {
   recent_hires,
   add_stats,
   update_stats,
   employees_with_birthday_today,
+  calculate_working_minutes,
 };

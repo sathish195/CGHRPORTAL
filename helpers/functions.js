@@ -23,6 +23,17 @@ module.exports = {
         .toUpperCase() + str
     );
   },
+  get_time_diff_minutes: async (date1, date2) => {
+    const diffInMs = new Date(date1) - new Date(date2);
+    const diffInMinutes = diffInMs / (1000 * 60);
+    return diffInMinutes;
+  },
+  get_full_date_time: async (time_string) => {
+    const [hours, minutes] = time_string.split(":").map(Number);
+    const now = new Date();
+    now.setHours(hours, minutes, 0, 0);
+    return now;
+  },
   calculate_leave_days: (from_date, to_date) => {
     // Parse the date strings into Date objects
     const date1 = new Date(from_date);
