@@ -799,6 +799,69 @@ router.post(
   })
 );
 
+//get team for attendance
+
+router.post(
+  "/get_team_for_attendance",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    console.log("get team for attendance route hit");
+    const data = req.body;
+    const roleName = req.employee.admin_type;
+
+    const query = {
+      organisation_id: req.employee.organisation_id,
+    };
+    if (roleName === "2") {
+      query["work_info.admin_type"] = { $in: ["2", "3", "4"] };
+    } else if (roleName === "1") {
+    } else {
+      return res.status(403).send("Access denied: Invalid role");
+    }
+
+    const projection = {
+      _id: 0,
+      employee_id: 1,
+      "basic_info.first_name": 1,
+      "basic_info.last_name": 1,
+      "basic_info.email": 1,
+      "work_info.role_name": 1,
+      images: 1,
+    };
+    let teamMembers;
+
+    if (data.name && data.name.length > 1) {
+      const teamMembersFromDb = await mongoFunctions.find(
+        "EMPLOYEE",
+        query,
+        { _id: -1 },
+        projection
+      );
+
+      const fuse = new Fuse(teamMembersFromDb, {
+        keys: ["basic_info.first_name", "basic_info.last_name"],
+        threshold: 0.3,
+      });
+
+      teamMembers = fuse.search(data.name).map((result) => result.item);
+    } else {
+      teamMembers = await mongoFunctions.find(
+        "EMPLOYEE",
+        query,
+        { _id: -1 },
+        projection
+      );
+    }
+
+    if (!teamMembers || teamMembers.length === 0) {
+      return res.status(404).send("No team members found.");
+    }
+
+    res.status(200).send(teamMembers);
+  })
+);
+
 router.post(
   "/get_team_for_project",
   Auth,
