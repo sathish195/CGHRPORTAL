@@ -408,7 +408,8 @@ function add_remove_team(data) {
   const schema = Joi.object({
     action: Joi.string().valid("remove", "add").required(),
     employee_id: Joi.array().min(1).required().messages({
-      'array.min': 'You Must Provide At Least One Employee Id To Remove From Team.',
+      "array.min":
+        "You Must Provide At Least One Employee Id To Remove From Team.",
     }),
     project_id: Joi.string().min(5).max(12).required(),
     task_id: Joi.string().optional().allow(""),
@@ -587,6 +588,24 @@ function checkin_checkout(data) {
   return schema.validate(data);
 }
 
+function get_emp_attendance_by_filter(data) {
+  const schema = Joi.object({
+    year: Joi.number().positive().required(),
+    month: Joi.number().min(1).max(12).required(),
+    week_date: Joi.date().optional().allow(""),
+  });
+  return schema.validate(data);
+}
+function get_emp_attendance_by_admin(data) {
+  const schema = Joi.object({
+    year: Joi.number().positive().required(),
+    month: Joi.number().min(1).max(12).required(),
+    employee_id: Joi.string().optional().allow(""),
+    week_date: Joi.date().optional().allow(""),
+  });
+  return schema.validate(data);
+}
+
 // Export the functions
 module.exports = {
   emp_login,
@@ -619,4 +638,6 @@ module.exports = {
   get_team,
   emp_reset_password_by_admin,
   checkin_checkout,
+  get_emp_attendance_by_filter,
+  get_emp_attendance_by_admin,
 };

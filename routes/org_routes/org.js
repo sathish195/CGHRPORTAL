@@ -501,8 +501,23 @@ router.post(
       // "basic_info.email": 1,
       // "work_info.role_name": 1,
     };
+    const now = new Date();
+    const start_day = new Date(now.setHours(0, 0, 0, 0));
+    const end_day = new Date(now.setHours(23, 59, 59, 999));
+    let today_attendance = await mongoFunctions.find_one(
+      "ATTENDANCE",
+      {
+        organisation_id: req.employee.organisation_id,
+        employee_id: req.employee.employee_id,
+        createdAt: {
+          $gte: start_day,
+          $lte: end_day,
+        },
+      },
+      { _id: 0, __v: 0 }
+    );
 
-    employee_id = await mongoFunctions.find_one(
+    let employee_id = await mongoFunctions.find_one(
       "EMPLOYEE",
       {
         organisation_id: req.employee.organisation_id,
@@ -519,6 +534,7 @@ router.post(
       organisation_details: org_data,
       reporting_managers: reporting_manager,
       employee_id: employee_id,
+      today_attendance: today_attendance,
     };
     // await redis.update_redis("ORGANISATIONS", org_data);
     return res.status(200).send(dashborad);
