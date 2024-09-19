@@ -699,3 +699,154 @@ router.post(
     });
   })
 );
+
+//checkin and checkout employee
+router.post(
+  "/checkin_checkout",
+  Auth,
+  rateLimit(60, 20),
+  Async(async (req, res) => {
+    let data = req.body;
+    const { error } = validations.checkin_checkout(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    if (req.employee.admin_type === "1") {
+      return res.status(400).send("Admin Do Not Checkin");
+    }
+
+    let org_data = await redis.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data)
+      return res.status(400).send("Access Denied; Organisation Not Found!");
+
+    let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+      employee_id: req.employee.employee_id,
+    });
+    if (!find_emp) return res.status(400).send("Employee Not Found..!");
+
+    const now = new Date();
+    const start_day = new Date(now.setHours(0, 0, 0, 0));
+    const end_day = new Date(now.setHours(23, 59, 59, 999));
+
+    let today_record = await mongoFunctions.find_one("ATTENDANCE", {
+      createdAt: {
+        $gte: start_day,
+        $lte: end_day,
+      },
+    });
+    const time_zone = "UTC+5:30";
+    let emp_in_time = await functions.get_time_of_emp_time_zone(time_zone);
+
+    const checkin_time = "10:00";
+    const checkout_time = "7:00";
+    let actual_in_time = await functions.get_full_date_time(checkin_time);
+    let actual_out_time = await functions.get_full_date_time(checkout_time);
+
+    if (data.type === "checkin") {
+      if (today_record) {
+        if (today_record.checkout.length < today_record.checkin.length) {
+          return res.status(400).send("Already Checked In..!");
+        } else {
+          let check_in_obj = {
+            in_time: emp_in_time,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            location: data.location,
+            ip: data.ip,
+          };
+
+          let attendance_obj = await mongoFunctions.find_one_and_update(
+            "ATTENDANCE",
+            { attendance_id: today_record.attendance_id },
+            {
+              status: data.type,
+              $push: {
+                checkin: check_in_obj,
+              },
+            }
+          );
+          return res.status(200).send({
+            success: "Checkin Successful",
+            data: attendance_obj.checkin[attendance_obj.checkin.length - 1],
+          });
+        }
+      } else {
+        let time_diff = await functions.get_time_diff_minutes(
+          actual_in_time,
+          emp_in_time
+        );
+        let grace_time = 15;
+        let check_in_obj = {
+          in_time: emp_in_time,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          location: data.location,
+          ip: data.ip,
+        };
+
+        let new_attendance_obj = await mongoFunctions.create_new_record(
+          "ATTENDANCE",
+          {
+            attendance_id:
+              functions.get_random_string("A", 3, true) + Date.now(),
+            organisation_id: find_emp.organisation_id,
+            employee_id: find_emp.employee_id,
+            employee_name: `${find_emp.basic_info.first_name} ${find_emp.basic_info.last_name}`,
+            status: data.type,
+            actual_in_time: actual_in_time,
+            actual_out_time: actual_out_time,
+            checkin: [check_in_obj],
+            checkout: [],
+            leave: {},
+            grace_time: grace_time,
+            late_by: time_diff,
+            late_checkin: time_diff < 15,
+          }
+        );
+
+        return res.status(200).send({
+          success: "Checkin Successful",
+          data: new_attendance_obj.checkin[
+            new_attendance_obj.checkin.length - 1
+          ],
+        });
+      }
+    } else if (data.type === "checkout") {
+      if (today_record) {
+        if (today_record.checkin.length > today_record.checkout.length) {
+          let check_out_obj = {
+            out_time: emp_in_time,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            location: data.location,
+            ip: data.ip,
+          };
+
+          let attendance_obj = await mongoFunctions.find_one_and_update(
+            "ATTENDANCE",
+            { attendance_id: today_record.attendance_id },
+            {
+              status: data.type,
+              $push: {
+                checkout: check_out_obj,
+              },
+            },
+            { new: true }
+          );
+
+          await stats.calculate_working_minutes(attendance_obj);
+          return res.status(200).send({
+            success: "Checkout Successful",
+            data: attendance_obj.checkout[attendance_obj.checkout.length - 1],
+          });
+        } else {
+          return res.status(400).send("Checkin First..!");
+        }
+      } else {
+        return res.status(400).send("Checkin First..!");
+      }
+    }
+  })
+);

@@ -501,8 +501,23 @@ router.post(
       // "basic_info.email": 1,
       // "work_info.role_name": 1,
     };
+    const now = new Date();
+    const start_day = new Date(now.setHours(0, 0, 0, 0));
+    const end_day = new Date(now.setHours(23, 59, 59, 999));
+    let today_attendance = await mongoFunctions.find_one(
+      "ATTENDANCE",
+      {
+        organisation_id: req.employee.organisation_id,
+        employee_id: req.employee.employee_id,
+        createdAt: {
+          $gte: start_day,
+          $lte: end_day,
+        },
+      },
+      { _id: 0, __v: 0 }
+    );
 
-    employee_id = await mongoFunctions.find_one(
+    let employee_id = await mongoFunctions.find_one(
       "EMPLOYEE",
       {
         organisation_id: req.employee.organisation_id,
@@ -519,6 +534,7 @@ router.post(
       organisation_details: org_data,
       reporting_managers: reporting_manager,
       employee_id: employee_id,
+      today_attendance: today_attendance,
     };
     // await redis.update_redis("ORGANISATIONS", org_data);
     return res.status(200).send(dashborad);
@@ -743,6 +759,69 @@ router.post(
     }
 
     const projection = {
+      employee_id: 1,
+      "basic_info.first_name": 1,
+      "basic_info.last_name": 1,
+      "basic_info.email": 1,
+      "work_info.role_name": 1,
+      images: 1,
+    };
+    let teamMembers;
+
+    if (data.name && data.name.length > 1) {
+      const teamMembersFromDb = await mongoFunctions.find(
+        "EMPLOYEE",
+        query,
+        { _id: -1 },
+        projection
+      );
+
+      const fuse = new Fuse(teamMembersFromDb, {
+        keys: ["basic_info.first_name", "basic_info.last_name"],
+        threshold: 0.3,
+      });
+
+      teamMembers = fuse.search(data.name).map((result) => result.item);
+    } else {
+      teamMembers = await mongoFunctions.find(
+        "EMPLOYEE",
+        query,
+        { _id: -1 },
+        projection
+      );
+    }
+
+    if (!teamMembers || teamMembers.length === 0) {
+      return res.status(404).send("No team members found.");
+    }
+
+    res.status(200).send(teamMembers);
+  })
+);
+
+//get team for attendance
+
+router.post(
+  "/get_team_for_attendance",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    console.log("get team for attendance route hit");
+    const data = req.body;
+    const roleName = req.employee.admin_type;
+
+    const query = {
+      organisation_id: req.employee.organisation_id,
+    };
+    if (roleName === "2") {
+      query["work_info.admin_type"] = { $in: ["2", "3", "4"] };
+    } else if (roleName === "1") {
+    } else {
+      return res.status(403).send("Access denied: Invalid role");
+    }
+
+    const projection = {
+      _id: 0,
       employee_id: 1,
       "basic_info.first_name": 1,
       "basic_info.last_name": 1,

@@ -75,11 +75,28 @@ router.post(
         $lt: new Date().setHours(24, 0, 0, 0),
       },
     });
+    const now = new Date();
+    const start_day = new Date(now.setHours(0, 0, 0, 0));
+    const end_day = new Date(now.setHours(23, 59, 59, 999));
+    let today_attendance = await mongoFunctions.find_one(
+      "ATTENDANCE",
+      {
+        organisation_id: req.employee.organisation_id,
+        employee_id: req.employee.employee_id,
+        createdAt: {
+          $gte: start_day,
+          $lte: end_day,
+        },
+      },
+      { _id: 0, __v: 0 }
+    );
+
     let dashborad = {
       recent_hires: recent_hires,
       birthdays: birthdays,
       organisation_details: filtered_org_data,
       stats: statss,
+      today_attendance: today_attendance,
     };
     console.log("dashboard data fetched successfully");
     return res.status(200).send(dashborad);
@@ -281,5 +298,53 @@ router.post(
     );
     console.log("leave applications fetched successfully");
     return res.status(200).send(leaveApplications);
+  })
+);
+
+//employee total attendance
+
+router.post(
+  "/get_total_attendance_by_employee",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    const user = req.employee;
+    let data = req.body;
+    var { error } = validations.get_emp_attendance_by_filter(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    let condition = {
+      organisation_id: user.organisation_id,
+      employee_id: user.employee_id,
+    };
+
+    if (data?.week_date) {
+      const start = new Date(data.week_date);
+      const end = new Date(data.week_date);
+      const dayOfWeek = start.getDay();
+      start.setDate(start.getDate() - dayOfWeek + 1);
+      start.setHours(0, 0, 0, 0);
+      end.setDate(start.getDate() + 5);
+      end.setHours(23, 59, 59, 999);
+      condition["createdAt"] = {
+        $gte: start.toISOString(),
+        $lte: end.toISOString(),
+      };
+    } else {
+      const startDate = new Date(data.year, data.month - 1, 1, 0, 0, 0, 0); // Month is 0-based
+      const endDate = new Date(data.year, data.month, 0, 23, 59, 59, 999);
+      condition["createdAt"] = { $gte: startDate, $lte: endDate };
+    }
+    let attendance = await mongoFunctions.find(
+      "ATTENDANCE",
+      condition,
+      { createdAt: -1 },
+      {
+        _id: 0,
+        __v: 0,
+        updatedAt: 0,
+      }
+    );
+
+    return res.status(200).send(attendance);
   })
 );
