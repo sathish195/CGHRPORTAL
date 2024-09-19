@@ -244,8 +244,8 @@ router.post(
     const leaveApplications = await mongoFunctions.lazy_loading(
       "LEAVE",
       query,
-      { __v: 0 },
-      { _id: -1 },
+      { __v: 0, _id: 0 },
+      { _id: -1, createdAt: -1 },
       { limit: 40 },
       { skip: data.skip || 0 } // Default skip to 0 if not provided
     );

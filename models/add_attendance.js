@@ -16,6 +16,7 @@ const attendance_Schema = new mongoose.Schema(
     late_by: { type: Number, default: 0 },
     late_checkin: { type: Boolean, default: false },
     others: { type: Object, default: {} },
+    attendance_status: { type: String, default: "" },
   },
   { timestamps: true }
 );
