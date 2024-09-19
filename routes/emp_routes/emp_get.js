@@ -304,7 +304,7 @@ router.post(
 //employee total attendance
 
 router.post(
-  "/get_emp_attendance",
+  "/get_total_attendance_by_employee",
   Auth,
   slowDown,
   Async(async (req, res) => {

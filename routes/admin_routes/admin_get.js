@@ -10,6 +10,7 @@ const { mongo } = require("mongoose");
 const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
+const { includes } = require("underscore");
 
 //get employee list
 
@@ -273,52 +274,59 @@ router.post(
 
 //employee total attendance by admin
 
-// router.post(
-//   "/get_total_attendance_by_admin",
-//   Auth,
-//   slowDown,
-//   Async(async (req, res) => {
-//     const user = req.employee;
-//     let data = req.body;
-//     var { error } = validations.get_emp_attendance_by_filter(data);
-//     if (error) return res.status(400).send(error.details[0].message);
-//     const admin_types=["1","2"];
-//     if ()
-//     let condition = {
-//       organisation_id: user.organisation_id,
-//       employee_id: user.employee_id,
-//     };
+router.post(
+  "/get_total_attendance_by_admin",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    const user = req.employee;
+    let data = req.body;
+    var { error } = validations.get_emp_attendance_by_admin(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director Or Manager Can Access Employee Total Attendance");
+    }
+    let condition = {
+      organisation_id: user.organisation_id,
+    };
+    if (data.employee_id && data.employee_id.length > 5) {
+      condition["employee_id"] = data.employee_id;
+    }
+    console.log(condition);
 
-//     if (data?.week_date) {
-//       const start = new Date(data.week_date);
-//       const end = new Date(data.week_date);
-//       const dayOfWeek = start.getDay();
-//       start.setDate(start.getDate() - dayOfWeek + 1);
-//       start.setHours(0, 0, 0, 0);
-//       end.setDate(start.getDate() + 5);
-//       end.setHours(23, 59, 59, 999);
-//       condition["createdAt"] = {
-//         $gte: start.toISOString(),
-//         $lte: end.toISOString(),
-//       };
-//     } else {
-//       const startDate = new Date(data.year, data.month - 1, 1, 0, 0, 0, 0); // Month is 0-based
-//       const endDate = new Date(data.year, data.month, 0, 23, 59, 59, 999);
-//       condition["createdAt"] = { $gte: startDate, $lte: endDate };
-//     }
-//     let attendance = await mongoFunctions.find(
-//       "ATTENDANCE",
-//       condition,
-//       { createdAt: -1 },
-//       {
-//         _id: 0,
-//         __v: 0,
-//         updatedAt: 0,
-//       }
-//     );
+    if (data?.week_date) {
+      const start = new Date(data.week_date);
+      const end = new Date(data.week_date);
+      const dayOfWeek = start.getDay();
+      start.setDate(start.getDate() - dayOfWeek + 1);
+      start.setHours(0, 0, 0, 0);
+      end.setDate(start.getDate() + 5);
+      end.setHours(23, 59, 59, 999);
+      condition["createdAt"] = {
+        $gte: start.toISOString(),
+        $lte: end.toISOString(),
+      };
+    } else {
+      const startDate = new Date(data.year, data.month - 1, 1, 0, 0, 0, 0); // Month is 0-based
+      const endDate = new Date(data.year, data.month, 0, 23, 59, 59, 999);
+      condition["createdAt"] = { $gte: startDate, $lte: endDate };
+    }
+    let attendance = await mongoFunctions.find(
+      "ATTENDANCE",
+      condition,
+      { createdAt: -1 },
+      {
+        _id: 0,
+        __v: 0,
+        updatedAt: 0,
+      }
+    );
 
-//     return res.status(200).send(attendance);
-//   })
-// );
+    return res.status(200).send(attendance);
+  })
+);
 
 module.exports = router;
