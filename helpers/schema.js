@@ -216,8 +216,8 @@ function add_employee_by_admin(data) {
         "string.pattern.base": "Email Should be valid mail",
       })
       .required(),
-    first_name: Joi.string().min(3).max(20).required(),
-    last_name: Joi.string().min(3).max(20).required(),
+    first_name: Joi.string().min(3).max(30).required(),
+    last_name: Joi.string().min(3).max(30).required(),
     nick_name: Joi.string().max(15).allow(null, "").optional(),
     department_id: Joi.string().min(3).max(15).required(),
     role_id: Joi.string().min(3).max(15).required(),
