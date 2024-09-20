@@ -190,30 +190,29 @@ router.post(
       employee_id: { $ne: req.employee.employee_id },
       // "approved_by.team_incharge.leave_status": status
     };
-    if(data.leave_status==="Pending"){
+    if (data.leave_status === "Pending") {
+      // Role-based access control
+      if (roleName === "4") {
+        return res.status(403).send("Access denied: Not Admin");
+      }
 
-    // Role-based access control
-    if (roleName === "4") {
-      return res.status(403).send("Access denied: Not Admin");
+      if (roleName === "1") {
+        query.leave_status = status;
+        // No additional conditions for 'director'
+      } else if (roleName === "2") {
+        query.reporting_manager = req.employee.email;
+        query.leave_status = status;
+        query["approved_by.manager.leave_status"] = status;
+      } else if (roleName === "3") {
+        query.department_id = req.employee.department_id;
+        query.leave_status = status;
+
+        // Optionally add conditions specific to 'team incharge'
+        query["approved_by.team_incharge.leave_status"] = status;
+      } else {
+        return res.status(403).send("Access denied: Invalid role");
+      }
     }
-
-    if (roleName === "1") {
-      query.leave_status = status;
-      // No additional conditions for 'director'
-    } else if (roleName === "2") {
-      query.reporting_manager = req.employee.email;
-      query.leave_status = status;
-      query["approved_by.manager.leave_status"] = status;
-    } else if (roleName === "3") {
-      query.department_id = req.employee.department_id;
-      query.leave_status = status;
-
-      // Optionally add conditions specific to 'team incharge'
-      query["approved_by.team_incharge.leave_status"] = status;
-    } else {
-      return res.status(403).send("Access denied: Invalid role");
-    }
-  }
 
     // Fetch leave applications with pagination
 
@@ -255,7 +254,7 @@ router.post(
       { limit: 40 },
       { skip: data.skip || 0 } // Default skip to 0 if not provided
     );
-    
+
     let response = { leaveApplications };
 
     // If employee_id is provided, fetch the employee profile
