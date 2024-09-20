@@ -65,9 +65,9 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
     let query = { organisation_id: req.employee.organisation_id };
     if (emp.admin_type === "1") {
-      query["work_info.admin_type"] = { $ne: "1" };
+      // query["work_info.admin_type"] = { $ne: "1" };
     } else if (emp.admin_type === "2") {
-      query["work_info.admin_type"] = { $nin: ["1", "2"] };
+      // query["work_info.admin_type"] = { $nin: ["1", "2"] };
     } else if (emp.admin_type === "3") {
       query["work_info.department_id"] = emp.department_id;
       query["work_info.admin_type"] = { $nin: ["1", "2"] };

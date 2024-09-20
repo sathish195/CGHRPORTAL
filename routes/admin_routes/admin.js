@@ -350,6 +350,12 @@ router.post(
     );
     if (!designation_data)
       return res.status(400).send("Invalid Designation id..!");
+    if (req.employee.admin_type === "2" && role_data.admin_type === "2") {
+      // Managers cannot add other Managers
+      if (data.role_id === role_data.role_id) {
+        return res.status(400).send("A Manager Cannot Update Another Manager.");
+      }
+    }
     let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
