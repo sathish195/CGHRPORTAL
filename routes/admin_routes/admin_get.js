@@ -190,6 +190,7 @@ router.post(
       employee_id: { $ne: req.employee.employee_id },
       // "approved_by.team_incharge.leave_status": status
     };
+    if(data.leave_status==="Pending"){
 
     // Role-based access control
     if (roleName === "4") {
@@ -212,6 +213,7 @@ router.post(
     } else {
       return res.status(403).send("Access denied: Invalid role");
     }
+  }
 
     // Fetch leave applications with pagination
 
@@ -241,6 +243,7 @@ router.post(
         query.leave_status = data.leave_status;
       }
     }
+    console.log(query);
 
     // Fetch leave applications with pagination
     alertDev(`query in get leaves-->${JSON.stringify(query)}`);
@@ -252,7 +255,7 @@ router.post(
       { limit: 40 },
       { skip: data.skip || 0 } // Default skip to 0 if not provided
     );
-    console.log(query);
+    
     let response = { leaveApplications };
 
     // If employee_id is provided, fetch the employee profile
