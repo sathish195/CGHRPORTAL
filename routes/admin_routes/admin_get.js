@@ -11,6 +11,7 @@ const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
 const { includes } = require("underscore");
+const { alertDev } = require("../../helpers/telegram");
 
 //get employee list
 
@@ -189,27 +190,28 @@ router.post(
       employee_id: { $ne: req.employee.employee_id },
       // "approved_by.team_incharge.leave_status": status
     };
+    if (data.leave_status === "Pending") {
+      // Role-based access control
+      if (roleName === "4") {
+        return res.status(403).send("Access denied: Not Admin");
+      }
 
-    // Role-based access control
-    if (roleName === "4") {
-      return res.status(403).send("Access denied: Not Admin");
-    }
+      if (roleName === "1") {
+        query.leave_status = status;
+        // No additional conditions for 'director'
+      } else if (roleName === "2") {
+        query.reporting_manager = req.employee.email;
+        query.leave_status = status;
+        query["approved_by.manager.leave_status"] = status;
+      } else if (roleName === "3") {
+        query.department_id = req.employee.department_id;
+        query.leave_status = status;
 
-    if (roleName === "1") {
-      query.leave_status = status;
-      // No additional conditions for 'director'
-    } else if (roleName === "2") {
-      query.reporting_manager = req.employee.email;
-      query.leave_status = status;
-      query["approved_by.manager.leave_status"] = status;
-    } else if (roleName === "3") {
-      query.department_id = req.employee.department_id;
-      query.leave_status = status;
-
-      // Optionally add conditions specific to 'team incharge'
-      query["approved_by.team_incharge.leave_status"] = status;
-    } else {
-      return res.status(403).send("Access denied: Invalid role");
+        // Optionally add conditions specific to 'team incharge'
+        query["approved_by.team_incharge.leave_status"] = status;
+      } else {
+        return res.status(403).send("Access denied: Invalid role");
+      }
     }
 
     // Fetch leave applications with pagination
@@ -240,8 +242,10 @@ router.post(
         query.leave_status = data.leave_status;
       }
     }
+    console.log(query);
 
     // Fetch leave applications with pagination
+    alertDev(`query in get leaves-->${JSON.stringify(query)}`);
     const leaveApplications = await mongoFunctions.lazy_loading(
       "LEAVE",
       query,
@@ -250,7 +254,7 @@ router.post(
       { limit: 40 },
       { skip: data.skip || 0 } // Default skip to 0 if not provided
     );
-    console.log(query);
+
     let response = { leaveApplications };
 
     // If employee_id is provided, fetch the employee profile
