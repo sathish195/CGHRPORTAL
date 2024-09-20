@@ -1109,35 +1109,35 @@ router.post(
       console.log(h.leaves);
 
       // Create leave records for each date between from_date and to_date
-    //   const fromDate = new Date(updated_leave_data.from_date);
-    //   const toDate = new Date(updated_leave_data.to_date);
-    //   const attendanceRecords = [];
+      // const fromDate = new Date(updated_leave_data.from_date);
+      // const toDate = new Date(updated_leave_data.to_date);
+      // const attendanceRecords = [];
 
-    //   for (
-    //     let date = fromDate;
-    //     date <= toDate;
-    //     date.setDate(date.getDate() + 1)
-    //   ) {
-    //     const attendance_object = {
-    //       attendance_id: functions.get_random_string("A", 3, true) + Date.now(),
-    //       organisation_id: find_emp.organisation_id,
-    //       employee_id: find_emp.employee_id,
-    //       employee_name: `${find_emp.basic_info.first_name} ${find_emp.basic_info.last_name}`,
-    //       status: "leave",
-    //       checkin: [],
-    //       checkout: [],
-    //       attendance_status: updated_leave_data.leave_type,
-    //       createdAt: new Date(date), // Use the current date in the loop
-    //     };
+      // for (
+      //   let date = fromDate;
+      //   date <= toDate;
+      //   date.setDate(date.getDate() + 1)
+      // ) {
+      //   const attendance_object = {
+      //     attendance_id: functions.get_random_string("A", 3, true) + Date.now(),
+      //     organisation_id: find_emp.organisation_id,
+      //     employee_id: find_emp.employee_id,
+      //     employee_name: `${find_emp.basic_info.first_name} ${find_emp.basic_info.last_name}`,
+      //     status: "leave",
+      //     checkin: [],
+      //     checkout: [],
+      //     attendance_status: updated_leave_data.leave_type,
+      //     createdAt: new Date(date), // Use the current date in the loop
+      //   };
 
-    //     attendanceRecords.push(attendance_object);
-    //   }
+      //   attendanceRecords.push(attendance_object);
+      // }
 
-    //   const attendance_update = await mongoFunctions.insertMany(
-    //     "ATTENDANCE",
-    //     attendanceRecords
-    //   );
-    //   console.log(attendance_update);
+      // const attendance_update = await mongoFunctions.insertMany(
+      //   "ATTENDANCE",
+      //   attendanceRecords
+      // );
+      // console.log(attendance_update);
     }
 
     if (updated_leave_data.leave_status === "Rejected") {
