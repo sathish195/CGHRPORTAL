@@ -11,6 +11,7 @@ const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
 const { includes } = require("underscore");
+const { alertDev } = require("../../helpers/telegram");
 
 //get employee list
 
@@ -242,6 +243,7 @@ router.post(
     }
 
     // Fetch leave applications with pagination
+    alertDev(`query in get leaves-->${JSON.stringify(query)}`);
     const leaveApplications = await mongoFunctions.lazy_loading(
       "LEAVE",
       query,
