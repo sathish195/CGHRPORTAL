@@ -741,6 +741,7 @@ router.post(
     const end_day = new Date(now.setHours(23, 59, 59, 999));
 
     let today_record = await mongoFunctions.find_one("ATTENDANCE", {
+      employee_id:req.employee.employee_id,
       createdAt: {
         $gte: start_day,
         $lte: end_day,
