@@ -77,7 +77,7 @@ function emp_reset_password(data) {
 //   };
 function add_update_org(data) {
   const schema = Joi.object({
-    organisation_name: Joi.string().min(5).max(30).required().trim(),
+    organisation_name: Joi.string().min(5).max(50).required().trim(),
     organisation_type: Joi.string().min(2).max(15).required(),
     logo: Joi.string()
       // .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
@@ -93,14 +93,14 @@ function add_update_org(data) {
       .lowercase()
       .max(55)
       .required(),
-    address: Joi.string().required(),
+    address: Joi.string().min(5).max(100).required(),
   });
   return schema.validate(data);
 }
 function add_update_department(data) {
   const schema = Joi.object({
     organisation_id: Joi.string().min(10).max(18).required(),
-    department_name: Joi.string().trim().strip().min(5).max(20).required(),
+    department_name: Joi.string().trim().strip().min(5).max(50).required(),
     department_id: Joi.string().allow(null, "").optional(),
   });
   return schema.validate(data);
@@ -506,7 +506,7 @@ function apply_leave(data) {
       .pattern(/^[a-zA-Z0-9.,_()[\]& ]+$/)
       .trim()
       .min(5)
-      .max(200)
+      .max(100)
       .messages({
         "string.pattern.base": "Invalid characters found.",
         "string.min": "The reason must be at least 5 characters long.",
