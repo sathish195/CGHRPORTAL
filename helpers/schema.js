@@ -506,7 +506,7 @@ function apply_leave(data) {
       .pattern(/^[a-zA-Z0-9.,_()[\]& ]+$/)
       .trim()
       .min(5)
-      .max(200)
+      .max(100)
       .messages({
         "string.pattern.base": "Invalid characters found.",
         "string.min": "The reason must be at least 5 characters long.",
