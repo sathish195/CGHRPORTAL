@@ -77,7 +77,7 @@ function emp_reset_password(data) {
 //   };
 function add_update_org(data) {
   const schema = Joi.object({
-    organisation_name: Joi.string().min(5).max(30).required().trim(),
+    organisation_name: Joi.string().min(5).max(50).required().trim(),
     organisation_type: Joi.string().min(2).max(15).required(),
     logo: Joi.string()
       // .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
