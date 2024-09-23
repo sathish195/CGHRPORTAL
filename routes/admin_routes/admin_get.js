@@ -296,6 +296,9 @@ router.post(
     let condition = {
       organisation_id: user.organisation_id,
     };
+    if (!data.employee_id || data.employee_id.length < 1) {
+      condition["employee_id"] = req.employee.employee_id;
+    }
     if (data.employee_id && data.employee_id.length > 5) {
       condition["employee_id"] = data.employee_id;
     }

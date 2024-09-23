@@ -18,6 +18,16 @@ module.exports = {
       );
     }
   },
+  insert_many_records: async (collection, dataArray) => {
+    try {
+      const Model = eval(collection);
+      return await Model.insertMany(dataArray);
+    } catch (error) {
+      throw new Error(
+        `❌❌❌❌ Error in insert many records Mongo query \n ${error} \n ❌❌❌❌`
+      );
+    }
+  },
   find_with_projection: async (
     collection,
     condition,
