@@ -1126,9 +1126,9 @@ router.post(
       ) {
         const attendance_object = {
           attendance_id: functions.get_random_string("A", 3, true) + Date.now(),
-          organisation_id: find_emp.organisation_id,
-          employee_id: find_emp.employee_id,
-          employee_name: `${find_emp.basic_info.first_name} ${find_emp.basic_info.last_name}`,
+          organisation_id: findEmployee.organisation_id,
+          employee_id: findEmployee.employee_id,
+          employee_name: `${findEmployee.basic_info.first_name} ${findEmployee.basic_info.last_name}`,
           status: "leave",
           checkin: [],
           checkout: [],
@@ -1358,3 +1358,5 @@ router.post(
     return res.status(200).send("Leave Status Updated Successfully");
   })
 );
+
+//

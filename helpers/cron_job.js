@@ -18,7 +18,7 @@ const updateAttendanceStatus = async () => {
         if (totalWorkingMinutes < 60) {
           newStatus = "absent";
         } else if (totalWorkingMinutes < 420) {
-          // less than 7 hours
+          // If it is less than 7 hours it should be half day present and half day absent
           newStatus = "0.5 day present, 0.5 day absent";
         } else if (totalWorkingMinutes >= 480) {
           // 8 hours or more
