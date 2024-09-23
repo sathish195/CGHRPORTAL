@@ -587,6 +587,20 @@ function checkin_checkout(data) {
   });
   return schema.validate(data);
 }
+//update attendance
+
+function checkin_checkout_update(data) {
+  const schema = Joi.object({
+    attendance_id: Joi.string().min(5).max(20).required(),
+    in_time: Joi.date().required(),
+    out_time: Joi.date().required(),
+    latitude: Joi.string().min(5).max(15).required(),
+    longitude: Joi.string().min(5).max(15).required(),
+    location: Joi.string().required(),
+    ip: Joi.string().ip().required(),
+  });
+  return schema.validate(data);
+}
 
 function get_emp_attendance_by_filter(data) {
   const schema = Joi.object({
@@ -638,6 +652,7 @@ module.exports = {
   get_team,
   emp_reset_password_by_admin,
   checkin_checkout,
+  checkin_checkout_update,
   get_emp_attendance_by_filter,
   get_emp_attendance_by_admin,
 };

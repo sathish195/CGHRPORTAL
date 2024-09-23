@@ -345,12 +345,15 @@ async function calculate_working_minutes(attendance) {
     let totalTimeMinutes = 0;
 
     for (let i = 0; i < checkin.length; i++) {
-      const checkinTime = new Date(checkin[i].in_time);
-      const checkoutTime = new Date(checkout[i].out_time);
+      const checkinTime = checkin[i].in_time;
+      const checkoutTime = checkout[i].out_time;
+      console.log(checkinTime);
+      console.log(checkoutTime);
 
       // Ensure both times are valid dates
       if (!isNaN(checkinTime) && !isNaN(checkoutTime)) {
         const diffInMs = checkoutTime - checkinTime;
+        console.log("diffInMs--->", diffInMs);
 
         // Only add positive differences
         if (diffInMs > 0) {
@@ -374,7 +377,6 @@ async function calculate_working_minutes(attendance) {
   }
   return false;
 }
-
 
 module.exports = {
   recent_hires,

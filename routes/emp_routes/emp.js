@@ -737,6 +737,8 @@ router.post(
     if (!find_emp) return res.status(400).send("Employee Not Found..!");
 
     const now = new Date();
+    console.log("now----->", now);
+
     const start_day = new Date(now.setHours(0, 0, 0, 0));
     const end_day = new Date(now.setHours(23, 59, 59, 999));
 
@@ -748,13 +750,16 @@ router.post(
       },
     });
 
-    const time_zone = "UTC+5:30";
-    let emp_in_time = await functions.get_time_of_emp_time_zone(time_zone);
+    let time = new Date();
+    // const time_zone = "UTC+5:30";
+    // let emp_in_time = await functions.get_time_of_emp_time_zone(time_zone);
+    let emp_in_time = time;
 
     const checkin_time = "10:00";
     const checkout_time = "7:00";
     let actual_in_time = await functions.get_full_date_time(checkin_time);
     let actual_out_time = await functions.get_full_date_time(checkout_time);
+    console.log(actual_in_time);
 
     if (data.type === "checkin") {
       if (today_record) {
@@ -814,7 +819,7 @@ router.post(
             leave: {},
             grace_time: grace_time,
             late_by: time_diff,
-            late_checkin: time_diff < 15,
+            late_checkin: time_diff < 0,
           }
         );
 
