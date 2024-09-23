@@ -1359,4 +1359,78 @@ router.post(
   })
 );
 
-//
+//update checkin and checkout time by admin
+router.post(
+  "/update_attendance",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let data = req.body;
+    const { error } = validations.checkin_checkout_update(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director Or Manager Can Update The Attendance");
+    }
+
+    let org_data = await redis.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data)
+      return res.status(400).send("Access Denied; Organisation Not Found!");
+
+    let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+      organisation_id: req.employee.organisation_id,
+      employee_id: req.employee.employee_id,
+    });
+    if (!find_emp) return res.status(400).send("Employee Not Found..!");
+    let find_attendance = await mongoFunctions.find_one("ATTENDANCE", {
+      organisation_id: req.employee.organisation_id,
+      attendance_id: data.attendance_id,
+    });
+    if (!find_attendance) return res.status(400).send("Attendance Not Found");
+
+    let check_in_obj = {
+      in_time: new Date(data.in_time),
+      latitude: data.latitude,
+      longitude: data.longitude,
+      location: data.location,
+      ip: data.ip,
+    };
+    let check_out_obj = {
+      out_time: new Date(data.out_time),
+      latitude: data.latitude,
+      longitude: data.longitude,
+      location: data.location,
+      ip: data.ip,
+    };
+
+    let attendance_obj = await mongoFunctions.find_one_and_update(
+      "ATTENDANCE",
+      { attendance_id: data.attendance_id },
+      {
+        $set: {
+          checkin: check_in_obj,
+          checkout: check_out_obj,
+        },
+      },
+      { new: true } // This option should be here
+    );
+
+    const s = await stats.calculate_working_minutes(attendance_obj);
+    console.log(s);
+    return res.status(200).send({
+      success: "Attendance Updated Successfully",
+      data: [
+        attendance_obj.checkin[attendance_obj.checkin.length - 1],
+        attendance_obj.checkout[attendance_obj.checkout.length - 1],
+        attendance_obj.total_working_minutes,
+      ],
+    });
+  })
+);
