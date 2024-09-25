@@ -593,7 +593,6 @@ function checkin_checkout_update(data) {
   const schema = Joi.object({
     attendance_id: Joi.string().min(5).max(20).required(),
     in_time: Joi.date().optional().allow(""),
-
     out_time: Joi.date().optional().allow(""),
     latitude: Joi.string().min(5).max(15).required(),
     longitude: Joi.string().min(5).max(15).required(),
