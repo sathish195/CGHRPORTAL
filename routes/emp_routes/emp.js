@@ -87,7 +87,7 @@ router.post(
         collection: "EMPLOYEE",
       },
       process.env.jwtPrivateKey,
-      { expiresIn: "90d" }
+      { expiresIn: "7d" }
     );
     console.log(token);
 
