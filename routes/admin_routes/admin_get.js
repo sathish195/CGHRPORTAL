@@ -47,6 +47,14 @@ router.post(
         // password: 0,
       }
     );
+    let repo = await mongoFunctions.find_one("EMPLOYEE", {
+      organisation_id: req.employee.organisation_id,
+      "basic_info.email": emp.work_info.reporting_manager,
+    });
+    if (repo) {
+      emp.work_info.reporting_manager =
+        repo.basic_info.first_name + " " + repo.basic_info.last_name;
+    }
     return res.status(200).send({ employee: emp });
   })
 );
