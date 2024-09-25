@@ -38,6 +38,14 @@ router.post(
         last_ip: 0,
       }
     );
+    let repo = await mongoFunctions.find_one(employee.collection, {
+      organisation_id: employee.organisation_id,
+      "basic_info.email": emp.work_info.reporting_manager,
+    });
+    if (repo) {
+      emp.work_info.reporting_manager =
+        repo.basic_info.first_name + " " + repo.basic_info.last_name;
+    }
     if (!emp) return res.status(400).send("Employee Not Found..!");
     return res.status(200).send({ profile: emp });
   })
