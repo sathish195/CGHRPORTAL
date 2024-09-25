@@ -1409,15 +1409,24 @@ router.post(
       location: data.location,
       ip: data.ip,
     };
+    let update;
+
+    if (data.in_time.length > 0 && data.out_time.length === 0) {
+      update = {
+        checkin: check_in_obj,
+      };
+    } else {
+      update = {
+        checkin: check_in_obj,
+        checkout: check_out_obj,
+      };
+    }
 
     let attendance_obj = await mongoFunctions.find_one_and_update(
       "ATTENDANCE",
       { attendance_id: data.attendance_id },
       {
-        $set: {
-          checkin: check_in_obj,
-          checkout: check_out_obj,
-        },
+        $set: update,
       },
       { new: true } // This option should be here
     );
