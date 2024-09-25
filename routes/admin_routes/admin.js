@@ -1124,19 +1124,24 @@ router.post(
         date <= toDate;
         date.setDate(date.getDate() + 1)
       ) {
-        const attendance_object = {
-          attendance_id: functions.get_random_string("A", 3, true) + Date.now(),
-          organisation_id: findEmployee.organisation_id,
-          employee_id: findEmployee.employee_id,
-          employee_name: `${findEmployee.basic_info.first_name} ${findEmployee.basic_info.last_name}`,
-          status: "leave",
-          checkin: [],
-          checkout: [],
-          attendance_status: updated_leave_data.leave_type,
-          createdAt: new Date(date), // Use the current date in the loop
-        };
+        const day = date.getDay(); // 0 is Sunday, 6 is Saturday
+        if (day !== 0 && day !== 6) {
+          // Exclude weekend
+          const attendance_object = {
+            attendance_id:
+              functions.get_random_string("A", 3, true) + Date.now(),
+            organisation_id: findEmployee.organisation_id,
+            employee_id: findEmployee.employee_id,
+            employee_name: `${findEmployee.basic_info.first_name} ${findEmployee.basic_info.last_name}`,
+            status: "leave",
+            checkin: [],
+            checkout: [],
+            attendance_status: updated_leave_data.leave_type,
+            createdAt: new Date(date), // Use the current date in the loop
+          };
 
-        attendanceRecords.push(attendance_object);
+          attendanceRecords.push(attendance_object);
+        }
       }
 
       const attendance_update = await mongoFunctions.insert_many_records(
@@ -1256,19 +1261,23 @@ router.post(
         date <= toDate;
         date.setDate(date.getDate() + 1)
       ) {
-        const attendance_object = {
-          attendance_id: functions.get_random_string("A", 3, true) + Date.now(),
-          organisation_id: findEmployee.organisation_id,
-          employee_id: findEmployee.employee_id,
-          employee_name: `${findEmployee.basic_info.first_name} ${findEmployee.basic_info.last_name}`,
-          status: "leave",
-          checkin: [],
-          checkout: [],
-          attendance_status: leave_data_up.leave_type,
-          createdAt: new Date(date), // Use the current date in the loop
-        };
+        const day = date.getDay(); // 0 is Sunday, 6 is Saturday
+        if (day !== 0 && day !== 6) {
+          const attendance_object = {
+            attendance_id:
+              functions.get_random_string("A", 3, true) + Date.now(),
+            organisation_id: findEmployee.organisation_id,
+            employee_id: findEmployee.employee_id,
+            employee_name: `${findEmployee.basic_info.first_name} ${findEmployee.basic_info.last_name}`,
+            status: "leave",
+            checkin: [],
+            checkout: [],
+            attendance_status: leave_data_up.leave_type,
+            createdAt: new Date(date), // Use the current date in the loop
+          };
 
-        attendanceRecords.push(attendance_object);
+          attendanceRecords.push(attendance_object);
+        }
       }
 
       const attendance_update = await mongoFunctions.insert_many_records(

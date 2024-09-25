@@ -72,21 +72,48 @@ module.exports = {
 
   calculate_leave_days: (from_date, to_date) => {
     // Parse the date strings into Date objects
+    // const date1 = new Date(from_date);
+    // const date2 = new Date(to_date);
+
+    // // Ensure the start date is before the end date
+    // if (date1 > date2) {
+    //   throw new Error("Start date must be before or equal to end date");
+    // }
+
+    // // Calculate the difference in time, inclusive of both start and end dates
+    // const timeDifference = date2 - date1;
+
+    // // Convert time difference from milliseconds to days and add 1 to include both endpoints
+    // const dayDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)) + 1;
+
+    // return dayDifference;
     const date1 = new Date(from_date);
     const date2 = new Date(to_date);
 
-    // Ensure the start date is before the end date
+    // Ensure the start date is before or equal to the end date
     if (date1 > date2) {
       throw new Error("Start date must be before or equal to end date");
     }
 
-    // Calculate the difference in time, inclusive of both start and end dates
-    const timeDifference = date2 - date1;
+    let totalDays = 0;
 
-    // Convert time difference from milliseconds to days and add 1 to include both endpoints
-    const dayDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)) + 1;
+    // Iterate through each day in the range
+    for (
+      let currentDate = date1;
+      currentDate <= date2;
+      currentDate.setDate(currentDate.getDate() + 1)
+    ) {
+      const dayOfWeek = currentDate.getDay();
 
-    return dayDifference;
+      // Increment totalDays only for weekdays (Monday to Friday)
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        // 0 is Sunday, 6 is Saturday
+        totalDays++;
+      }
+    }
+    console.log(totalDays);
+    return totalDays;
+    
   },
   update_status: (leave_status_up) => {},
 };
