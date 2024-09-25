@@ -626,6 +626,10 @@ router.post(
       employee_id: req.employee.employee_id,
     });
     if (!find_emp) return res.status(400).send("Employee Not Found..!");
+    if (functions.weekends_apply(data.from_date, data.to_date)=== false) {
+      console.log("Both dates are on the weekend!");
+      return res.status(400).send("Do Not Apply On Weekends");
+    }
 
     let find_tl = await mongoFunctions.find_one("EMPLOYEE", {
       "work_info.admin_type": "3",

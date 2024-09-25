@@ -23,6 +23,15 @@ module.exports = {
         .toUpperCase() + str
     );
   },
+  weekends_apply: async (from_date, to_date) => {
+    const fromDate = new Date(from_date);
+    const toDate = new Date(to_date);
+
+    const isFromWeekend = fromDate.getDay() === 6 || fromDate.getDay() === 0; // Saturday is 6, Sunday is 0
+    const isToWeekend = toDate.getDay() === 6 || toDate.getDay() === 0;
+    console.log(isFromWeekend, isToWeekend);
+    return isFromWeekend && isToWeekend;
+  },
   get_time_diff_minutes: async (date1, date2) => {
     const diffInMs = new Date(date1) - new Date(date2);
     const diffInMinutes = diffInMs / (1000 * 60);
@@ -52,7 +61,7 @@ module.exports = {
 
     // Return formatted date and time string
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-},
+  },
 
   get_full_date_time: async (time_string) => {
     const [hours, minutes] = time_string.split(":").map(Number);
@@ -60,6 +69,7 @@ module.exports = {
     now.setHours(hours, minutes, 0, 0);
     return now;
   },
+
   calculate_leave_days: (from_date, to_date) => {
     // Parse the date strings into Date objects
     const date1 = new Date(from_date);
