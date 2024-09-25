@@ -77,7 +77,7 @@ router.post('/login',rateLimit(60,40),Async(async(req,res)=>{
         collection: "EMPLOYEE",
       },
       process.env.jwtPrivateKey,
-      { expiresIn: "90d" }
+      { expiresIn: "7d" }
     );
     console.log(token);
 
