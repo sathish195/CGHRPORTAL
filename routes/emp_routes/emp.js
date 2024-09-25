@@ -546,12 +546,12 @@ router.post(
     if (userRole === "1") {
       return res.status(403).send("Access Denied: Not Team Member");
     }
-    // let findId = await mongoFunctions.find_one("TASKS", {
-    //   organisation_id: req.employee.organisation_id,
-    //   task_id: data.task_id,
-    //   team: { $elemMatch: { employee_id: req.employee.employee_id } },
-    // });
-    // if (!findId) return res.status(400).send("Task ID does not exist");
+    let findId = await mongoFunctions.find_one("TASKS", {
+      organisation_id: req.employee.organisation_id,
+      task_id: data.task_id,
+      // team: { $elemMatch: { employee_id: req.employee.employee_id } },
+    });
+    if (!findId) return res.status(400).send("Task ID does not exist");
     const task_data_up = await mongoFunctions.find_one_and_update(
       "TASKS",
       {
