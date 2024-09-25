@@ -875,7 +875,7 @@ router.post(
     };
 
     if (roleName === "1") {
-      query["work_info.admin_type"] = "3";
+      query["work_info.admin_type"] = { $in: ["3", "2"] };
     } else if (roleName === "2") {
       query["work_info.admin_type"] = "3";
       // No additional conditions for 'manager' or 'team incharge'
