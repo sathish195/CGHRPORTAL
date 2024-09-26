@@ -713,9 +713,9 @@ router.post(
     let data = req.body;
     const { error } = validations.checkin_checkout(data);
     if (error) return res.status(400).send(error.details[0].message);
-    if (req.employee.admin_type === "1") {
-      return res.status(400).send("Admin Do Not Checkin");
-    }
+    // if (req.employee.admin_type === "1") {
+    //   return res.status(400).send("Admin Do Not Checkin");
+    // }
 
     let org_data = await redis.redisGet(
       "CRM_ORGANISATIONS",
