@@ -7,10 +7,9 @@ const admin = require("../routes/admin_routes/admin");
 const error = require("../middlewares/error");
 const queue = require("express-queue");
 
-
 module.exports = (app) => {
   // Middleware setup
-  app.use(express.json()); 
+  app.use(express.json());
 
   // Route handlers
   app.get("/", async (req, res) => {
@@ -58,5 +57,4 @@ module.exports = (app) => {
       queuedLimit: -1,
     })
   );
-  
 };

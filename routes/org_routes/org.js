@@ -817,7 +817,7 @@ router.post(
       query["work_info.admin_type"] = { $in: ["2", "3", "4"] };
     } else if (roleName === "1") {
     } else {
-      return res.status(403).send("Access denied: Invalid role");
+      query["employee_id"] = req.employee.employee_id;
     }
 
     const projection = {
