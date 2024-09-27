@@ -364,12 +364,29 @@ async function calculate_working_minutes(attendance) {
     }
 
     console.log(totalTimeMinutes);
+    let newStatus;
+    if (totalTimeMinutes < 60) {
+      newStatus = "absent";
+    } else if (totalTimeMinutes < 420) {
+      // If it is less than 7 hours it should be half day present and half day absent
+      newStatus = "0.5 day present, 0.5 day absent";
+    } else if (totalTimeMinutes >= 480) {
+      // 8 hours or more
+      newStatus = "present";
+    } else {
+      newStatus = "absent";
+    }
 
     if (totalTimeMinutes > 0) {
-      await mongofunctions.find_one_and_update(
-        "ATTENDANCE",
+      await mongoFunctions.find_one_and_update("ATTENDANCE",
         { attendance_id: attendance_id },
-        { total_working_minutes: totalTimeMinutes }
+        {
+          $set: {
+            total_working_minutes: totalTimeMinutes,
+            attendance_status: newStatus,
+          },
+        },
+        { new: true } // This option returns the updated document
       );
     }
 

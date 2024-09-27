@@ -13,25 +13,34 @@ const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
 // const bcrypt=require('bcrypt');
 
+router.post(
+  "/error",
+  Async(async (req, res) => {
+    const error = req.validations.error;
+    // alertDev("error")
+    console.log(error);
 
-
-router.post("/error",Async(async(req,res)=>{
-  const error = req.validations.error;
-  // alertDev("error")
-  console.log(error);
-  
-  return res.send(error)
-
-}))
-router.post('/login',rateLimit(60,40),Async(async(req,res)=>{
-    data=req.body;
+    return res.send(error);
+  })
+);
+router.post(
+  "/login",
+  rateLimit(60, 40),
+  Async(async (req, res) => {
+    data = req.body;
     console.log(data);
     //validate data
-    var {error}=validations.emp_login(data);
-    if(error) return res.status(400).send(error.details[0].message);
-    const employee=await mongoFunctions.find_one('EMPLOYEE',{'basic_info.email':data.email.toLowerCase()});
-    if(!employee) return res.status(400).send('No Employee Found With The Given Email');
-    const validPassword=await bcrypt.compare_password(data.password,employee.password);
+    var { error } = validations.emp_login(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    const employee = await mongoFunctions.find_one("EMPLOYEE", {
+      "basic_info.email": data.email.toLowerCase(),
+    });
+    if (!employee)
+      return res.status(400).send("No Employee Found With The Given Email");
+    const validPassword = await bcrypt.compare_password(
+      data.password,
+      employee.password
+    );
     console.log(validPassword);
     console.log(employee.password);
     if (!validPassword) return res.status(400).send("Incorrect Password");
@@ -565,7 +574,8 @@ router.post(
         $push: {
           modified_by: {
             employee_id: req.employee.employee_id,
-            employee_name:req.employee.first_name+" "+req.employee.last_name,
+            employee_name:
+              req.employee.first_name + " " + req.employee.last_name,
             employee_email: req.employee.email,
             modifiedAt: new Date(),
             prevStatus: findId.status,
@@ -774,6 +784,7 @@ router.post(
             { attendance_id: today_record.attendance_id },
             {
               status: data.type,
+              attendance_status: "",
               $push: {
                 checkin: check_in_obj,
               },

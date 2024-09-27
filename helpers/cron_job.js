@@ -44,21 +44,21 @@ const updateAttendanceStatus = async () => {
           record.attendance_status === null ||
           record.attendance_status === ""
         ) {
-          let newStatus;
+          let newStatus = "absent";
 
-          const totalWorkingMinutes = record.total_working_minutes;
+          //   const totalWorkingMinutes = record.total_working_minutes;
 
-          if (totalWorkingMinutes < 60) {
-            newStatus = "absent";
-          } else if (totalWorkingMinutes < 420) {
-            // If it is less than 7 hours it should be half day present and half day absent
-            newStatus = "0.5 day present, 0.5 day absent";
-          } else if (totalWorkingMinutes >= 480) {
-            // 8 hours or more
-            newStatus = "present";
-          } else {
-            newStatus = "absent";
-          }
+          //   if (totalWorkingMinutes < 60) {
+          //     newStatus = "absent";
+          //   } else if (totalWorkingMinutes < 420) {
+          //     // If it is less than 7 hours it should be half day present and half day absent
+          //     newStatus = "0.5 day present, 0.5 day absent";
+          //   } else if (totalWorkingMinutes >= 480) {
+          //     // 8 hours or more
+          //     newStatus = "present";
+          //   } else {
+          //     newStatus = "absent";
+          //   }
 
           record.attendance_status = newStatus;
           return mongoFunctions.update_many(
