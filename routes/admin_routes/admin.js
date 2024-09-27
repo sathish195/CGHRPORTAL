@@ -566,6 +566,7 @@ router.post(
           $push: {
             modified_by: {
               employee_id: req.employee.employee_id,
+              employee_name:req.employee.first_name+" "+req.employee.last_name,
               employee_email: req.employee.email,
               modifiedAt: new Date(),
               prevStatus: findId.status,
@@ -605,6 +606,7 @@ router.post(
         project_status: data.project_status,
         created_by: {
           employee_id: req.employee.employee_id,
+          employee_name:req.employee.first_name+" "+req.employee.last_name,
           email: req.employee.email,
         },
       };
@@ -715,6 +717,7 @@ router.post(
           const newAssignTrack = {
             assigned_by: {
               employee_id: req.employee.employee_id,
+              employee_name:req.employee.first_name+" "+req.employee.last_name,
               employee_email: req.employee.email,
               date_time: new Date(),
             },
@@ -756,6 +759,7 @@ router.post(
           const newAssignTrack = {
             assigned_by: {
               employee_id: req.employee.employee_id,
+              employee_name:req.employee.first_name+" "+req.employee.last_name,
               employee_email: req.employee.email,
               date_time: new Date(),
             },
@@ -889,6 +893,7 @@ router.post(
           $push: {
             modified_by: {
               employee_id: req.employee.employee_id,
+              employee_name:req.employee.first_name+" "+req.employee.last_name,
               employee_email: req.employee.email,
               modifiedAt: new Date(),
               prevStatus: findId.status,
@@ -929,6 +934,7 @@ router.post(
         task_status: data.task_status,
         created_by: {
           employee_id: req.employee.employee_id,
+          employee_name:req.employee.first_name+" "+req.employee.last_name,
           email: req.employee.email,
         },
       };
@@ -983,6 +989,7 @@ router.post(
         $push: {
           modified_by: {
             employee_id: req.employee.employee_id,
+            employee_name:req.employee.first_name+" "+req.employee.last_name,
             employee_email: req.employee.email,
             modifiedAt: new Date(),
             prevStatus: findId.status,
