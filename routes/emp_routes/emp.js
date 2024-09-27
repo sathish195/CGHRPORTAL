@@ -565,6 +565,7 @@ router.post(
         $push: {
           modified_by: {
             employee_id: req.employee.employee_id,
+            employee_name:req.employee.first_name+" "+req.employee.last_name,
             employee_email: req.employee.email,
             modifiedAt: new Date(),
             prevStatus: findId.status,
