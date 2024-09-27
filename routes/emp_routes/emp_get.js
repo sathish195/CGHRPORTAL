@@ -10,6 +10,8 @@ const stats = require("../../helpers/stats");
 const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
+const multer = require("multer");
+const XLSX = require("xlsx");
 
 //get employee profile
 
@@ -354,5 +356,65 @@ router.post(
     );
 
     return res.status(200).send(attendance);
+  })
+);
+
+router.post(
+  "/add_emp_by_xl",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    try {
+      // Read the uploaded file
+      const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+      const sheetName = workbook.SheetNames[0]; 
+      const worksheet = workbook.Sheets[sheetName];
+
+      // Convert sheet to JSON
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      await mongoFunctions.insert_many_records("EMPLOYEE", jsonData);
+
+      res
+        .status(200)
+        .send("Data has been successfully uploaded to the database.");
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("An error occurred while processing the file.");
+    }
+  })
+);
+
+router.post(
+  "/download_xl_of_emp",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    try {
+      const data = await mongoFunctions.find("EMPLOYEE");
+
+      if (!data || data.length === 0) {
+        return res.status(404).send("No employee data found.");
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "buffer",
+      });
+
+      res.set({
+        "Content-Disposition": "attachment; filename=output.xlsx",
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      res.send(excelBuffer);
+    } catch (error) {
+      console.error("Error generating Excel file:", error);
+      res.status(500).send("Internal Server Error");
+    }
   })
 );

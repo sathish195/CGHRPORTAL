@@ -6,12 +6,8 @@ const functions = require("./functions");
 const updateAttendanceStatus = async () => {
   const attendanceRecords = await mongoFunctions.find("ATTENDANCE");
   const now = new Date();
-  const start_day = new Date(now.setDate(now.getDate() - 1));
-  start_day.setHours(0, 0, 0, 0);
-
-  const end_day = new Date(now.setDate(now.getDate()));
-  end_day.setHours(0, 0, 0, 0);
-  end_day.setMilliseconds(end_day.getMilliseconds() - 1);
+  const start_day = new Date(now.setHours(0, 0, 0, 0));
+  const end_day = new Date(now.setHours(23, 59, 59, 999));
   const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
     createdAt: {
       $gte: start_day,
@@ -109,7 +105,7 @@ const updateAttendanceStatus = async () => {
   }
 };
 cron.schedule(
-  "37 10 * * *",
+  "59 11 * * *",
   () => {
     updateAttendanceStatus();
     alertDev("running cron to update status");
