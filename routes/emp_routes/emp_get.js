@@ -333,7 +333,7 @@ router.post(
       const dayOfWeek = start.getDay();
       start.setDate(start.getDate() - dayOfWeek + 1);
       start.setHours(0, 0, 0, 0);
-      end.setDate(start.getDate() + 5);
+      end.setDate(start.getDate() + 6);
       end.setHours(23, 59, 59, 999);
       condition["createdAt"] = {
         $gte: start.toISOString(),
