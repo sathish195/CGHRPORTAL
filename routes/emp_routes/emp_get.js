@@ -278,10 +278,8 @@ router.post(
     let query = {
       employee_id: req.employee.employee_id,
       organisation_id: req.employee.organisation_id,
+      leave_status: "Pending",
     };
-    if (data.leave_status && data.leave_status.length < 1) {
-      query.leave_status ="Pending";
-    }
 
     // Optional fields
     if (data.leave_status && data.leave_status.length > 4) {
@@ -374,7 +372,6 @@ router.post(
       if (!data || data.length === 0) {
         return res.status(404).send("No employee data found.");
       }
-     
 
       const flattenedData = data;
       console.log(flattenedData);
@@ -383,22 +380,22 @@ router.post(
         "Organisation ID": data.organisation_id || "",
         "Organisation Name": data.organisation_name || "",
         "Employee ID": data.employee_id || "",
-        "password": data.password || "",
+        password: data.password || "",
         "First Name": data.basic_info?.first_name || "",
         "Last Name": data.basic_info?.last_name || "",
-        "nick_name":data.basic_info?.nick_name || "",
+        nick_name: data.basic_info?.nick_name || "",
         Email: data.basic_info?.email || "",
         Gender: data.personal_details?.gender || "",
         "Department ID": data.work_info?.department_id || "",
         "Department Name": data.work_info?.department_name || "",
-        "Admin_Type":data.work_info?.admin_type || "",
-        'Employment Type':data.work_info?.employment_type || "",
-        "employee_status":data.work_info?.employee_status || "",
-        "Designation_ID": data.work_info?.designation_id || "",
-        "Designation Name":data.work_info?.designation_name || "",
-        "source_of_hire":data.work_info?.source_of_hire || "",
-        "reporting_manager":data.work_info?.reporting_manager || "",
-        "date_of_join":data.work_info?.date_of_join || "",
+        Admin_Type: data.work_info?.admin_type || "",
+        "Employment Type": data.work_info?.employment_type || "",
+        employee_status: data.work_info?.employee_status || "",
+        Designation_ID: data.work_info?.designation_id || "",
+        "Designation Name": data.work_info?.designation_name || "",
+        source_of_hire: data.work_info?.source_of_hire || "",
+        reporting_manager: data.work_info?.reporting_manager || "",
+        date_of_join: data.work_info?.date_of_join || "",
         "Role ID": data.work_info?.role_id || "",
         "Role Name": data.work_info?.role_name || "",
         "Date of Join": data.work_info?.date_of_join || "",
