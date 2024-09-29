@@ -279,6 +279,10 @@ router.post(
       employee_id: req.employee.employee_id,
       organisation_id: req.employee.organisation_id,
     };
+    if (data.leave_status && data.leave_status.length < 1) {
+      query.leave_status ="Pending";
+    }
+
     // Optional fields
     if (data.leave_status && data.leave_status.length > 4) {
       query.leave_status = data.leave_status;
