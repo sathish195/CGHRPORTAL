@@ -38,6 +38,7 @@ router.post(
         fcm_token: 0,
         browserid: 0,
         last_ip: 0,
+        password: 0,
       }
     );
     let repo = await mongoFunctions.find_one(employee.collection, {

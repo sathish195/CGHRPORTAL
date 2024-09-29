@@ -200,12 +200,12 @@ function add_employee_by_admin(data) {
           "Employee ID can only contain uppercase letters and digits",
         "any.required": "Employee ID is required",
       }),
-    password: Joi.string()
-      .required()
-      .min(8)
-      .max(60)
-      .pattern(/(?=.*[A-Z])/, "uppercase") // At least one uppercase letter
-      .pattern(/(?=.*[@$!%*?&])/, "special"), //atleast one special character
+    password: Joi.string().allow(null, "").optional(),
+    // .required()
+    // .min(8)
+    // .max(60)
+    // .pattern(/(?=.*[A-Z])/, "uppercase") // At least one uppercase letter
+    // .pattern(/(?=.*[@$!%*?&])/, "special"), //atleast one special character
     email: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
