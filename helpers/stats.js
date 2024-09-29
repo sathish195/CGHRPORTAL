@@ -377,7 +377,7 @@ async function calculate_working_minutes(attendance) {
       newStatus = "absent";
     }
 
-    if (totalTimeMinutes > 0) {
+    if (totalTimeMinutes >= 0) {
       await mongoFunctions.find_one_and_update("ATTENDANCE",
         { attendance_id: attendance_id },
         {

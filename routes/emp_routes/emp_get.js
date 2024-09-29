@@ -360,32 +360,6 @@ router.post(
 );
 
 router.post(
-  "/add_emp_by_xl",
-  Auth,
-  slowDown,
-  Async(async (req, res) => {
-    try {
-      // Read the uploaded file
-      const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
-      const sheetName = workbook.SheetNames[0]; 
-      const worksheet = workbook.Sheets[sheetName];
-
-      // Convert sheet to JSON
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-      await mongoFunctions.insert_many_records("EMPLOYEE", jsonData);
-
-      res
-        .status(200)
-        .send("Data has been successfully uploaded to the database.");
-    } catch (error) {
-      console.error(error);
-      res.status(500).send("An error occurred while processing the file.");
-    }
-  })
-);
-
-router.post(
   "/download_xl_of_emp",
   Auth,
   slowDown,
@@ -396,22 +370,68 @@ router.post(
       if (!data || data.length === 0) {
         return res.status(404).send("No employee data found.");
       }
+     
 
-      const worksheet = XLSX.utils.json_to_sheet(data);
+      const flattenedData = data;
+      console.log(flattenedData);
+
+      const excelData = flattenedData.map((data) => ({
+        "Organisation ID": data.organisation_id || "",
+        "Organisation Name": data.organisation_name || "",
+        "Employee ID": data.employee_id || "",
+        "password": data.password || "",
+        "First Name": data.basic_info?.first_name || "",
+        "Last Name": data.basic_info?.last_name || "",
+        "nick_name":data.basic_info?.nick_name || "",
+        Email: data.basic_info?.email || "",
+        Gender: data.personal_details?.gender || "",
+        "Department ID": data.work_info?.department_id || "",
+        "Department Name": data.work_info?.department_name || "",
+        "Admin_Type":data.work_info?.admin_type || "",
+        'Employment Type':data.work_info?.employment_type || "",
+        "employee_status":data.work_info?.employee_status || "",
+        "Designation_ID": data.work_info?.designation_id || "",
+        "Designation Name":data.work_info?.designation_name || "",
+        "source_of_hire":data.work_info?.source_of_hire || "",
+        "reporting_manager":data.work_info?.reporting_manager || "",
+        "date_of_join":data.work_info?.date_of_join || "",
+        "Role ID": data.work_info?.role_id || "",
+        "Role Name": data.work_info?.role_name || "",
+        "Date of Join": data.work_info?.date_of_join || "",
+        "Mobile Number": data.contact_details?.personal_mobile_number || "",
+        "Work Phone Number": data.contact_details?.work_phone_number || "",
+        "Date of Birth": data.personal_details?.date_of_birth || "",
+        "Marital Status": data.personal_details?.marital_status || "",
+        "About Me": data.personal_details?.about_me || "",
+        UAN: data.identity_info?.uan || "",
+        PAN: data.identity_info?.pan || "",
+        Aadhaar: data.identity_info?.aadhaar || "",
+        Passport: data.identity_info?.passport || "",
+        "Present Address": data.contact_details?.present_address || "",
+        "Permanent Address": data.contact_details?.permanent_address || "",
+        Expertise: data.personal_details?.expertise || "",
+        "Leave Information":
+          data.leaves?.map((leave) => leave.leave_name).join(", ") || "",
+      }));
+
+      // Optionally filter out any records that are still not properly structured
+      const validExcelData = excelData.filter(
+        (record) => record["Employee ID"]
+      ); // Adjust filtering criteria as necessary
+
+      const worksheet = XLSX.utils.json_to_sheet(validExcelData);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "buffer",
-      });
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+
+      const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
 
       res.set({
-        "Content-Disposition": "attachment; filename=output.xlsx",
+        "Content-Disposition": "attachment; filename=employees.xlsx",
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
 
-      res.send(excelBuffer);
+      res.send(buffer);
     } catch (error) {
       console.error("Error generating Excel file:", error);
       res.status(500).send("Internal Server Error");
