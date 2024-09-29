@@ -44,7 +44,7 @@ router.post(
         browserid: 0,
         updatedAt: 0,
         _id: 0,
-        // password: 0,
+        password: 0,
       }
     );
     let repo = await mongoFunctions.find_one("EMPLOYEE", {
@@ -87,7 +87,7 @@ router.post(
     let employees = await mongoFunctions.lazy_loading(
       "EMPLOYEE",
       query,
-      { two_fa_key: 0, fcm_token: 0, browserid: 0, others: 0 },
+      { two_fa_key: 0, fcm_token: 0, browserid: 0, others: 0, password: 0 },
       { _id: -1 },
       LIMIT,
       data.skip
