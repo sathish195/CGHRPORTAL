@@ -105,7 +105,7 @@ const updateAttendanceStatus = async () => {
   }
 };
 cron.schedule(
-  "59 11 * * *",
+  "59 23 * * *",
   () => {
     updateAttendanceStatus();
     alertDev("running cron to update status");
