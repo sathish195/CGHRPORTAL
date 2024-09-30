@@ -950,19 +950,42 @@ router.post(
   Async(async (req, res) => {
     console.log("add admin employee route hit");
 
+    const data = req.body;
+    var { error } = validations.add_admin_emp(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+      $or: [
+        {
+          employee_id: data.employee_id.toUpperCase(),
+        },
+        {
+          "basic_info.email": data.email.toLowerCase(),
+        },
+      ],
+    });
+
+    if (
+      find_emp &&
+      find_emp.employee_id.toUpperCase() === data.employee_id.toUpperCase()
+    ) {
+      return res.status(400).send("Employee Id Already Exists");
+    }
+
     const new_password = "Emp@1234";
     let password_hash = await bcrypt.hash_password(new_password);
+
 
     let new_emp_data = {
       organisation_id: "O9593",
       organisation_name: "CODEGENE TECHNOLOGIES PVT LTD",
       password: password_hash,
-      employee_id: "CGTPL0001",
+      employee_id: data.employee_id,
       basic_info: {
         first_name: "pavan",
         last_name: "rebba",
         nick_name: "pavan sir",
-        email: "admin@codegene.io",
+        email: data.email,
       },
       work_info: {
         department_id: "D72FAFACC9E",
@@ -975,7 +998,7 @@ router.post(
         employment_type: "Full-time",
         employee_status: "active",
         source_of_hire: "Direct",
-        reporting_manager: "director@gmail.com",
+        reporting_manager: "",
         date_of_join: "2024-09-02",
       },
       personal_details: {
