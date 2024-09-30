@@ -381,43 +381,104 @@ router.post(
 
       console.log(data);
 
-      const excelData = data.map((data) => ({
-        organisation_id: data.organisation_id || "",
-        organisation_name: data.organisation_name || "",
-        employee_id: data.employee_id || "",
-        password: data.password || "",
-        first_name: data.basic_info?.first_name || "",
-        last_name: data.basic_info?.last_name || "",
-        nick_name: data.basic_info?.nick_name || "",
-        email: data.basic_info?.email || "",
-        gender: data.personal_details?.gender || "",
-        department_id: data.work_info?.department_id || "",
-        department_name: data.work_info?.department_name || "",
-        admin_type: data.work_info?.admin_type || "",
-        employment_type: data.work_info?.employment_type || "",
-        employee_status: data.work_info?.employee_status || "",
-        designation_id: data.work_info?.designation_id || "",
-        designation_name: data.work_info?.designation_name || "",
-        source_of_hire: data.work_info?.source_of_hire || "",
-        reporting_manager: data.work_info?.reporting_manager || "",
-        date_of_join: data.work_info?.date_of_join || "",
-        role_id: data.work_info?.role_id || "",
-        role_name: data.work_info?.role_name || "",
-        date_of_join: data.work_info?.date_of_join || "",
-        mobile_number: data.contact_details?.personal_mobile_number || "",
-        work_phone_number: data.contact_details?.work_phone_number || "",
-        date_of_birth: data.personal_details?.date_of_birth || "",
-        marital_status: data.personal_details?.marital_status || "",
-        about_me: data.personal_details?.about_me || "",
-        uan: data.identity_info?.uan || "",
-        pan: data.identity_info?.pan || "",
-        aadhaar: data.identity_info?.aadhaar || "",
-        passport: data.identity_info?.passport || "",
-        present_address: data.contact_details?.present_address || "",
-        permanent_address: data.contact_details?.permanent_address || "",
-        expertise: data.personal_details?.expertise || "",
-        // Leaves: data.leaves?.map((leave) => leave.leave_name).join(", ") || "",
-      }));
+      const excelData = data.map((employee) => {
+        const educationDetails = employee.educational_details || [];
+
+        // Format educational details
+        const educationString = educationDetails
+          .map(
+            (detail) =>
+              `degree: ${detail.degree || ""}, specialization: ${
+                detail.specialization || ""
+              }, institute_name: ${
+                detail.institute_name || ""
+              }, year_of_completion: ${detail.year_of_completion || ""}`
+          )
+          .join(" | ");
+
+        const workExperience = employee.work_experience || [];
+
+        // Format educational details
+        const workExperienceString = workExperience
+          .map(
+            (detail) =>
+              `company_name: ${detail.company_name || ""}, from_date: ${
+                detail.from_date || ""
+              }, to_date: ${detail.to_date || ""}, job_description: ${
+                detail.job_description || ""
+              }`
+          )
+          .join(" | ");
+        const dependentDetails = employee.dependent_details || [];
+
+        // Format educational details
+        const dependentDetailsString = dependentDetails
+          .map(
+            (detail) =>
+              `name: ${detail.name || ""}, relation: ${
+                detail.relation || ""
+              }, dependent_mobile_number: ${
+                detail.dependent_mobile_number || ""
+              }`
+          )
+          .join(" | ");
+        const leaveData = employee.leaves || [];
+
+        // Format educational details
+        const leaveDataString = leaveData
+          .map(
+            (detail) =>
+              `leave_id: ${detail.leave_id || ""}, leave_name: ${
+                detail.leave_name || ""
+              }, total_leaves: ${
+                detail.total_leaves || ""
+              }, remaining_leaves: ${detail.remaining_leaves || ""}`
+          )
+          .join(" | ");
+
+        return {
+          organisation_id: employee.organisation_id || "",
+          organisation_name: employee.organisation_name || "",
+          employee_id: employee.employee_id || "",
+          password: employee.password || "",
+          first_name: employee.basic_info?.first_name || "",
+          last_name: employee.basic_info?.last_name || "",
+          nick_name: employee.basic_info?.nick_name || "",
+          email: employee.basic_info?.email || "",
+          gender: employee.personal_details?.gender || "",
+          department_id: employee.work_info?.department_id || "",
+          department_name: employee.work_info?.department_name || "",
+          admin_type: employee.work_info?.admin_type || "",
+          employment_type: employee.work_info?.employment_type || "",
+          employee_status: employee.work_info?.employee_status || "",
+          designation_id: employee.work_info?.designation_id || "",
+          designation_name: employee.work_info?.designation_name || "",
+          source_of_hire: employee.work_info?.source_of_hire || "",
+          reporting_manager: employee.work_info?.reporting_manager || "",
+          date_of_join: employee.work_info?.date_of_join || "",
+          role_id: employee.work_info?.role_id || "",
+          role_name: employee.work_info?.role_name || "",
+          mobile_number: employee.contact_details?.personal_mobile_number || "",
+          work_phone_number: employee.contact_details?.work_phone_number || "",
+          date_of_birth: employee.personal_details?.date_of_birth || "",
+          marital_status: employee.personal_details?.marital_status || "",
+          about_me: employee.personal_details?.about_me || "",
+          uan: employee.identity_info?.uan || "",
+          pan: employee.identity_info?.pan || "",
+          aadhaar: employee.identity_info?.aadhaar || "",
+          passport: employee.identity_info?.passport || "",
+          present_address: employee.contact_details?.present_address || "",
+          personal_email_address:
+            employee.contact_details?.personal_email_address || "",
+          seating_location: employee.contact_details?.seating_location || "",
+          permanent_address: employee.contact_details?.permanent_address || "",
+          expertise: employee.personal_details?.expertise || "",
+          educational_details: educationString || "", // Include formatted education details
+          work_experience: workExperienceString || "",
+          dependent_details: dependentDetailsString || "",
+          leaves: leaveDataString || "",
+        };
+      });
 
       const validExcelData = excelData.filter(
         (record) => record["employee_id"]
@@ -480,13 +541,6 @@ router.post(
       }
 
       for (const data of jsonData) {
-        // Validate each row of data
-        const { error } = validations.add_employee_by_admin(data);
-        if (error)
-          return res
-            .status(400)
-            .send(`Validation error: ${error.details[0].message}`);
-
         let department_data = org_data.departments.find(
           (e) => e.department_id === data.department_id
         );
@@ -524,15 +578,6 @@ router.post(
           }
         }
 
-        if (
-          !Array.isArray(data.educational_details) ||
-          data.educational_details.length === 0
-        ) {
-          return res
-            .status(400)
-            .send("Educational Details Must be Filled in Excel file.");
-        }
-
         // Check for existing employee
         let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
           $or: [
@@ -541,10 +586,19 @@ router.post(
           ],
         });
 
-        if (find_emp) {
-          return res
-            .status(400)
-            .send("Employee ID or Email already exists in the database.");
+        if (
+          find_emp &&
+          find_emp.employee_id.toUpperCase() === data.employee_id.toUpperCase()
+        ) {
+          return res.status(400).send("Employee Id Already Exists");
+        }
+        if (
+          find_emp &&
+          find_emp.basic_info.email &&
+          find_emp.basic_info.email.toLowerCase() ===
+            data.email.toLowerCase().trim()
+        ) {
+          return res.status(400).send("Email Id Already Exists");
         }
 
         // Create new employee record
@@ -590,9 +644,14 @@ router.post(
             present_address: data.present_address,
             permanent_address: data.permanent_address,
           },
-          work_experience: data.work_experience,
-          educational_details: data.educational_details,
-          dependent_details: data.dependent_details,
+          work_experience: stats.parseWorkExperience(data.work_experience),
+          educational_details: stats.parseEducationalDetails(
+            data.educational_details
+          ),
+          dependent_details: stats.parseDependentDetails(
+            data.dependent_details
+          ),
+
           leaves:
             role_data.leaves?.map((e) => ({
               ...e,
@@ -607,6 +666,7 @@ router.post(
           "EMPLOYEE",
           new_emp_data
         );
+        console.log(new_emp);
         if (!new_emp) {
           return res.status(400).send("Failed To Add New Employee.");
         }
@@ -625,7 +685,6 @@ router.post(
 router.post(
   "/today_attendance",
   Auth,
-  slowDown,
   Async(async (req, res) => {
     const employee = await mongoFunctions.find_one("EMPLOYEE", {
       organisation_id: req.employee.organisation_id,

@@ -378,7 +378,8 @@ async function calculate_working_minutes(attendance) {
     }
 
     if (totalTimeMinutes >= 0) {
-      await mongoFunctions.find_one_and_update("ATTENDANCE",
+      await mongoFunctions.find_one_and_update(
+        "ATTENDANCE",
         { attendance_id: attendance_id },
         {
           $set: {
@@ -395,10 +396,65 @@ async function calculate_working_minutes(attendance) {
   return false;
 }
 
+// Helper function to parse dependent_details
+function parseDependentDetails(details) {
+  const regex =
+    /name:\s*(.*?),\s*relation:\s*(.*?),\s*dependent_mobile_number:\s*(\d+)/g;
+  const result = [];
+  let match;
+
+  while ((match = regex.exec(details)) !== null) {
+    result.push({
+      name: match[1].trim(),
+      relation: match[2].trim(),
+      dependent_mobile_number: match[3].trim(),
+    });
+  }
+  return result;
+}
+
+// Helper function to parse educational_details
+function parseEducationalDetails(details) {
+  const regex =
+    /degree:\s*(.*?),\s*specialization:\s*(.*?),\s*institute_name:\s*(.*?),\s*year_of_completion:\s*(\d{4})/;
+  const match = regex.exec(details);
+  if (match) {
+    return {
+      degree: match[1].trim(),
+      specialization: match[2].trim(),
+      institute_name: match[3].trim(),
+      year_of_completion: match[4].trim(),
+    };
+  }
+  return null;
+}
+
+// Helper function to parse work_experience
+function parseWorkExperience(details) {
+  const regex =
+    /position:\s*(.*?),\s*company:\s*(.*?),\s*duration:\s*(.*?)(?=\s*position:|\s*$)/g;
+  const result = [];
+  let match;
+
+  while ((match = regex.exec(details)) !== null) {
+    result.push({
+      position: match[1].trim(),
+      company: match[2].trim(),
+      duration: match[3].trim(),
+    });
+  }
+  return result;
+}
+
+
+
 module.exports = {
   recent_hires,
   add_stats,
   update_stats,
   employees_with_birthday_today,
   calculate_working_minutes,
+  parseDependentDetails,
+  parseEducationalDetails,
+  parseWorkExperience,
 };
