@@ -368,7 +368,12 @@ router.post(
   slowDown,
   Async(async (req, res) => {
     try {
-      const data = await mongoFunctions.find("EMPLOYEE");
+      const data = await mongoFunctions.find(
+        "EMPLOYEE",
+        { organisation_id: req.employee.organisation_id },
+        { _id: -1 },
+        { _id: 0, __v: 0, "images.dp": 0 }
+      );
 
       if (!data || data.length === 0) {
         return res.status(404).send("No employee data found.");
@@ -377,48 +382,46 @@ router.post(
       console.log(data);
 
       const excelData = data.map((data) => ({
-        "Organisation ID": data.organisation_id || "",
-        "Organisation Name": data.organisation_name || "",
-        "Employee ID": data.employee_id || "",
+        organisation_id: data.organisation_id || "",
+        organisation_name: data.organisation_name || "",
+        employee_id: data.employee_id || "",
         password: data.password || "",
-        "First Name": data.basic_info?.first_name || "",
-        "Last Name": data.basic_info?.last_name || "",
+        first_name: data.basic_info?.first_name || "",
+        last_name: data.basic_info?.last_name || "",
         nick_name: data.basic_info?.nick_name || "",
-        Email: data.basic_info?.email || "",
-        Gender: data.personal_details?.gender || "",
-        "Department ID": data.work_info?.department_id || "",
-        "Department Name": data.work_info?.department_name || "",
-        Admin_Type: data.work_info?.admin_type || "",
-        "Employment Type": data.work_info?.employment_type || "",
+        email: data.basic_info?.email || "",
+        gender: data.personal_details?.gender || "",
+        department_id: data.work_info?.department_id || "",
+        department_name: data.work_info?.department_name || "",
+        admin_type: data.work_info?.admin_type || "",
+        employment_type: data.work_info?.employment_type || "",
         employee_status: data.work_info?.employee_status || "",
-        Designation_ID: data.work_info?.designation_id || "",
-        "Designation Name": data.work_info?.designation_name || "",
+        designation_id: data.work_info?.designation_id || "",
+        designation_name: data.work_info?.designation_name || "",
         source_of_hire: data.work_info?.source_of_hire || "",
         reporting_manager: data.work_info?.reporting_manager || "",
         date_of_join: data.work_info?.date_of_join || "",
-        "Role ID": data.work_info?.role_id || "",
-        "Role Name": data.work_info?.role_name || "",
-        "Date of Join": data.work_info?.date_of_join || "",
-        "Mobile Number": data.contact_details?.personal_mobile_number || "",
-        "Work Phone Number": data.contact_details?.work_phone_number || "",
-        "Date of Birth": data.personal_details?.date_of_birth || "",
-        "Marital Status": data.personal_details?.marital_status || "",
-        "About Me": data.personal_details?.about_me || "",
-        UAN: data.identity_info?.uan || "",
-        PAN: data.identity_info?.pan || "",
-        Aadhaar: data.identity_info?.aadhaar || "",
-        Passport: data.identity_info?.passport || "",
-        "Present Address": data.contact_details?.present_address || "",
-        "Permanent Address": data.contact_details?.permanent_address || "",
-        Expertise: data.personal_details?.expertise || "",
-        "Leave Information":
-          data.leaves?.map((leave) => leave.leave_name).join(", ") || "",
+        role_id: data.work_info?.role_id || "",
+        role_name: data.work_info?.role_name || "",
+        date_of_join: data.work_info?.date_of_join || "",
+        mobile_number: data.contact_details?.personal_mobile_number || "",
+        work_phone_number: data.contact_details?.work_phone_number || "",
+        date_of_birth: data.personal_details?.date_of_birth || "",
+        marital_status: data.personal_details?.marital_status || "",
+        about_me: data.personal_details?.about_me || "",
+        uan: data.identity_info?.uan || "",
+        pan: data.identity_info?.pan || "",
+        aadhaar: data.identity_info?.aadhaar || "",
+        passport: data.identity_info?.passport || "",
+        present_address: data.contact_details?.present_address || "",
+        permanent_address: data.contact_details?.permanent_address || "",
+        expertise: data.personal_details?.expertise || "",
+        // Leaves: data.leaves?.map((leave) => leave.leave_name).join(", ") || "",
       }));
 
-      // Optionally filter out any records that are still not properly structured
       const validExcelData = excelData.filter(
-        (record) => record["Employee ID"]
-      ); // Adjust filtering criteria as necessary
+        (record) => record["employee_id"]
+      );
 
       const worksheet = XLSX.utils.json_to_sheet(validExcelData);
       const workbook = XLSX.utils.book_new();
@@ -437,5 +440,215 @@ router.post(
       console.error("Error generating Excel file:", error);
       res.status(500).send("Internal Server Error");
     }
+  })
+);
+
+const upload = multer({ dest: "uploads/" });
+
+router.post(
+  "/add_emp_from_xl",
+  Auth,
+  upload.single("Employees"),
+  Async(async (req, res) => {
+    try {
+      console.log("Uploaded file:", req.file.filename);
+
+      if (!req.file) {
+        return res.status(400).send("No File Uploaded.");
+      }
+      console.log(req.file);
+
+      // Read the uploaded Excel file
+      const workbook = XLSX.readFile(req.file.path);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      console.log(jsonData);
+
+      // Check if the user is authorized
+      const org_data = await redis.redisGet(
+        "CRM_ORGANISATIONS",
+        req.employee.organisation_id,
+        true
+      );
+      if (!org_data) return res.status(400).send("Access Denied..!");
+
+      const admin_types = ["1", "2"];
+      if (!admin_types.includes(req.employee.admin_type)) {
+        return res
+          .status(403)
+          .send("Only Admin Or Manager Can Add New Employee");
+      }
+
+      for (const data of jsonData) {
+        // Validate each row of data
+        const { error } = validations.add_employee_by_admin(data);
+        if (error)
+          return res
+            .status(400)
+            .send(`Validation error: ${error.details[0].message}`);
+
+        let department_data = org_data.departments.find(
+          (e) => e.department_id === data.department_id
+        );
+        if (!department_data)
+          return res.status(400).send("Invalid Department ID in Excel file.");
+
+        let role_data = org_data.roles.find((e) => e.role_id === data.role_id);
+        if (!role_data)
+          return res.status(400).send("Invalid Role ID in Excel file.");
+
+        let designation_data = org_data.designations.find(
+          (e) => e.designation_id === data.designation_id
+        );
+        if (!designation_data)
+          return res.status(400).send("Invalid Designation ID in Excel file.");
+
+        const employees = await mongoFunctions.find("EMPLOYEE", {
+          organisation_id: req.employee.organisation_id,
+        });
+
+        if (employees.length < 2 && role_data.admin_type !== "2") {
+          return res
+            .status(400)
+            .send(
+              "Director Must Have Added At Least One Manager Before Adding Another Employee."
+            );
+        }
+
+        // Manager restrictions
+        if (req.employee.admin_type === "2" && role_data.admin_type === "2") {
+          if (data.role_id === role_data.role_id) {
+            return res
+              .status(400)
+              .send("A Manager Cannot Add Another Manager.");
+          }
+        }
+
+        if (
+          !Array.isArray(data.educational_details) ||
+          data.educational_details.length === 0
+        ) {
+          return res
+            .status(400)
+            .send("Educational Details Must be Filled in Excel file.");
+        }
+
+        // Check for existing employee
+        let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+          $or: [
+            { employee_id: data.employee_id.toUpperCase() },
+            { "basic_info.email": data.email.toLowerCase() },
+          ],
+        });
+
+        if (find_emp) {
+          return res
+            .status(400)
+            .send("Employee ID or Email already exists in the database.");
+        }
+
+        // Create new employee record
+        const new_password = data.password;
+        const password_hash = await bcrypt.hash_password(new_password);
+        const new_emp_data = {
+          organisation_id: org_data.organisation_id,
+          organisation_name: org_data.organisation_name,
+          employee_id: data.employee_id.toUpperCase(),
+          password: password_hash,
+          basic_info: {
+            first_name: data.first_name,
+            last_name: data.last_name,
+            nick_name: data.nick_name,
+            email: data.email.toLowerCase(),
+          },
+          work_info: {
+            department_id: data.department_id,
+            department_name: department_data.department_name,
+            role_id: data.role_id,
+            role_name: role_data.role_name,
+            admin_type: role_data.admin_type,
+            designation_id: data.designation_id,
+            designation_name: designation_data.designation_name,
+            employment_type: data.employment_type,
+            employee_status: data.employee_status,
+            source_of_hire: data.source_of_hire,
+            reporting_manager: data.reporting_manager,
+            date_of_join: data.date_of_join,
+          },
+          personal_details: {
+            date_of_birth: data.date_of_birth,
+            expertise: data.expertise,
+            gender: data.gender,
+            marital_status: data.marital_status,
+            about_me: data.about_me,
+          },
+          identity_info: data.identity_info,
+          contact_details: {
+            mobile_number: data.mobile_number,
+            personal_email_address: data.personal_email_address.toLowerCase(),
+            seating_location: data.seating_location,
+            present_address: data.present_address,
+            permanent_address: data.permanent_address,
+          },
+          work_experience: data.work_experience,
+          educational_details: data.educational_details,
+          dependent_details: data.dependent_details,
+          leaves:
+            role_data.leaves?.map((e) => ({
+              ...e,
+              used_leaves: 0,
+              remaining_leaves: e.total_leaves,
+            })) || [],
+          images: {},
+          files: {},
+        };
+
+        const new_emp = await mongoFunctions.create_new_record(
+          "EMPLOYEE",
+          new_emp_data
+        );
+        if (!new_emp) {
+          return res.status(400).send("Failed To Add New Employee.");
+        }
+      }
+
+      return res.status(200).send({
+        success: "Employees Added Successfully..!!",
+      });
+    } catch (error) {
+      console.error("Error adding employees from Excel:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  })
+);
+
+router.post(
+  "/today_attendance",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    const employee = await mongoFunctions.find_one("EMPLOYEE", {
+      organisation_id: req.employee.organisation_id,
+      employee_id: req.employee.employee_id,
+    });
+    if (!employee) {
+      return res.status(400).send("Employee Not Found");
+    }
+    const now = new Date();
+    const start_day = new Date(now.setHours(0, 0, 0, 0));
+    const end_day = new Date(now.setHours(23, 59, 59, 999));
+    let today_attendance = await mongoFunctions.find_one(
+      "ATTENDANCE",
+      {
+        organisation_id: req.employee.organisation_id,
+        employee_id: req.employee.employee_id,
+        createdAt: {
+          $gte: start_day,
+          $lte: end_day,
+        },
+      },
+      { _id: 0, __v: 0 }
+    );
+    return res.status(200).send(today_attendance);
   })
 );
