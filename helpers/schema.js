@@ -619,6 +619,22 @@ function get_emp_attendance_by_admin(data) {
   });
   return schema.validate(data);
 }
+function add_admin_emp(data) {
+  const schema = Joi.object({
+    employee_id: Joi.string().required().min(5).max(15),
+    email: Joi.string()
+      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+      .trim()
+      .min(10)
+      .max(55)
+      .email()
+      .messages({
+        "string.pattern.base": "Email Should be valid mail",
+      })
+      .required(),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -655,4 +671,5 @@ module.exports = {
   checkin_checkout_update,
   get_emp_attendance_by_filter,
   get_emp_attendance_by_admin,
+  add_admin_emp,
 };

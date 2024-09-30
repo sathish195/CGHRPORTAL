@@ -374,10 +374,9 @@ router.post(
         return res.status(404).send("No employee data found.");
       }
 
-      const flattenedData = data;
-      console.log(flattenedData);
+      console.log(data);
 
-      const excelData = flattenedData.map((data) => ({
+      const excelData = data.map((data) => ({
         "Organisation ID": data.organisation_id || "",
         "Organisation Name": data.organisation_name || "",
         "Employee ID": data.employee_id || "",
