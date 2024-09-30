@@ -946,7 +946,7 @@ router.post(
 );
 
 router.post(
-  "/add_admin_employee",
+  "/add_admin",
   Async(async (req, res) => {
     console.log("add admin employee route hit");
 
@@ -972,9 +972,8 @@ router.post(
       return res.status(400).send("Employee Id Already Exists");
     }
 
-    const new_password = "Emp@1234";
+    const new_password = "Admin@1234";
     let password_hash = await bcrypt.hash_password(new_password);
-
 
     let new_emp_data = {
       organisation_id: "O9593",
@@ -1024,26 +1023,7 @@ router.post(
       work_experience: [],
       educational_details: [],
       dependent_details: [],
-      leaves: [
-        {
-          leave_id: "L43A7B58B",
-          leave_name: "casual leave",
-          total_leaves: 5,
-          remaining_leaves: 9,
-        },
-        {
-          leave_id: "L9CA10A6F",
-          leave_name: "sick leave",
-          total_leaves: 6,
-          remaining_leaves: 5,
-        },
-        {
-          leave_id: "L943CC97E",
-          leave_name: "others",
-          total_leaves: 5,
-          remaining_leaves: 5,
-        },
-      ],
+      leaves: [],
 
       images: {},
       files: {},
