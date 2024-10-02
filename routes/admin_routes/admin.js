@@ -597,6 +597,7 @@ router.post(
     } else {
       // Check if project name already exists
       const findProject = await mongoFunctions.find_one("PROJECTS", {
+        organisation_id: req.employee.organisation_id,
         project_name: data.project_name.toLowerCase(),
       });
 
