@@ -10,7 +10,7 @@ const updateAttendanceStatus = async () => {
   const end_day = new Date(now.setHours(23, 59, 59, 999));
   const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
     createdAt: {
-      $gte: start_day,
+      $gt: start_day,
       $lte: end_day,
     },
   });

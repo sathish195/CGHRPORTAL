@@ -748,6 +748,7 @@ router.post(
     const query = {
       organisation_id: req.employee.organisation_id,
       employee_id: { $ne: req.employee.employee_id },
+      "work_info.employee_status": { $regex: /^active$/i },
     };
     if (roleName === "2") {
       query["work_info.admin_type"] = { $in: ["3", "4"] };
@@ -812,6 +813,7 @@ router.post(
 
     const query = {
       organisation_id: req.employee.organisation_id,
+      "work_info.employee_status": { $regex: /^active$/i },
     };
     if (roleName === "2") {
       query["work_info.admin_type"] = { $in: ["2", "3", "4"] };
@@ -874,6 +876,7 @@ router.post(
     const query = {
       organisation_id: req.employee.organisation_id,
       employee_id: { $ne: req.employee.employee_id },
+      "work_info.employee_status": { $regex: /^active$/i },
     };
 
     if (roleName === "1") {
