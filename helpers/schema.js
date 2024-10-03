@@ -158,12 +158,13 @@ const validateDates = (value, helpers) => {
 };
 function add_employee_by_admin(data) {
   const work_experience_obj = Joi.object({
-    company_name: Joi.string().min(3).max(30).required(),
-    job_title: Joi.string().min(2).max(25).required(),
+    company_name: Joi.string().trim().min(3).max(30).required(),
+    job_title: Joi.string().trim().min(2).max(25).required(),
     from_date: Joi.date().required(),
     to_date: Joi.date().required(),
     job_description: Joi.string()
       .regex(/^\S.*\S$/)
+      .trim()
       .min(5)
       .max(100)
       .pattern(/^[A-Za-z0-9\s.,-]+$/, "valid characters")
@@ -176,18 +177,19 @@ function add_employee_by_admin(data) {
   }).custom(validateDates, "date comparison validation");
   const educational_details_obj = Joi.object({
     institute_name: Joi.string().trim().min(2).max(50).required(),
-    degree: Joi.string().min(3).max(15).required(),
-    specialization: Joi.string().min(2).max(30).required(),
+    degree: Joi.string().trim().min(3).max(15).required(),
+    specialization: Joi.string().trim().min(2).max(30).required(),
     year_of_completion: Joi.number().required(),
   });
   const dependent_details_obj = Joi.object({
-    name: Joi.string(),
-    relation: Joi.string(),
-    dependent_mobile_number: Joi.string(),
+    name: Joi.string().trim(),
+    relation: Joi.string().trim(),
+    dependent_mobile_number: Joi.string().trim(),
   });
   const schema = Joi.object({
-    organisation_id: Joi.string().min(15).max(17).required(),
+    organisation_id: Joi.string().trim().min(15).max(17).required(),
     employee_id: Joi.string()
+      .trim()
       .min(5)
       .max(10)
       .regex(/^[A-Z0-9]+$/)
@@ -200,7 +202,7 @@ function add_employee_by_admin(data) {
           "Employee ID can only contain uppercase letters and digits",
         "any.required": "Employee ID is required",
       }),
-    password: Joi.string().allow(null, "").optional(),
+    password: Joi.string().trim().allow(null, "").optional(),
     // .required()
     // .min(8)
     // .max(60)
@@ -216,20 +218,21 @@ function add_employee_by_admin(data) {
         "string.pattern.base": "Email Should be valid mail",
       })
       .required(),
-    first_name: Joi.string().min(3).max(50).required(),
-    last_name: Joi.string().min(3).max(50).required(),
-    nick_name: Joi.string().max(15).allow(null, "").optional(),
-    department_id: Joi.string().min(3).max(15).required(),
-    role_id: Joi.string().min(3).max(15).required(),
-    designation_id: Joi.string().min(3).max(15).required(),
-    employment_type: Joi.string().min(3).max(15).required(),
+    first_name: Joi.string().trim().min(3).max(50).required(),
+    last_name: Joi.string().trim().min(3).max(50).required(),
+    nick_name: Joi.string().trim().max(15).allow(null, "").optional(),
+    department_id: Joi.string().trim().min(3).max(15).required(),
+    role_id: Joi.string().trim().min(3).max(15).required(),
+    designation_id: Joi.string().trim().min(3).max(15).required(),
+    employment_type: Joi.string().trim().min(3).max(15).required(),
     employee_status: Joi.string()
       .valid("active", "disable", "terminated")
+      .trim()
       .min(5)
       .max(15)
       .required(),
-    source_of_hire: Joi.string().min(3).max(15).required(),
-    reporting_manager: Joi.string().required(),
+    source_of_hire: Joi.string().trim().min(3).max(15).required(),
+    reporting_manager: Joi.string().trim().required(),
     date_of_join: Joi.date().required(),
 
     date_of_birth: Joi.date().required(),
@@ -238,12 +241,15 @@ function add_employee_by_admin(data) {
     //   .message("Date must be in DDMMYYYY format")
     //   .required()
     //   .custom(validate_dob),
-    expertise: Joi.string().allow(null, "").optional(),
-    gender: Joi.string().valid("male", "female", "others").required(),
-    marital_status: Joi.string().valid("married", "unmarried").required(),
-    about_me: Joi.string().allow(null, "").optional().trim(),
+    expertise: Joi.string().trim().allow(null, "").optional(),
+    gender: Joi.string().valid("male", "female", "others").trim().required(),
+    marital_status: Joi.string()
+      .valid("married", "unmarried")
+      .trim()
+      .required(),
+    about_me: Joi.string().trim().allow(null, "").optional().trim(),
     identity_info: Joi.object().min(2).required(),
-    mobile_number: Joi.string().allow(null, "").optional(),
+    mobile_number: Joi.string().trim().allow(null, "").optional(),
     // mobile_number: Joi.string().min(10).max(10).required(),
     personal_email_address: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
@@ -255,8 +261,9 @@ function add_employee_by_admin(data) {
         "string.pattern.base": "Email Should be valid mail",
       })
       .required(),
-    seating_location: Joi.string().allow(null, "").optional(),
+    seating_location: Joi.string().trim().allow(null, "").optional(),
     present_address: Joi.string()
+      .trim()
       .min(10)
       .max(100)
       .pattern(/^[A-Za-z0-9\s.,/()-]+$/, "valid characters")
@@ -264,9 +271,9 @@ function add_employee_by_admin(data) {
         "string.pattern.base":
           "present address can only contain letters, numbers, spaces, periods, commas, and hyphens.",
       })
-      .required()
-      .trim(),
+      .required(),
     permanent_address: Joi.string()
+      .trim()
       .min(10)
       .max(100)
       .pattern(/^[A-Za-z0-9\s.,/()-]+$/, "valid characters")
@@ -274,8 +281,7 @@ function add_employee_by_admin(data) {
         "string.pattern.base":
           "permanent address can only contain letters, numbers, spaces, periods, commas, and hyphens.",
       })
-      .required()
-      .trim(),
+      .required(),
     work_experience: Joi.array().items(work_experience_obj).required(),
     educational_details: Joi.array().items(educational_details_obj).required(),
     dependent_details: Joi.array().items(dependent_details_obj).required(),

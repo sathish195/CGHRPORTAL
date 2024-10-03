@@ -314,8 +314,9 @@ router.post(
   Async(async (req, res) => {
     console.log("update employee profile by admin route hit");
     console.log(req.data);
-    let data = req.body;
-    var { error } = validations.add_employee_by_admin(data);
+    var { error, value } = validations.add_employee_by_admin(req.body);
+    let data = value;
+
     if (error) return res.status(400).send(error.details[0].message);
     let org_data = await redis.redisGet(
       "CRM_ORGANISATIONS",
