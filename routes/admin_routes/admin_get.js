@@ -296,7 +296,7 @@ router.post(
     let data = req.body;
     var { error } = validations.get_emp_attendance_by_admin(data);
     if (error) return res.status(400).send(error.details[0].message);
-    const admin_types = ["1", "2"];
+    const admin_types = ["1", "2", "3"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res
         .status(403)
