@@ -254,7 +254,7 @@ router.post(
     console.log(query);
 
     // Fetch leave applications with pagination
-    alertDev(`query in get leaves-->${JSON.stringify(query)}`);
+    // alertDev(`query in get leaves-->${JSON.stringify(query)}`);
     const leaveApplications = await mongoFunctions.lazy_loading(
       "LEAVE",
       query,
