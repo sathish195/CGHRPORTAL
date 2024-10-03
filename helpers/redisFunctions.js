@@ -9,7 +9,7 @@ if (process.env.REDIS_URL) {
     password: process.env.REDIS_PASSWORD,
   });
 }
-alertDev(process.env.REDIS_URL);
+// alertDev(process.env.REDIS_URL);
 
 client.on("error", (err) => {
   console.log("redis err--->", err);
