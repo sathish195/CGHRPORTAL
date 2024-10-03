@@ -580,8 +580,8 @@ function get_team(data) {
 function checkin_checkout(data) {
   const schema = Joi.object({
     type: Joi.string().valid("checkin", "checkout").required(),
-    latitude: Joi.string().min(5).max(15).required(),
-    longitude: Joi.string().min(5).max(15).required(),
+    latitude: Joi.string().min(5).required(),
+    longitude: Joi.string().min(5).required(),
     location: Joi.string().required(),
     ip: Joi.string().ip().required(),
   });
