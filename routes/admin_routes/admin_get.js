@@ -245,6 +245,7 @@ router.post(
       if (roleName === "2") {
         query["approved_by.manager.leave_status"] = data.leave_status;
       } else if (roleName === "3") {
+        query.department_id = req.employee.department_id;
         query["approved_by.team_incharge.leave_status"] = data.leave_status;
       } else {
         query.leave_status = data.leave_status;
