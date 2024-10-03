@@ -503,14 +503,15 @@ router.post(
       educational_details: data.educational_details,
       dependent_details: data.dependent_details,
       leaves:
-        role_data.leaves && role_data.leaves.length > 0
+        role_data.role_id !== data.role_id && role_data.leaves.length > 0
           ? role_data.leaves.map((e) => ({
               ...e,
               used_leaves: 0,
               remaining_leaves: e.total_leaves,
             }))
-          : [],
+          : find_emp.leaves,
     };
+    console.log(find_emp.leaves);
     let new_emp = await mongoFunctions.find_one_and_update(
       "EMPLOYEE",
       { employee_id: data.employee_id },

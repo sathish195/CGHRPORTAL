@@ -606,9 +606,9 @@ router.post(
   rateLimit(60, 10),
   Async(async (req, res) => {
     console.log("apply leave route hit");
-    if (req.employee.admin_type === "1") {
-      return res.status(400).send("Access denied: Director Do Not Apply Leave");
-    }
+    // if (req.employee.admin_type === "1") {
+    //   return res.status(400).send("Access denied: Director Do Not Apply Leave");
+    // }
     let data = req.body;
     var { error } = validations.apply_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -661,19 +661,29 @@ router.post(
 
     // Set the end of the day for toDate to include all times on that day
     // toDate.setHours(23, 59, 59, 999);
-    const over_lapping_leaves = await mongoFunctions.find("LEAVE", {
+    let to_date = new Date(data.to_date);
+    const over_lapping_leaves = await mongoFunctions.find_one("LEAVE", {
       organisation_id: find_emp.organisation_id,
       employee_id: find_emp.employee_id,
       from_date: { $gte: new Date(data.from_date) },
-      to_date: { $lte: new Date(data.to_date) },
+      // to_date: {
+      //   $lt: new Date(
+      //     new Date(data.to_date).setDate(new Date(data.to_date).getDate() + 1)
+      //   ),
+      // },
       // from_date: { $gte: data.from_date},
       // to_date: { $lte:data.to_date},
     });
     console.log(new Date(data.from_date));
+    console.log(
+      new Date(
+        new Date(data.to_date).setDate(new Date(data.to_date).getDate() + 1)
+      )
+    );
 
     console.log(over_lapping_leaves);
 
-    if (over_lapping_leaves.length > 0)
+    if (over_lapping_leaves)
       return res.status(400).send("Leave Already Applied On Selected Dates");
     let leaves_count = await functions.calculate_leave_days(
       data.from_date,

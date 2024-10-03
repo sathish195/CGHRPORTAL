@@ -816,6 +816,8 @@ router.post(
     if (roleName === "2") {
       query["work_info.admin_type"] = { $in: ["2", "3", "4"] };
     } else if (roleName === "1") {
+    } else if (roleName === "3") {
+      query["work_info.department_id"] = req.employee.department_id;
     } else {
       query["employee_id"] = req.employee.employee_id;
     }
@@ -1001,7 +1003,7 @@ router.post(
         date_of_join: "2024-09-02",
       },
       personal_details: {
-        date_of_birth: "2024-09-12",
+        date_of_birth: "1996-09-12",
         expertise: "everything",
         gender: "male",
         marital_status: "married",
@@ -1021,7 +1023,14 @@ router.post(
         permanent_address: "vijayawada,ap",
       },
       work_experience: [],
-      educational_details: [],
+      educational_details: [
+        {
+          institute_name: "testing",
+          degree: "testing",
+          specialization: "testing",
+          year_of_completion: 2023,
+        },
+      ],
       dependent_details: [],
       leaves: [],
 
