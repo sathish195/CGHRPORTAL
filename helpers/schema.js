@@ -388,7 +388,7 @@ function edit_profile(data) {
 function add_project(data) {
   const schema = Joi.object({
     project_name: Joi.string().min(3).max(50).required().trim(),
-    description: Joi.string()
+    description: Joi.string().trim()
       .min(10)
       .max(200)
       .pattern(/^[A-Za-z0-9\s.,-]+$/, "valid characters")
@@ -426,7 +426,7 @@ function add_update_task(data) {
   const schema = Joi.object({
     project_id: Joi.string().min(5).max(12).required(),
     task_name: Joi.string().min(3).max(50).required().trim(),
-    description: Joi.string()
+    description: Joi.string().trim()
       .min(10)
       .max(200)
       .pattern(/^[A-Za-z0-9\s.,-]+$/, "valid characters")

@@ -609,9 +609,9 @@ router.post(
     // if (req.employee.admin_type === "1") {
     //   return res.status(400).send("Access denied: Director Do Not Apply Leave");
     // }
-    let data = req.body;
-    var { error } = validations.apply_leave(data);
+    var { error, value } = validations.apply_leave(req.body);
     if (error) return res.status(400).send(error.details[0].message);
+    let data = value;
     let org_data = await redis.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,

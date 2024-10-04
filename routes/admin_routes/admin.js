@@ -535,11 +535,11 @@ router.post(
   rateLimit(60, 10),
   Async(async (req, res) => {
     console.log("add update project route hit");
-    let data = req.body;
 
     // Validate request data
-    const { error } = validations.add_project(data);
+    const { error, value } = validations.add_project(req.body);
     if (error) return res.status(400).send(error.details[0].message);
+    let data = value;
 
     // Check user role
     const admin_types = ["1", "2"];
@@ -843,11 +843,11 @@ router.post(
   rateLimit(60, 10),
   Async(async (req, res) => {
     console.log("add update task route hit");
-    let data = req.body;
 
     // Validate request data
-    const { error } = validations.add_update_task(data);
+    const { error, value } = validations.add_update_task(req.body);
     if (error) return res.status(400).send(error.details[0].message);
+    let data = value;
 
     // Check user role
     const userRole = req.employee.admin_type;
