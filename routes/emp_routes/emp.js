@@ -671,12 +671,14 @@ router.post(
       //     new Date(data.to_date).setDate(new Date(data.to_date).getDate() + 1)
       //   ),
       // },
-      from_date: { $lt: new Date(data.to_date) },
-      to_date: { $gt: new Date(data.from_date) },
+      from_date: { $lte: new Date(data.to_date) },
+      to_date: { $gte: new Date(data.from_date) },
       // from_date: { $gte: data.from_date},
       // to_date: { $lte:data.to_date},
     });
     console.log(new Date(data.from_date));
+    console.log(new Date(data.to_date));
+
     console.log(
       new Date(
         new Date(data.to_date).setDate(new Date(data.to_date).getDate() + 1)
