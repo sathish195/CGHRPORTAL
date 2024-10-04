@@ -665,12 +665,14 @@ router.post(
     const over_lapping_leaves = await mongoFunctions.find_one("LEAVE", {
       organisation_id: find_emp.organisation_id,
       employee_id: find_emp.employee_id,
-      from_date: { $gte: new Date(data.from_date) },
+      // from_date: { $gte: new Date(data.from_date) },
       // to_date: {
       //   $lt: new Date(
       //     new Date(data.to_date).setDate(new Date(data.to_date).getDate() + 1)
       //   ),
       // },
+      from_date: { $lt: new Date(data.to_date) },
+      to_date: { $gt: new Date(data.from_date) },
       // from_date: { $gte: data.from_date},
       // to_date: { $lte:data.to_date},
     });
