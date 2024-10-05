@@ -779,9 +779,22 @@ router.post(
     let actual_in_time = await functions.get_full_date_time(checkin_time);
     let actual_out_time = await functions.get_full_date_time(checkout_time);
     console.log(actual_in_time);
+    let time_diff = await functions.get_time_diff_minutes(
+      actual_in_time,
+      emp_in_time
+    );
 
     if (data.type === "checkin") {
       if (today_record) {
+        if (today_record.checkin.length === 0) {
+          if (time_diff > 30 || time_diff < 0) {
+            return res
+              .status(400)
+              .send(
+                "Check-In Time Must Be Within 30 Minutes Before Or After The Scheduled Time[10:00 AM]."
+              );
+          }
+        }
         if (today_record.checkout.length < today_record.checkin.length) {
           return res.status(400).send("Already Checked In..!");
         } else {
@@ -810,11 +823,7 @@ router.post(
           });
         }
       } else {
-        let time_diff = await functions.get_time_diff_minutes(
-          actual_in_time,
-          emp_in_time
-        );
-        let grace_time = 15;
+        let grace_time = 30;
         let check_in_obj = {
           in_time: emp_in_time,
           latitude: data.latitude,

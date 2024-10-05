@@ -64,7 +64,7 @@ const updateStatusInHolidays = async () => {
   const employees = await mongoFunctions.find("EMPLOYEE");
 
   if (attendanceRecord.length === 0) {
-    await createAttendanceRecords(employees, "absent");
+    await createAttendanceRecords(employees, "weekend");
   } else {
     const employeeIdsInAttendance = attendanceRecord.map(
       (record) => record.employee_id
@@ -74,7 +74,7 @@ const updateStatusInHolidays = async () => {
     );
 
     if (missingRecords.length > 0) {
-      await createAttendanceRecords(missingRecords, "absent");
+      await createAttendanceRecords(missingRecords, "weekend");
     }
   }
 };
@@ -103,7 +103,7 @@ const updateStatusOfNotCheckouts = async () => {
 
 // Scheduling cron jobs
 cron.schedule(
-  "00 10 * * *",
+  "00 10 * * 1-5",
   async () => {
     await updateAttendanceStatus();
     alertDev("Running cron to update status in weekdays");
@@ -115,7 +115,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "30 12 * * *",
+  "30 10 * * 6,0",
   async () => {
     await updateStatusInHolidays();
     alertDev("Running cron to update status in holidays and weekends");
@@ -132,7 +132,7 @@ cron.schedule(
     await updateStatusOfNotCheckouts();
     alertDev("Running cron to update status of not checked outs");
     console.log(
-      "Running a job every day at 11:59 AM to update attendance of not checked outs at Asia/Kolkata timezone"
+      "Running a job every day at 11:59 PM to update attendance of not checked outs at Asia/Kolkata timezone"
     );
   },
   { scheduled: true, timezone: "Asia/Kolkata" }

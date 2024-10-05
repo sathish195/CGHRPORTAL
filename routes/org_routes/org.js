@@ -1053,4 +1053,117 @@ router.post(
   })
 );
 
+router.post(
+  "/add_update_holiday",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    console.log("add update holiday route hit");
+
+    // Validate data
+    const { error, value } = validations.add_update_holiday(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const data = value;
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director Or Manager Can Access This Endpoint");
+    }
+
+    // Retrieve organisation data from Redis
+    const org_data = await redis.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data || org_data.organisation_id !== data.organisation_id) {
+      return res.status(400).send("Invalid Organisation Id");
+    }
+    console.log("Fetched org data from Redis");
+
+    let holiday_data;
+    if (data.holiday_id && data.holiday_id.length > 9) {
+      // Update existing holiday
+      holiday_data = await mongoFunctions.find_one("HOLIDAYS", {
+        organisation_id: org_data.organisation_id,
+        holiday_id: data.holiday_id,
+      });
+
+      if (!holiday_data) {
+        return res.status(400).send("Holiday Id Doesn't Exist");
+      }
+      // Check if holiday already exists
+      const holiday_exists = await mongoFunctions.find_one("HOLIDAYS", {
+        organisation_id: req.employee.organisation_id,
+        holiday_name: data.holiday_name,
+        holiday_id: { $ne: data.holiday_id },
+      });
+      if (holiday_exists) {
+        return res.status(400).send("Holiday Already Exists..!");
+      }
+
+      holiday_data = await mongoFunctions.find_one_and_update(
+        "HOLIDAYS",
+        {
+          organisation_id: org_data.organisation_id,
+          holiday_id: data.holiday_id,
+        },
+        {
+          $set: {
+            holiday_name: data.holiday_name,
+            holiday_date: data.holiday_date,
+          },
+          $push: {
+            // Include holiday_date
+            modified_by: {
+              employee_id: req.employee.employee_id,
+              employee_name: `${req.employee.first_name} ${req.employee.last_name}`,
+              employee_email: req.employee.email,
+            },
+          },
+        }
+      );
+      console.log("Holiday data updated");
+    } else {
+      // Check if holiday already exists
+      const holiday_exists = await mongoFunctions.find_one("HOLIDAYS", {
+        organisation_id: req.employee.organisation_id,
+        holiday_name: data.holiday_name,
+      });
+      if (holiday_exists) {
+        return res.status(400).send("Holiday Already Exists..!");
+      }
+      // Add new holiday
+      const new_holiday_data = {
+        organisation_id: req.employee.organisation_id,
+        holiday_id: functions.get_random_string("D", 10, true),
+        holiday_name: data.holiday_name,
+        holiday_date: data.holiday_date, // Include holiday_date
+        added_by: {
+          employee_id: req.employee.employee_id,
+          employee_name: `${req.employee.first_name} ${req.employee.last_name}`,
+          email: req.employee.email,
+        },
+      };
+
+      holiday_data = await mongoFunctions.create_new_record(
+        "HOLIDAYS",
+        new_holiday_data
+      );
+      console.log("New holiday data added");
+    }
+
+    if (holiday_data) {
+      return res.status(200).send({
+        success: "Holiday Details Added Successfully!",
+        data: holiday_data,
+      });
+    }
+
+    return res.status(400).send("Failed To Add/Update Holiday");
+  })
+);
+
 module.exports = router;

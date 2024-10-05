@@ -5,6 +5,7 @@ const { TASKS } = require("../models/add_tasks");
 const { STATS } = require("../models/add_stats");
 const { LEAVE } = require("../models/add_leaves");
 const { ATTENDANCE } = require("../models/add_attendance");
+const { HOLIDAYS } = require("../models/add_holiday");
 
 module.exports = {
   create_new_record: async (collection, data) => {
