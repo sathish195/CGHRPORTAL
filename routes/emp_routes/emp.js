@@ -787,7 +787,8 @@ router.post(
     if (data.type === "checkin") {
       if (!today_record || today_record.checkin.length === 0) {
         console.log(time_diff);
-        if (time_diff > 30 || time_diff < 0) {
+        console.log(-14 < -30);
+        if (time_diff > 30 || time_diff < -30) {
           return res
             .status(400)
             .send(

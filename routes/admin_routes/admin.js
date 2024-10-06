@@ -1336,6 +1336,15 @@ router.post(
       findId.leave_status === "Approved" &&
       leave_data_up.leave_status === "Rejected"
     ) {
+      await mongoFunctions.delete_many("ATTENDANCE", {
+        organisation_id: req.employee.organisation_id,
+        employee_id: findId.employee_id,
+        status: "leave",
+        createdAt: {
+          $gte: new Date(leave_data_up.from_date),
+          $lte: new Date(leave_data_up.to_date),
+        },
+      });
       await mongoFunctions.find_one_and_update(
         "LEAVE",
         {

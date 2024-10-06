@@ -115,7 +115,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "30 10 * * 6,0",
+  "30 9 * * 6,0",
   async () => {
     await updateStatusInHolidays();
     alertDev("Running cron to update status in holidays and weekends");

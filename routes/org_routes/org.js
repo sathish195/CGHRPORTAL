@@ -1098,12 +1098,35 @@ router.post(
       // Check if holiday already exists
       const holiday_exists = await mongoFunctions.find_one("HOLIDAYS", {
         organisation_id: req.employee.organisation_id,
-        holiday_name: data.holiday_name,
-        holiday_id: { $ne: data.holiday_id },
+        $or: [
+          {
+            holiday_name: data.holiday_name.toLowerCase(),
+            holiday_id: { $ne: data.holiday_id || null },
+          },
+          {
+            holiday_date: data.holiday_date,
+            holiday_id: { $ne: data.holiday_id || null },
+          },
+        ],
       });
 
       if (holiday_exists) {
-        return res.status(400).send("Holiday Already Exists..!");
+        // Check if the existing record matches the holiday name
+        if (holiday_exists.holiday_name === data.holiday_name.toLowerCase()) {
+          return res
+            .status(400)
+            .send("Holiday With This Name Already Exists..!");
+        }
+
+        // Check if the existing record matches the holiday date
+        if (
+          holiday_exists.holiday_date.getTime() ===
+          new Date(data.holiday_date).getTime()
+        ) {
+          return res
+            .status(400)
+            .send("Holiday With This Date Already Exists..!");
+        }
       }
 
       holiday_data = await mongoFunctions.find_one_and_update(
@@ -1130,11 +1153,11 @@ router.post(
       console.log("Holiday data updated");
     } else {
       // Check if holiday already exists
-      const holiday_exists = await mongoFunctions.find_one("HOLIDAYS", {
+      const holiday_exist = await mongoFunctions.find_one("HOLIDAYS", {
         organisation_id: req.employee.organisation_id,
         holiday_name: data.holiday_name.toLowerCase(),
       });
-      if (holiday_exists) {
+      if (holiday_exist) {
         return res.status(400).send("Holiday Already Exists..!");
       }
       // Add new holiday
@@ -1165,6 +1188,27 @@ router.post(
     }
 
     return res.status(400).send("Failed To Add/Update Holiday");
+  })
+);
+
+router.post(
+  "/get_holidays_list",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    const admin_types = ["1", "2", "3", "4"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director Or Manager Can Access Holidays List");
+    }
+    const h_list = await mongoFunctions.find(
+      "HOLIDAYS",
+      { organisation_id: req.employee.organisation_id },
+      { holiday_date: 1 },
+      { _id: 0, __v: 0 }
+    );
+    return res.status(200).send(h_list);
   })
 );
 
