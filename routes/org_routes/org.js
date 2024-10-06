@@ -1065,6 +1065,7 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     const data = value;
+    console.log(data);
     const admin_types = ["1", "2"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res
@@ -1112,7 +1113,7 @@ router.post(
         },
         {
           $set: {
-            holiday_name: data.holiday_name,
+            holiday_name: data.holiday_name.toLowerCase(),
             holiday_date: data.holiday_date,
           },
           $push: {
@@ -1130,7 +1131,7 @@ router.post(
       // Check if holiday already exists
       const holiday_exists = await mongoFunctions.find_one("HOLIDAYS", {
         organisation_id: req.employee.organisation_id,
-        holiday_name: data.holiday_name,
+        holiday_name: data.holiday_name.toLowerCase(),
       });
       if (holiday_exists) {
         return res.status(400).send("Holiday Already Exists..!");
@@ -1138,8 +1139,8 @@ router.post(
       // Add new holiday
       const new_holiday_data = {
         organisation_id: req.employee.organisation_id,
-        holiday_id: functions.get_random_string("D", 10, true),
-        holiday_name: data.holiday_name,
+        holiday_id: functions.get_random_string("H", 10, true),
+        holiday_name: data.holiday_name.toLowerCase(),
         holiday_date: data.holiday_date, // Include holiday_date
         added_by: {
           employee_id: req.employee.employee_id,
