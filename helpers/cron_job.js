@@ -103,7 +103,7 @@ const updateStatusOfNotCheckouts = async () => {
 
 // Scheduling cron jobs
 cron.schedule(
-  "00 10 * * 1-5",
+  "30 9 * * 1-5",
   async () => {
     await updateAttendanceStatus();
     alertDev("Running cron to update status in weekdays");
@@ -115,7 +115,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "30 10 * * 6,0",
+  "30 9 * * 6,0",
   async () => {
     await updateStatusInHolidays();
     alertDev("Running cron to update status in holidays and weekends");
