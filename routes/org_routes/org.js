@@ -1061,7 +1061,7 @@ router.post(
     console.log("add update holiday route hit");
 
     // Validate data
-    const { error, value } = validations.add_update_holiday(req.body);
+    const { error, value } = validations.add_holidays(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     const data = value;
@@ -1101,6 +1101,7 @@ router.post(
         holiday_name: data.holiday_name,
         holiday_id: { $ne: data.holiday_id },
       });
+
       if (holiday_exists) {
         return res.status(400).send("Holiday Already Exists..!");
       }

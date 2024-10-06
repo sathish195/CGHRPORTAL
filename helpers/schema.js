@@ -643,10 +643,10 @@ function add_admin_emp(data) {
   });
   return schema.validate(data);
 }
-function add_update_holiday(data) {
+function add_holidays(data) {
   const schema = Joi.object({
     organisation_id: Joi.string().min(10).max(18).required(),
-    holiday_name: Joi.string().trim().strip().min(5).max(50).required(),
+    holiday_name: Joi.string().trim().min(5).max(50).required(),
     holiday_date: Joi.date().required(),
     holiday_id: Joi.string().allow(null, "").optional(),
   });
@@ -689,5 +689,5 @@ module.exports = {
   get_emp_attendance_by_filter,
   get_emp_attendance_by_admin,
   add_admin_emp,
-  add_update_holiday,
+  add_holidays,
 };
