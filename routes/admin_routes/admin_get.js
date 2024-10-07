@@ -198,7 +198,7 @@ router.post(
       employee_id: { $ne: req.employee.employee_id },
       // "approved_by.team_incharge.leave_status": status
     };
-    if (data.leave_status === " " || data.leave_status === "Pending") {
+    if (data.leave_status === "" || data.leave_status === "Pending") {
       // Role-based access control
       if (roleName === "4") {
         return res.status(403).send("Access denied: Not Admin");

@@ -639,7 +639,7 @@ router.post(
     });
     let approved_by = {};
     approved_by.manager = {
-      email: find_emp.work_info.reporting_manager,
+      email: find_emp.work_info.reporting_manager.email,
       leave_status: "Pending",
     };
 
@@ -712,7 +712,7 @@ router.post(
       reason: data.reason,
       // team_mail_id: data.team_mail_id,
       approved_by: approved_by,
-      reporting_manager: find_emp.work_info.reporting_manager,
+      reporting_manager: find_emp.work_info.reporting_manager.email,
       leave_status: "Pending",
       // leaves:find_emp.leaves,
     };

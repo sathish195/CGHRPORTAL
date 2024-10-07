@@ -232,7 +232,7 @@ function add_employee_by_admin(data) {
       .max(15)
       .required(),
     source_of_hire: Joi.string().trim().min(3).max(15).required(),
-    reporting_manager: Joi.string().trim().required(),
+    reporting_manager: Joi.string().required(),
     date_of_join: Joi.date().required(),
 
     date_of_birth: Joi.date().required(),
