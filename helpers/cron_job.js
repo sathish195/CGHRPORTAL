@@ -80,41 +80,54 @@ const updateStatusInHolidays = async () => {
 };
 
 const updateStatusOfNotCheckouts = async () => {
-  const { start, end } = getCurrentDayRange();
-  const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
-    createdAt: { $gt: start, $lte: end },
-  });
-  // Fetch the list of employees
-  const employees = await mongoFunctions.find("EMPLOYEE");
+  try {
+    const { start, end } = getCurrentDayRange();
 
-  // Determine the employee IDs present in the attendance records
-  const employeeIdsInAttendance = attendanceRecords.map(
-    (record) => record.employee_id
-  );
-
-  // Find missing employees
-  const missingEmployees = employees.filter(
-    (employee) => !employeeIdsInAttendance.includes(employee.employee_id)
-  );
-
-  const updates = attendanceRecord
-    .filter((record) => !record.attendance_status)
-    .map((record) => {
-      const newStatus = "absent";
-      return mongoFunctions.update_many(
-        "ATTENDANCE",
-        { attendance_id: record.attendance_id },
-        { $set: { attendance_status: newStatus } }
-      );
+    // Fetch attendance records for the current day
+    const attendanceRecords = await mongoFunctions.find("ATTENDANCE", {
+      createdAt: { $gt: start, $lte: end },
     });
 
-  await Promise.all(updates);
-  // Create attendance records for missing employees
-  if (missingEmployees.length > 0) {
-    await createAttendanceRecords(missingEmployees, "absent"); // or any status you prefer
+    // Fetch the list of employees
+    const employees = await mongoFunctions.find("EMPLOYEE");
+
+    // Determine the employee IDs present in the attendance records
+    const employeeIdsInAttendance = new Set(
+      attendanceRecords.map((record) => record.employee_id)
+    );
+
+    // Find missing employees
+    const missingEmployees = employees.filter(
+      (employee) => !employeeIdsInAttendance.has(employee.employee_id)
+    );
+
+    // Update attendance status for records without a status
+    const updates = attendanceRecords
+      .filter((record) => !record.attendance_status)
+      .map((record) => {
+        const newStatus = "absent";
+        return mongoFunctions.update_many(
+          // Change to updateMany if necessary
+          "ATTENDANCE",
+          { attendance_id: record.attendance_id },
+          { $set: { attendance_status: newStatus } }
+        );
+      });
+
+    // Await all updates to complete
+    await Promise.all(updates);
+
+    // Create attendance records for missing employees
+    if (missingEmployees.length > 0) {
+      await createAttendanceRecords(missingEmployees, "absent");
+    }
+
+    console.log("Attendance status updated successfully for not checked outs.");
+    alertDev("Attendance status updated successfully for not checked outs");
+  } catch (error) {
+    console.error("Error updating attendance status:", error);
+    alertDev("Failed to update attendance status.");
   }
-  console.log("Attendance status updated successfully for not checked outs.");
-  alertDev("Attendance status updated successfully for not checked outs");
 };
 
 const updateStatusBasedOnHolidays = async () => {
@@ -178,9 +191,11 @@ cron.schedule(
 );
 
 cron.schedule(
-  "27 18 * * *",
+  "30 23 * * *",
   async () => {
+    console.log("running cron");
     await updateStatusOfNotCheckouts();
+
     alertDev("Running cron to update status of not checked outs");
     console.log(
       "Running a job every day at 11:59 PM to update attendance of not checked outs at Asia/Kolkata timezone"
