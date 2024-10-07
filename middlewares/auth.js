@@ -17,6 +17,9 @@ module.exports = {
       }
       next();
     } catch (err) {
+      if (err.name === "TokenExpiredError") {
+        return res.status(401).send({ message: "Token Is Expired" });
+      }
       return res.status(400).send({ message: "Token is not valid" });
     }
   },

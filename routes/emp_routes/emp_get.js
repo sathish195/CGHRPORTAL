@@ -49,7 +49,8 @@ router.post(
     //   emp.work_info.reporting_manager =
     //     repo.basic_info.first_name + " " + repo.basic_info.last_name;
     // }
-    // if (!emp) return res.status(400).send("Employee Not Found..!");
+
+    if (!emp) return res.status(400).send("Employee Not Found..!");
     return res.status(200).send({ profile: emp });
   })
 );
