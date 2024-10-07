@@ -84,6 +84,18 @@ const updateStatusOfNotCheckouts = async () => {
   const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
     createdAt: { $gt: start, $lte: end },
   });
+  // Fetch the list of employees
+  const employees = await mongoFunctions.find("EMPLOYEE");
+
+  // Determine the employee IDs present in the attendance records
+  const employeeIdsInAttendance = attendanceRecords.map(
+    (record) => record.employee_id
+  );
+
+  // Find missing employees
+  const missingEmployees = employees.filter(
+    (employee) => !employeeIdsInAttendance.includes(employee.employee_id)
+  );
 
   const updates = attendanceRecord
     .filter((record) => !record.attendance_status)
@@ -97,8 +109,47 @@ const updateStatusOfNotCheckouts = async () => {
     });
 
   await Promise.all(updates);
+  // Create attendance records for missing employees
+  if (missingEmployees.length > 0) {
+    await createAttendanceRecords(missingEmployees, "absent"); // or any status you prefer
+  }
   console.log("Attendance status updated successfully for not checked outs.");
   alertDev("Attendance status updated successfully for not checked outs");
+};
+
+const updateStatusBasedOnHolidays = async () => {
+  const { start, end } = getCurrentDayRange();
+  const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
+    createdAt: { $gt: start, $lte: end },
+  });
+  const employees = await mongoFunctions.find("EMPLOYEE");
+  const holidays = await mongoFunctions.find("HOLIDAYS");
+  const today = new Date();
+
+  const holidayNames = holidays
+    .filter((holiday) => holiday.holiday_date === today)
+    .map((holiday) => holiday.holiday_name);
+
+  if (holidayNames.length > 0) {
+    const holidayName = holidayNames[0];
+    if (attendanceRecord.length > 0) {
+      // If there are existing records, create records for missing employees
+      const employeeIdsInAttendance = attendanceRecord.map(
+        (record) => record.employee_id
+      );
+      const missingEmployees = employees.filter(
+        (employee) => !employeeIdsInAttendance.includes(employee.employee_id)
+      );
+
+      if (missingEmployees.length > 0) {
+        await createAttendanceRecords(missingEmployees, holidayName);
+      }
+    } else {
+      // If no attendance records exist, create for all employees
+      await createAttendanceRecords(employees, holidayName);
+    }
+  }
+  console.log("Holiday not found");
 };
 
 // Scheduling cron jobs
@@ -133,6 +184,18 @@ cron.schedule(
     alertDev("Running cron to update status of not checked outs");
     console.log(
       "Running a job every day at 11:59 PM to update attendance of not checked outs at Asia/Kolkata timezone"
+    );
+  },
+  { scheduled: true, timezone: "Asia/Kolkata" }
+);
+
+cron.schedule(
+  "41 17 * * *",
+  async () => {
+    await updateStatusBasedOnHolidays();
+    alertDev("Running cron to update attendance status based on holidays");
+    console.log(
+      "Running a job every day at midnight to update attendance status based on holiday list at Asia/Kolkata timezone"
     );
   },
   { scheduled: true, timezone: "Asia/Kolkata" }
