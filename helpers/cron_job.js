@@ -178,7 +178,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "30 23 * * *",
+  "27 18 * * *",
   async () => {
     await updateStatusOfNotCheckouts();
     alertDev("Running cron to update status of not checked outs");
