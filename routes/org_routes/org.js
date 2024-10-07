@@ -524,7 +524,7 @@ router.post(
         // "work_info.admin_type": { $in: ["1", "2"] }
       }, //
       project,
-      { employee_id: 1 }
+      { employee_id: -1 }
     );
     console.log("organisation data fetched in universal route");
 
