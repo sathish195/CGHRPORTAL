@@ -991,7 +991,7 @@ router.post(
     let password_hash = await bcrypt.hash_password(new_password);
 
     let new_emp_data = {
-      organisation_id: "O9593",
+      organisation_id: functions.get_random_string("O", 5, true),
       organisation_name: "CODEGENE TECHNOLOGIES PVT LTD",
       password: password_hash,
       employee_id: data.employee_id,
