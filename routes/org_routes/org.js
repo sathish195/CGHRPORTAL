@@ -31,6 +31,15 @@ router.post(
     let find_org = await mongoFunctions.find_one("ORGANISATIONS", {
       email: req.employee.email,
     });
+    let find_id = await mongoFunctions.find_one("ORGANISATIONS", {
+      employee_id: req.employee.employee_id,
+    });
+    if (find_id) {
+      return res
+        .status(400)
+        .send("Employee Id Already Exists For Another Organisation");
+    }
+
     let org_data_up;
     let org_data = {
       email: req.employee.email,
