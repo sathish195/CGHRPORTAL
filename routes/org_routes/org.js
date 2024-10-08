@@ -14,6 +14,7 @@ const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
 const { alertDev } = require("../../helpers/telegram");
+const multer = require("multer");
 
 router.post(
   "/add_update_org_details",
@@ -1209,6 +1210,30 @@ router.post(
       { _id: 0, __v: 0 }
     );
     return res.status(200).send(h_list);
+  })
+);
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+router.post(
+  "/upload_pdf_file",
+  Auth,
+  upload.single("Files"),
+  Async(async (req, res) => {
+    if (!req.file) {
+      return res.status(400).send("No file uploaded.");
+    }
+
+    const base64_string = req.file.buffer.toString("base64");
+    file_data = {
+      file_id: functions.get_random_string("F", 9, true),
+      file: base64_string,
+      organisation_id: req.employee.organisation_id,
+    };
+    // await mongoFunctions.create_new_record("FILES", file_data);
+
+    res.send({ message: "File uploaded successfully!", base64: base64_string });
   })
 );
 
