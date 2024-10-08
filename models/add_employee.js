@@ -24,7 +24,7 @@ const EMPLOYEE_Schema = new mongoose.Schema(
       employment_type: { type: String },
       employee_status: { type: String },
       source_of_hire: { type: String },
-      reporting_manager: { type: Object },
+      reporting_manager: { type: String },
       date_of_join: { type: Date },
     },
 

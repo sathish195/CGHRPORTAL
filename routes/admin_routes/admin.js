@@ -126,15 +126,15 @@ router.post(
     ) {
       return res.status(400).send("Educational Details Must be Filled");
     }
-    let repo = await mongoFunctions.find_one("EMPLOYEE", {
-      organisation_id: req.employee.organisation_id,
-      employee_id: data.reporting_manager,
-    });
-    // if (repo) {
-    //   emp.work_info.reporting_manager =
-    //     repo.basic_info.first_name + " " + repo.basic_info.last_name;
-    // }
-    if (!repo) return res.status(400).send("Reporting Manager Not Found..!");
+    // let repo = await mongoFunctions.find_one("EMPLOYEE", {
+    //   organisation_id: req.employee.organisation_id,
+    //   employee_id: data.reporting_manager,
+    // });
+    // // if (repo) {
+    // //   emp.work_info.reporting_manager =
+    // //     repo.basic_info.first_name + " " + repo.basic_info.last_name;
+    // // }
+    // if (!repo) return res.status(400).send("Reporting Manager Not Found..!");
     let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
@@ -263,11 +263,7 @@ router.post(
         employment_type: data.employment_type,
         employee_status: data.employee_status,
         source_of_hire: data.source_of_hire,
-        reporting_manager: {
-          employee_id: data.reporting_manager,
-          name: repo.basic_info.first_name + " " + repo.basic_info.last_name,
-          email: repo.basic_info.email,
-        },
+        reporting_manager: data.reporting_manager,
         date_of_join: data.date_of_join,
       },
 
@@ -377,15 +373,15 @@ router.post(
     ) {
       return res.status(400).send("Educational Details Must be Filled");
     }
-    let repo = await mongoFunctions.find_one("EMPLOYEE", {
-      organisation_id: req.employee.organisation_id,
-      employee_id: data.reporting_manager,
-    });
-    // if (repo) {
-    //   emp.work_info.reporting_manager =
-    //     repo.basic_info.first_name + " " + repo.basic_info.last_name;
-    // }
-    if (!repo) return res.status(400).send("Reporting Manager Not Found..!");
+    // let repo = await mongoFunctions.find_one("EMPLOYEE", {
+    //   organisation_id: req.employee.organisation_id,
+    //   employee_id: data.reporting_manager,
+    // });
+    // // if (repo) {
+    // //   emp.work_info.reporting_manager =
+    // //     repo.basic_info.first_name + " " + repo.basic_info.last_name;
+    // // }
+    // if (!repo) return res.status(400).send("Reporting Manager Not Found..!");
     let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
@@ -502,11 +498,7 @@ router.post(
         employment_type: data.employment_type,
         employee_status: data.employee_status,
         source_of_hire: data.source_of_hire,
-        reporting_manager: {
-          employee_id: data.reporting_manager,
-          name: repo.basic_info.first_name + " " + repo.basic_info.last_name,
-          email: repo.basic_info.email,
-        },
+        reporting_manager: data.reporting_manager,
         date_of_join: data.date_of_join,
       },
 
