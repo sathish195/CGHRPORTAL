@@ -167,7 +167,7 @@ const updateStatusBasedOnHolidays = async () => {
 
 // Scheduling cron jobs
 cron.schedule(
-  "30 9 * * 1-5",
+  "03 17 * * 1-5",
   async () => {
     await updateAttendanceStatus();
     alertDev("Running cron to update status in weekdays");
