@@ -31,14 +31,6 @@ router.post(
     let find_org = await mongoFunctions.find_one("ORGANISATIONS", {
       email: req.employee.email,
     });
-    let find_id = await mongoFunctions.find_one("ORGANISATIONS", {
-      employee_id: req.employee.employee_id,
-    });
-    if (find_id) {
-      return res
-        .status(400)
-        .send("Employee Id Already Exists For Another Organisation");
-    }
 
     let org_data_up;
     let org_data = {
@@ -60,6 +52,15 @@ router.post(
       );
       console.log("organisation details updated");
     } else {
+      let find_id = await mongoFunctions.find_one("ORGANISATIONS", {
+        employee_id: req.employee.employee_id,
+      });
+      if (find_id) {
+        return res
+          .status(400)
+          .send("Employee Id Already Exists For Another Organisation");
+      }
+
       let new_org_data = {
         organisation_id: functions.get_random_string("O", 15, true),
         organisation_name: data.organisation_name.toUpperCase(),
