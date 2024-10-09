@@ -1235,7 +1235,9 @@ router.post(
     if (findId && findId.leave_status === data.leave_status)
       return res
         .status(400)
-        .send("Leave Application Is Already In The Given Status");
+        .send(
+          `Leave Application Is Already In The ${data.leave_status} Status`
+        );
     console.log(findId);
     const findEmployee = await mongoFunctions.find_one("EMPLOYEE", {
       organisation_id: req.employee.organisation_id,
@@ -1470,10 +1472,44 @@ router.post(
     let update;
 
     if (data.in_time.length > 0 && data.out_time.length === 0) {
+      const in_time = new Date(data.in_time);
+
+      const localInTime = new Date(
+        in_time.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+      );
+      const nine_thirty_AM = new Date(localInTime);
+      nine_thirty_AM.setHours(9, 30, 0, 0);
+
+      if (localInTime < nine_thirty_AM) {
+        return res.status(400).send("Check-in Time Cannot Be Before 9:30 AM.");
+      }
+
       update = {
         checkin: check_in_obj,
       };
     } else {
+      const in_time = new Date(data.in_time);
+      const out_time = new Date(data.out_time);
+
+      const localInTime = new Date(
+        in_time.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+      );
+      const localOutTime = new Date(
+        out_time.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+      );
+      const nine_thirty_AM = new Date(localInTime);
+      nine_thirty_AM.setHours(9, 30, 0, 0);
+
+      const ten_AM = new Date(localOutTime);
+      ten_AM.setHours(10, 0, 0, 0);
+
+      if (localInTime < nine_thirty_AM) {
+        return res.status(400).send("Check-in Time Cannot Be Before 9:30 AM.");
+      }
+      if (localOutTime < ten_AM) {
+        return res.status(400).send("Checkout Time Cannot Be Before 10 AM.");
+      }
+
       update = {
         checkin: check_in_obj,
         checkout: check_out_obj,
