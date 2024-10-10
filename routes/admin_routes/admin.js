@@ -1305,6 +1305,20 @@ router.post(
       ) {
         const day = date.getDay(); // 0 is Sunday, 6 is Saturday
         if (day !== 0 && day !== 6) {
+          const attendanceCheck = await mongoFunctions.find("ATTENDANCE", {
+            organisation_id: req.employee.organisation_id,
+            employee_id: findEmployee.employee_id,
+            createdAt: new Date(date),
+          });
+
+          // If there's an existing attendance record for that date, delete it
+          if (attendanceCheck.length > 0) {
+            await mongoFunctions.delete_many("ATTENDANCE", {
+              organisation_id: req.employee.organisation_id,
+              employee_id: findEmployee.employee_id,
+              createdAt: new Date(date),
+            });
+          }
           const attendance_object = {
             attendance_id:
               functions.get_random_string("A", 3, true) + Date.now(),
@@ -1321,6 +1335,36 @@ router.post(
           attendanceRecords.push(attendance_object);
         }
       }
+      // console.log("query-->", {
+      //   organisation_id: req.employee.organisation_id,
+      //   employee_id: findId.employee_id,
+
+      //   createdAt: {
+      //     $gte: new Date(leave_data_up.to_date),
+      //     $lte: new Date(leave_data_up.from_date),
+      //   },
+      // });
+
+      // const att_rec = await mongoFunctions.find("ATTENDANCE", {
+      //   organisation_id: req.employee.organisation_id,
+      //   employee_id: findId.employee_id,
+
+      //   createdAt: {
+      //     $gte: new Date(leave_data_up.to_date),
+      //     $lte: new Date(leave_data_up.from_date),
+      //   },
+      // });
+      // console.log("---", att_rec.length);
+      // // console.log("---", att_rec);
+      // const h = await mongoFunctions.delete_many("ATTENDANCE", {
+      //   organisation_id: req.employee.organisation_id,
+      //   employee_id: findId.employee_id,
+      //   createdAt: {
+      //     $gte: new Date(leave_data_up.to_date),
+      //     $lte: new Date(leave_data_up.from_date),
+      //   },
+      // });
+      // console.log(h);
 
       const attendance_update = await mongoFunctions.insert_many_records(
         "ATTENDANCE",
@@ -1334,6 +1378,21 @@ router.post(
           );
 
       console.log("updated count for pending to approved status");
+      // / Increment today's leave stats if today is within the approved leave dates
+      // const today = new Date(new Date().setHours(0, 0, 0, 0));
+      // if (fromDate <= today && today <= toDate) {
+      //   await mongoFunctions.find_one_and_update(
+      //     "STATS",
+      //     {
+      //       organisation_id: req.employee.organisation_id,
+      //       employee_id: findEmployee.employee_id,
+      //     },
+      //     {
+      //       $inc: { "attendance_stats.leave": 1 },
+      //     },
+      //     { upsert: true }
+      //   );
+      // }
     }
 
     if (

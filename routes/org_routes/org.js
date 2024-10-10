@@ -538,6 +538,16 @@ router.post(
       { employee_id: -1 }
     );
     console.log("organisation data fetched in universal route");
+    let today = new Date();
+    let tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1); // Set to tomorrow
+
+    let statss = await mongoFunctions.find_one("STATS", {
+      createdAt: {
+        $gte: new Date(today.setHours(0, 0, 0, 0)), // Start of today
+        $lt: new Date(tomorrow.setHours(0, 0, 0, 0)), // Start of tomorrow
+      },
+    });
 
     let dashborad = {
       recent_hires: recent_hires,
@@ -546,6 +556,7 @@ router.post(
       reporting_managers: reporting_manager,
       employee_id: employee_id,
       today_attendance: today_attendance,
+      stats: statss,
     };
     // await redis.update_redis("ORGANISATIONS", org_data);
     return res.status(200).send(dashborad);
