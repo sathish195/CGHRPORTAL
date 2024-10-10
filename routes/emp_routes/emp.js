@@ -11,6 +11,7 @@ const functions = require("../../helpers/functions");
 const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
+const { func } = require("joi");
 // const bcrypt=require('bcrypt');
 
 router.post(
@@ -814,11 +815,14 @@ router.post(
             {
               status: data.type,
               attendance_status: "",
+              late_by: time_diff,
+              late_checkin: time_diff < 0,
               $push: {
                 checkin: check_in_obj,
               },
             }
           );
+          await functions.add_overall_stats(attendance_obj);
           return res.status(200).send({
             success: "Checkin Successful",
             data: attendance_obj.checkin[attendance_obj.checkin.length - 1],
@@ -883,6 +887,7 @@ router.post(
             },
             { new: true }
           );
+          await functions.add_overall_stats(attendance_obj);
 
           await stats.calculate_working_minutes(attendance_obj);
           return res.status(200).send({

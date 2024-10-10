@@ -79,7 +79,7 @@ module.exports = {
     return await eval(collection).updateMany(condition, update, options);
   },
   delete_many: async (collection, condition) => {
-    return await eval(collection).deleteMany(condition);
+    return await eval(collection).deleteMany(condition, { mutli: true });
   },
   delete_one: async (collection, condition) => {
     return await eval(collection).deleteOne(condition);

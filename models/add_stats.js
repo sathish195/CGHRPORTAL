@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-
 // Define default status values
 const defaultStatusTrack = [
   { status: "new", count: 0 },
@@ -18,10 +17,14 @@ const statsSchema = new mongoose.Schema(
       type: Array,
       default: defaultStatusTrack,
     },
+    attendance_stats: {
+      checkin: { type: Number },
+      late_checkins: { type: Number },
+      leave: { type: Number },
+    },
   },
   { timestamps: true }
 );
 
 // Export the model
 exports.STATS = mongoose.model("STATS", statsSchema);
-
