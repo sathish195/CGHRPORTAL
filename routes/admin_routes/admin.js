@@ -1425,15 +1425,18 @@ router.post(
           );
 
       console.log("updated count for pending to approved status");
-      // Increment today's leave stats
-      const today = new Date(new Date().setHours(0, 0, 0, 0));
-      const nextDayToDate = new Date(toDate);
-      nextDayToDate.setDate(nextDayToDate.getDate() + 1);
-
-      if (fromDate <= today && today < nextDayToDate) {
-        const stat = await functions.add_overall_stats(attendance_update);
-        console.log(stat);
-      }
+      // //increment leave stats
+      // const fromDateObj = fromDate;
+      // const toDateObj = toDate;
+      // const today = new Date(new Date().setHours(0, 0, 0, 0));
+      // const nextDayToDate = new Date(toDateObj);
+      // nextDayToDate.setDate(nextDayToDate.getDate() + 1);
+      // if (fromDateObj <= today && today < nextDayToDate) {
+      //   const stat = await functions.add_overall_stats(attendance_update);
+      //   console.log(stat);
+      // } else {
+      //   console.log("Today's date is not in the leave range.");
+      // }
     }
 
     if (
