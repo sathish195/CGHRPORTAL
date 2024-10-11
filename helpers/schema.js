@@ -551,6 +551,7 @@ function get_all_leave_applications(data) {
     employee_id: Joi.string().optional().allow(""),
     // name:Joi.string().optional().allow(""),
     year: Joi.string().optional().allow(""),
+    month: Joi.string().optional().allow(""),
   });
   return schema.validate(data);
 }
@@ -562,6 +563,7 @@ function get_employee_leave_applications(data) {
       .optional()
       .allow(""),
     year: Joi.string().optional().allow(""),
+    month: Joi.string().optional().allow(""),
   });
   return schema.validate(data);
 }
