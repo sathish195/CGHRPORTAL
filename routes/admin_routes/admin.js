@@ -1624,6 +1624,7 @@ router.post(
 
       update = {
         checkin: check_in_obj,
+        status: "checkin",
       };
     } else {
       const in_time = new Date(data.in_time);
@@ -1651,6 +1652,7 @@ router.post(
       update = {
         checkin: check_in_obj,
         checkout: check_out_obj,
+        status: "checkout",
       };
     }
 
@@ -1662,7 +1664,8 @@ router.post(
       },
       { new: true } // This option should be here
     );
-    await functions.add_overall_stats(attendance_obj);
+    let m = await functions.add_overall_stats(attendance_obj);
+    console.log(m);
 
     const s = await stats.calculate_working_minutes(attendance_obj);
     console.log(s);
