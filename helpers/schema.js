@@ -550,8 +550,8 @@ function get_all_leave_applications(data) {
       .allow(""),
     employee_id: Joi.string().optional().allow(""),
     // name:Joi.string().optional().allow(""),
-    year: Joi.number().positive().required(),
-    month: Joi.number().min(1).max(12).required(),
+    year: Joi.number().positive().optional(),
+    month: Joi.number().min(1).max(12).optional(),
   });
   return schema.validate(data);
 }
@@ -562,8 +562,8 @@ function get_employee_leave_applications(data) {
       .valid("Approved", "Rejected", "Pending")
       .optional()
       .allow(""),
-    year: Joi.number().positive().required(),
-    month: Joi.number().min(1).max(12).required(),
+    year: Joi.number().positive().optional(),
+    month: Joi.number().min(1).max(12).optional(),
   });
   return schema.validate(data);
 }
