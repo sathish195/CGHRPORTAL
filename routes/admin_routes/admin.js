@@ -8,7 +8,7 @@ const { Auth } = require("../../middlewares/auth");
 const redis = require("../../helpers/redisFunctions");
 const stats = require("../../helpers/stats");
 const functions = require("../../helpers/functions");
-const { date } = require("joi");
+const { date, func } = require("joi");
 const { RFC_2822 } = require("moment");
 const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
@@ -1166,6 +1166,32 @@ router.post(
       ) {
         const day = date.getDay(); // 0 is Sunday, 6 is Saturday
         if (day !== 0 && day !== 6) {
+          let startDate = new Date(date);
+          let endDate = new Date(startDate);
+          endDate.setDate(startDate.getDate() + 1);
+
+          const attendanceCheck = await mongoFunctions.find("ATTENDANCE", {
+            organisation_id: req.employee.organisation_id,
+            employee_id: findEmployee.employee_id,
+            createdAt: {
+              $gte: startDate,
+              $lt: endDate,
+            },
+          });
+          console.log(attendanceCheck.length);
+
+          // If there's an existing attendance record for that date, delete it
+          if (attendanceCheck.length > 0) {
+            const h = await mongoFunctions.delete_many("ATTENDANCE", {
+              organisation_id: req.employee.organisation_id,
+              employee_id: findEmployee.employee_id,
+              createdAt: {
+                $gte: startDate,
+                $lt: endDate,
+              },
+            });
+            console.log(h);
+          }
           // Exclude weekend
           const attendance_object = {
             attendance_id:
@@ -1194,6 +1220,15 @@ router.post(
           .send(
             "Attendance Update Failed To Create Leave Status Records After Approving Leave Application"
           );
+      // Increment today's leave stats
+      const today = new Date(new Date().setHours(0, 0, 0, 0));
+      const nextDayToDate = new Date(toDate);
+      nextDayToDate.setDate(nextDayToDate.getDate() + 1);
+
+      if (fromDate <= today && today < nextDayToDate) {
+        const stat = await functions.add_overall_stats(attendance_update);
+        console.log(stat);
+      }
     }
 
     if (updated_leave_data.leave_status === "Rejected") {
@@ -1305,19 +1340,31 @@ router.post(
       ) {
         const day = date.getDay(); // 0 is Sunday, 6 is Saturday
         if (day !== 0 && day !== 6) {
+          let startDate = new Date(date);
+          let endDate = new Date(startDate);
+          endDate.setDate(startDate.getDate() + 1);
+
           const attendanceCheck = await mongoFunctions.find("ATTENDANCE", {
             organisation_id: req.employee.organisation_id,
             employee_id: findEmployee.employee_id,
-            createdAt: new Date(date),
+            createdAt: {
+              $gte: startDate,
+              $lt: endDate,
+            },
           });
+          console.log(attendanceCheck.length);
 
           // If there's an existing attendance record for that date, delete it
           if (attendanceCheck.length > 0) {
-            await mongoFunctions.delete_many("ATTENDANCE", {
+            const h = await mongoFunctions.delete_many("ATTENDANCE", {
               organisation_id: req.employee.organisation_id,
               employee_id: findEmployee.employee_id,
-              createdAt: new Date(date),
+              createdAt: {
+                $gte: startDate,
+                $lt: endDate,
+              },
             });
+            console.log(h);
           }
           const attendance_object = {
             attendance_id:
@@ -1378,21 +1425,15 @@ router.post(
           );
 
       console.log("updated count for pending to approved status");
-      // / Increment today's leave stats if today is within the approved leave dates
-      // const today = new Date(new Date().setHours(0, 0, 0, 0));
-      // if (fromDate <= today && today <= toDate) {
-      //   await mongoFunctions.find_one_and_update(
-      //     "STATS",
-      //     {
-      //       organisation_id: req.employee.organisation_id,
-      //       employee_id: findEmployee.employee_id,
-      //     },
-      //     {
-      //       $inc: { "attendance_stats.leave": 1 },
-      //     },
-      //     { upsert: true }
-      //   );
-      // }
+      // Increment today's leave stats
+      const today = new Date(new Date().setHours(0, 0, 0, 0));
+      const nextDayToDate = new Date(toDate);
+      nextDayToDate.setDate(nextDayToDate.getDate() + 1);
+
+      if (fromDate <= today && today < nextDayToDate) {
+        const stat = await functions.add_overall_stats(attendance_update);
+        console.log(stat);
+      }
     }
 
     if (
@@ -1583,6 +1624,7 @@ router.post(
       },
       { new: true } // This option should be here
     );
+    await functions.add_overall_stats(attendance_obj);
 
     const s = await stats.calculate_working_minutes(attendance_obj);
     console.log(s);
