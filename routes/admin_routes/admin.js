@@ -1445,8 +1445,8 @@ router.post(
 
       console.log("updated count for pending to approved status");
       // Increment today's leave stats
-      const fromDateObj = updated_leave_data.from_date; // Date object
-      const toDateObj = updated_leave_data.to_date; // Date object
+      const fromDateObj = leave_data_up.from_date; // Date object
+      const toDateObj = leave_data_up.to_date; // Date object
 
       // Log the date objects for debugging
       console.log("From Date Object:", fromDateObj);
