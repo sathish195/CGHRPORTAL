@@ -287,17 +287,41 @@ router.post(
       query.leave_status = data.leave_status;
     }
 
-    if (data.year) {
-      const year = parseInt(data.year, 10);
-      if (!isNaN(year)) {
-        const startOfYear = new Date(year, 0, 1); // January 1st of the given year
-        const endOfYear = new Date(year + 1, 0, 0, 23, 59, 59, 999); // December 31st of the given year
+    // Handle year and month filtering
+    const currentDate = new Date();
+    let startOfMonth, endOfMonth;
 
-        query.createdAt = { $gte: startOfYear, $lte: endOfYear };
+    // Check if year and month are provided
+    if (data.year && data.month) {
+      const year = parseInt(data.year, 10);
+      const month = parseInt(data.month, 10);
+
+      if (!isNaN(year) && month >= 1 && month <= 12) {
+        startOfMonth = new Date(year, month - 1, 1); // Start of the specified month
+        endOfMonth = new Date(year, month, 0, 23, 59, 59, 999); // End of the specified month
       } else {
-        return res.status(400).send("Invalid year format.");
+        return res.status(400).send("Invalid year or month format.");
       }
+    } else {
+      // Default to current month and year if not provided
+      startOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+      endOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999
+      );
     }
+
+    // Add date range to the query
+    query.createdAt = { $gte: startOfMonth, $lte: endOfMonth };
     console.log(query);
     let leaveApplications = await mongoFunctions.lazy_loading(
       "LEAVE",
