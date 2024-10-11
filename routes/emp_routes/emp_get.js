@@ -292,7 +292,18 @@ router.post(
     let startOfMonth, endOfMonth;
 
     // Check if year and month are provided
-    if (data.year && data.month) {
+
+    if (data.year) {
+      const year = parseInt(data.year, 10);
+
+      if (!isNaN(year)) {
+        // If only year is provided, set the date range for all months in that year
+        startOfMonth = new Date(year, 0, 1); // Start of the year (January 1st)
+        endOfMonth = new Date(year + 1, 0, 0, 23, 59, 59, 999); // End of the year (December 31st)
+      } else {
+        return res.status(400).send("Invalid year format.");
+      }
+    } else if (data.year && data.month) {
       const year = parseInt(data.year, 10);
       const month = parseInt(data.month, 10);
 
