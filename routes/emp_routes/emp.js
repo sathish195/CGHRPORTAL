@@ -13,6 +13,7 @@ const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
 const { func } = require("joi");
 const { alertDev } = require("../../helpers/telegram");
+const { DateTime } = require("luxon");
 // const bcrypt=require('bcrypt');
 
 router.post(
@@ -772,10 +773,13 @@ router.post(
     });
 
     let time = new Date();
-    // const time_zone = "UTC+5:30";
-    // let emp_in_time = await functions.get_time_of_emp_time_zone(time_zone);
     let emp_in_time = time;
+    let nowUTC = new Date();
 
+    let istOffset = 5.5 * 60 * 60 * 1000; // Offset in milliseconds
+
+    let emp_checkin_time = new Date(nowUTC.getTime() + istOffset);
+    console.log("in_timeeeeee", emp_checkin_time);
     const checkin_time = "10:00";
     const checkout_time = "7:00";
     let actual_in_time = await functions.get_full_date_time(checkin_time);
@@ -783,21 +787,21 @@ router.post(
     console.log(actual_in_time);
     let time_diff = await functions.get_time_diff_minutes(
       actual_in_time,
-      emp_in_time
+      emp_checkin_time
     );
 
     if (data.type === "checkin") {
-      // if (!today_record || today_record.checkin.length === 0) {
-      //   console.log(time_diff);
-      //   console.log(-14 < -30);
-      //   if (time_diff > 30 || time_diff < -30) {
-      //     return res
-      //       .status(400)
-      //       .send(
-      //         "Check-In Time Must Be Within 30 Minutes Before Or After The Scheduled Time[10:00 AM]."
-      //       );
-      //   }
-      // }
+      if (!today_record || today_record.checkin.length === 0) {
+        console.log(time_diff);
+        console.log(-14 < -30);
+        if (time_diff > 30 || time_diff < -30) {
+          return res
+            .status(400)
+            .send(
+              "Check-In Time Must Be Within 30 Minutes Before Or After The Scheduled Time[10:00 AM]."
+            );
+        }
+      }
       alertDev(emp_in_time);
       if (today_record) {
         if (today_record.checkout.length < today_record.checkin.length) {

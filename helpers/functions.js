@@ -116,55 +116,6 @@ module.exports = {
     console.log(totalDays);
     return totalDays;
   },
-  // add_overall_stats: async(object)=> {
-  // let overall_status={
-  //   checkin:0,
-  //   checkout:0,
-  //   late_checkins:0,
-  //   leave:0,
-  //   absent:0,
-
-  // };
-  // if (object.status==="checkin"){
-
-  //   overall_status.checkin=1
-
-  // }
-  // if (object.status==="checkout"){
-  //   overall_status.checkout=1
-
-  // }
-  // if (object.status==="leave"){
-  //   overall_status.leave=1
-
-  // }
-  // if (object.attendance_status==="absent"){
-  //   overall_status.absent=1
-
-  // }
-  // if (object.late_checkin==="true"){
-  //   overall_status.late_checkins=1
-
-  // }
-  //  let  new_record={
-  //     organisation_id:object.organisation_id,
-  //     employee_id:object.employee_id,
-  //     attendance_stats:overall_status
-  //   };
-  //   today_record=await mongoFunctions.find_one("STATS",{ organisation_id:object.organisation_id,
-  //     employee_id:object.employee_id, createdAt: {
-  //       $gte: new Date().setHours(0, 0, 0, 0),
-  //       $lt: new Date().setHours(24, 0, 0, 0),
-  //     }})
-  //   if(!today_record){
-  //     await mongoFunctions.create_new_record("STATS",new_record);
-  //   }
-  //   await mongoFunctions.find_one_and_update("STATS",{organisation_id:object.organisation_id,
-  //     employee_id:object.employee_id},$set:{
-  //       attendance_stats:overall_status
-  //     });
-
-  // },
   add_overall_stats: async (object) => {
     if (object.checkin.length === 1 || object.checkin.length === 0) {
       const query = {
