@@ -222,15 +222,12 @@ router.post(
       }
     }
 
-    // Fetch leave applications with pagination
-
     // Add optional fields to the query
     if (data.employee_id && data.employee_id.length > 5) {
       query.employee_id = data.employee_id;
     }
 
     // Handle year and month filtering
-    const currentDate = new Date();
     let startOfMonth, endOfMonth;
 
     // Check if year and month are provided
@@ -238,24 +235,27 @@ router.post(
       const year = parseInt(data.year, 10);
 
       if (!isNaN(year)) {
-        // If only year is provided, set the date range for all months in that year
-        startOfMonth = new Date(year, 0, 1); // Start of the year (January 1st)
-        endOfMonth = new Date(year + 1, 0, 0, 23, 59, 59, 999); // End of the year (December 31st)
+        if (data.month) {
+          const month = parseInt(data.month, 10);
+
+          if (!isNaN(month) && month >= 1 && month <= 12) {
+            // Set the date range for the specified year and month
+            startOfMonth = new Date(year, month - 1, 1); // Start of the specified month
+            endOfMonth = new Date(year, month, 0, 23, 59, 59, 999); // End of the specified month
+          } else {
+            return res.status(400).send("Invalid month format.");
+          }
+        } else {
+          // If only year is provided, set the date range for all months in that year
+          startOfMonth = new Date(year, 0, 1);
+          endOfMonth = new Date(year + 1, 0, 0, 23, 59, 59, 999);
+        }
       } else {
         return res.status(400).send("Invalid year format.");
       }
-    } else if (data.year && data.month) {
-      const year = parseInt(data.year, 10);
-      const month = parseInt(data.month, 10);
-
-      if (!isNaN(year) && month >= 1 && month <= 12) {
-        startOfMonth = new Date(year, month - 1, 1); // Start of the specified month
-        endOfMonth = new Date(year, month, 0, 23, 59, 59, 999); // End of the specified month
-      } else {
-        return res.status(400).send("Invalid year or month format.");
-      }
     } else {
       // Default to current month and year if not provided
+      const currentDate = new Date();
       startOfMonth = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth(),
