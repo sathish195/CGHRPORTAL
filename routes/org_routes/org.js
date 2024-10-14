@@ -998,6 +998,12 @@ router.post(
     ) {
       return res.status(400).send("Employee Id Already Exists");
     }
+    if (
+      find_emp &&
+      find_emp.basic_info.email.toLowerCase() === data.email.toLowerCase()
+    ) {
+      return res.status(400).send("Email Id Already Exists");
+    }
 
     const new_password = "Admin@1234";
     let password_hash = await bcrypt.hash_password(new_password);
