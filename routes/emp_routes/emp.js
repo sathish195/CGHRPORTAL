@@ -12,6 +12,7 @@ const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
 const { func } = require("joi");
+const { alertDev } = require("../../helpers/telegram");
 // const bcrypt=require('bcrypt');
 
 router.post(
@@ -797,6 +798,7 @@ router.post(
       //       );
       //   }
       // }
+      alertDev(emp_in_time);
       if (today_record) {
         if (today_record.checkout.length < today_record.checkin.length) {
           return res.status(400).send("Already Checked In..!");
