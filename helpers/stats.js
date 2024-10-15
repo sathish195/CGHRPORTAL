@@ -367,7 +367,7 @@ async function calculate_working_minutes(attendance) {
     let newStatus;
     if (totalTimeMinutes < 60) {
       newStatus = "absent";
-    } else if (totalTimeMinutes < 420) {
+    } else if (totalTimeMinutes <= 479) {
       // If it is less than 7 hours it should be half day present and half day absent
       newStatus = "0.5 day present, 0.5 day absent";
     } else if (totalTimeMinutes >= 480) {
@@ -445,8 +445,6 @@ function parseWorkExperience(details) {
   }
   return result;
 }
-
-
 
 module.exports = {
   recent_hires,
