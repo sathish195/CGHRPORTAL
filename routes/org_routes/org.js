@@ -1263,5 +1263,42 @@ router.post(
     res.send({ message: "File uploaded successfully!", base64: base64_string });
   })
 );
+router.post(
+  "/get_attendance_stats",
+  Auth,
+  Async(async (req, res) => {
+    const now = new Date();
+    const start_day = new Date(now.setHours(0, 0, 0, 0));
+    const end_day = new Date(now.setHours(23, 59, 59, 999));
+
+    let present = await mongoFunctions.find(
+      "ATTENDANCE",
+      {
+        createdAt: {
+          $gte: start_day,
+          $lte: end_day,
+        },
+        status: "checkin",
+      },
+      { createdAt: -1 },
+      { _id: 0, __v: 0, checkin: 0, checkout: 0 }
+    );
+
+    let leave = await mongoFunctions.find(
+      "ATTENDANCE",
+      {
+        createdAt: {
+          $gte: start_day,
+          $lte: end_day,
+        },
+        status: "leave",
+      },
+      { createdAt: -1 },
+      { _id: 0, __v: 0, checkin: 0, checkout: 0 }
+    );
+
+    return res.status(200).send({ present, leave });
+  })
+);
 
 module.exports = router;
