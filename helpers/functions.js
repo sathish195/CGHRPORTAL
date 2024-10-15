@@ -64,18 +64,18 @@ module.exports = {
     // Return formatted date and time string
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   },
-  get_full_date_time: async (time_string) => {
-    const [hours, minutes] = time_string.split(":").map(Number);
-    const now = new Date();
+  get_full_date_time: async (time) => {
+    const currentDate = new Date(); // Get the current date
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0"); 
+    const currentDay = String(currentDate.getDate()).padStart(2, "0");
 
-    // Set the current date with the specified time in local timezone
-    now.setHours(hours, minutes, 0, 0);
-
-    // Create a new Date object that represents the same moment in time in Asia/Kolkata
-    const utcOffset = 5.5 * 60; // IST is UTC+5:30
-    const utcDate = new Date(now.getTime() + utcOffset * 60 * 1000);
-
-    return utcDate;
+    // Combine date and time
+    const dateTimeString = `${currentYear}-${currentMonth}-${currentDay}T${
+      new Date(`1970-01-01 ${time}`).toTimeString().split(" ")[0]
+    }.000Z`;
+    const dateTimeObject = new Date(dateTimeString);
+    return dateTimeObject;
   },
 
   calculate_leave_days: (from_date, to_date) => {

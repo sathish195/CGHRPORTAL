@@ -1676,6 +1676,13 @@ router.post(
       if (localOutTime < ten_AM) {
         return res.status(400).send("Checkout Time Cannot Be Before 10 AM.");
       }
+      console.log(localInTime);
+      console.log(localOutTime);
+      if (localOutTime < localInTime) {
+        return res
+          .status(400)
+          .send("Checkout Time Cannot Less Than Checkin Time.");
+      }
 
       update = {
         checkin: check_in_obj,
