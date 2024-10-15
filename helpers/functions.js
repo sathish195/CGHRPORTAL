@@ -67,14 +67,22 @@ module.exports = {
   get_full_date_time: async (time) => {
     const currentDate = new Date(); // Get the current date
     const currentYear = currentDate.getFullYear();
-    const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0"); 
+    const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0");
     const currentDay = String(currentDate.getDate()).padStart(2, "0");
 
     // Combine date and time
     const dateTimeString = `${currentYear}-${currentMonth}-${currentDay}T${
       new Date(`1970-01-01 ${time}`).toTimeString().split(" ")[0]
     }.000Z`;
+    console.log("string'''", dateTimeString);
+
+    // Create a date object in UTC
     const dateTimeObject = new Date(dateTimeString);
+
+    // // Convert UTC to IST (UTC + 5:30)
+    // const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in milliseconds
+    // const istDateTimeObject = new Date(dateTimeObject.getTime() + istOffset);
+
     return dateTimeObject;
   },
 
