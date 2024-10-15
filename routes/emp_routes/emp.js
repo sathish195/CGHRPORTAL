@@ -774,12 +774,12 @@ router.post(
 
     let time = new Date();
     let emp_in_time = time;
-    // let nowUTC = new Date();
+    let nowUTC = new Date();
 
-    // let istOffset = 5.5 * 60 * 60 * 1000; // Offset in milliseconds
+    let istOffset = 5.5 * 60 * 60 * 1000; // Offset in milliseconds
 
-    // let emp_checkin_time = new Date(nowUTC.getTime() + istOffset);
-    // console.log("in_timeeeeee", emp_checkin_time);
+    let emp_checkin_time = new Date(nowUTC.getTime() + istOffset);
+    console.log("in_timeeeeee", emp_checkin_time);
     const checkin_time = "10:00";
     const checkout_time = "7:00";
     let actual_in_time = await functions.get_full_date_time(checkin_time);
@@ -787,7 +787,7 @@ router.post(
     console.log(actual_in_time);
     let time_diff = await functions.get_time_diff_minutes(
       actual_in_time,
-      emp_in_time
+      emp_checkin_time
     );
 
     if (data.type === "checkin") {

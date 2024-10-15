@@ -64,12 +64,18 @@ module.exports = {
     // Return formatted date and time string
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   },
-
   get_full_date_time: async (time_string) => {
     const [hours, minutes] = time_string.split(":").map(Number);
     const now = new Date();
+
+    // Set the current date with the specified time in local timezone
     now.setHours(hours, minutes, 0, 0);
-    return now;
+
+    // Create a new Date object that represents the same moment in time in Asia/Kolkata
+    const utcOffset = 5.5 * 60; // IST is UTC+5:30
+    const utcDate = new Date(now.getTime() + utcOffset * 60 * 1000);
+
+    return utcDate;
   },
 
   calculate_leave_days: (from_date, to_date) => {
