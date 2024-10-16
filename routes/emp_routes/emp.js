@@ -831,7 +831,7 @@ router.post(
               },
             }
           );
-          await functions.add_overall_stats(attendance_obj);
+          // await functions.add_overall_stats(attendance_obj, time);
           return res.status(200).send({
             success: "Checkin Successful",
             data: attendance_obj.checkin[attendance_obj.checkin.length - 1],
@@ -896,7 +896,7 @@ router.post(
             },
             { new: true }
           );
-          await functions.add_overall_stats(attendance_obj);
+          // await functions.add_overall_stats(attendance_obj, time);
 
           await stats.calculate_working_minutes(attendance_obj);
           return res.status(200).send({

@@ -1221,33 +1221,33 @@ router.post(
             "Attendance Update Failed To Create Leave Status Records After Approving Leave Application"
           );
       // Increment today's leave stats
-      const fromDateObj = updated_leave_data.from_date; // Date object
-      const toDateObj = updated_leave_data.to_date; // Date object
+      // const fromDateObj = updated_leave_data.from_date; // Date object
+      // const toDateObj = updated_leave_data.to_date; // Date object
 
-      // Log the date objects for debugging
-      console.log("From Date Object:", fromDateObj);
-      console.log("To Date Object:", toDateObj);
+      // // Log the date objects for debugging
+      // console.log("From Date Object:", fromDateObj);
+      // console.log("To Date Object:", toDateObj);
 
-      // Start of today (midnight in UTC)
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      console.log("Today:", today);
+      // // Start of today (midnight in UTC)
+      // const today = new Date();
+      // today.setUTCHours(0, 0, 0, 0);
+      // console.log("Today:", today);
 
-      // Create the next day of toDate
-      const nextDayToDate = new Date(toDateObj);
-      nextDayToDate.setUTCDate(nextDayToDate.getUTCDate() + 1);
-      console.log("Next Day to Date:", nextDayToDate);
+      // // Create the next day of toDate
+      // const nextDayToDate = new Date(toDateObj);
+      // nextDayToDate.setUTCDate(nextDayToDate.getUTCDate() + 1);
+      // console.log("Next Day to Date:", nextDayToDate);
 
-      // Check the comparison
-      const isTodayInLeaveRange = fromDateObj <= today && today < nextDayToDate;
-      console.log("Is today in leave range:", isTodayInLeaveRange);
+      // // Check the comparison
+      // const isTodayInLeaveRange = fromDateObj <= today && today < nextDayToDate;
+      // console.log("Is today in leave range:", isTodayInLeaveRange);
 
-      if (isTodayInLeaveRange) {
-        const stat = await functions.add_overall_stats(attendance_update[0]);
-        console.log(stat);
-      } else {
-        console.log("Today's date is not in the leave range.");
-      }
+      // if (isTodayInLeaveRange) {
+      //   const stat = await functions.add_overall_stats(attendance_update[0]);
+      //   console.log(stat);
+      // } else {
+      //   console.log("Today's date is not in the leave range.");
+      // }
     }
 
     if (updated_leave_data.leave_status === "Rejected") {
@@ -1445,33 +1445,41 @@ router.post(
 
       console.log("updated count for pending to approved status");
       // Increment today's leave stats
-      const fromDateObj = leave_data_up.from_date; // Date object
-      const toDateObj = leave_data_up.to_date; // Date object
+      // const fromDateObj = leave_data_up.from_date; // Already a Date object
+      // const toDateObj = leave_data_up.to_date; // Already a Date object
 
-      // Log the date objects for debugging
-      console.log("From Date Object:", fromDateObj);
-      console.log("To Date Object:", toDateObj);
+      // // Log the date objects for debugging
+      // console.log("From Date Object:", fromDateObj);
+      // console.log("To Date Object:", toDateObj);
 
-      // Start of today (midnight in UTC)
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      console.log("Today:", today);
+      // // Create a new Date object for iteration
+      // let currentDate = new Date(fromDateObj); // Make a copy to iterate
 
-      // Create the next day of toDate
-      const nextDayToDate = new Date(toDateObj);
-      nextDayToDate.setUTCDate(nextDayToDate.getUTCDate() + 1);
-      console.log("Next Day to Date:", nextDayToDate);
+      // // Loop through each date until the end date
+      // while (currentDate <= toDateObj) {
+      //   // Check if the current date is a weekday (Mon-Fri)
+      //   const day = currentDate.getUTCDay(); // 0 = Sunday, 6 = Saturday
+      //   if (day !== 0 && day !== 6) {
+      //     // Log the current date being processed
+      //     console.log("Processing Date:", currentDate);
+      //     console.log(attendance_update[0]);
 
-      // Check the comparison
-      const isTodayInLeaveRange = fromDateObj <= today && today < nextDayToDate;
-      console.log("Is today in leave range:", isTodayInLeaveRange);
+      //     // Call add_overall_stats for the current date
+      //     const stat = await functions.add_overall_stats(
+      //       attendance_update[0], // Include existing data
+      //       currentDate // Add the current date to the stats
+      //     );
 
-      if (isTodayInLeaveRange) {
-        const stat = await functions.add_overall_stats(attendance_update[0]);
-        console.log(stat);
-      } else {
-        console.log("Today's date is not in the leave range.");
-      }
+      //     console.log(`Stats updated for ${currentDate}:`, stat);
+      //   } else {
+      //     console.log(`Skipping weekend date: ${currentDate}`);
+      //   }
+
+      //   // Move to the next date
+      //   currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+      // }
+
+      // console.log("Overall stats updated for all leave dates.");
     }
 
     if (
@@ -1699,8 +1707,8 @@ router.post(
       },
       { new: true } // This option should be here
     );
-    let m = await functions.add_overall_stats(attendance_obj);
-    console.log(m);
+    // let m = await functions.add_overall_stats(attendance_obj, new Date());
+    // console.log(m);
 
     const s = await stats.calculate_working_minutes(attendance_obj);
     console.log(s);

@@ -116,7 +116,7 @@ module.exports = {
     console.log(totalDays);
     return totalDays;
   },
-  add_overall_stats: async (object) => {
+  add_overall_stats: async (object,date) => {
     if (object.checkin.length === 1 || object.checkin.length === 0) {
       const query = {
         organisation_id: object.organisation_id,
@@ -131,7 +131,7 @@ module.exports = {
         $setOnInsert: {
           organisation_id: object.organisation_id,
           // employee_id: object.employee_id,
-          createdAt: new Date(),
+          createdAt: date,
         },
         $inc: {
           "attendance_stats.checkin": object.status === "checkin" ? 1 : 0,
