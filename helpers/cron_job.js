@@ -199,12 +199,12 @@ cron.schedule(
   { scheduled: true, timezone: "Asia/Kolkata" }
 );
 cron.schedule(
-  "25 11 * * 1-5",
+  "00 11 * * 1-5",
   async () => {
     await updateStatusOfNotCheckins();
     alertDev("Running cron to update absent status in weekdays");
     console.log(
-      "Running a job every day at 11:05 AM to update attendance status at Asia/Kolkata timezone"
+      "Running a job every day at 11:00 AM to update attendance status at Asia/Kolkata timezone"
     );
   },
   { scheduled: true, timezone: "Asia/Kolkata" }

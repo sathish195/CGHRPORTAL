@@ -1280,6 +1280,7 @@ router.post(
     let present = await mongoFunctions.find(
       "ATTENDANCE",
       {
+        organisation_id: req.employee.organisation_id,
         createdAt: {
           $gte: start_day,
           $lte: end_day,
@@ -1292,6 +1293,7 @@ router.post(
     let absent = await mongoFunctions.find(
       "ATTENDANCE",
       {
+        organisation_id: req.employee.organisation_id,
         createdAt: {
           $gte: start_day,
           $lte: end_day,
@@ -1305,6 +1307,7 @@ router.post(
     let leave = await mongoFunctions.find(
       "ATTENDANCE",
       {
+        organisation_id: req.employee.organisation_id,
         createdAt: {
           $gte: start_day,
           $lte: end_day,
