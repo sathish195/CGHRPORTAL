@@ -694,8 +694,8 @@ router.post(
       )
     );
 
-    console.log(over_lapping_leaves);
-    console.log(over_lapping_leaves.leave_status);
+    // console.log(over_lapping_leaves);
+    // console.log(over_lapping_leaves.leave_status);
 
     if (
       over_lapping_leaves &&
