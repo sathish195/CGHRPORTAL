@@ -1285,8 +1285,12 @@ router.post(
           $gte: start_day,
           $lte: end_day,
         },
-        status: "checkin",
+        status: {$in: ["checkin","checkout"]},
+        attendance_status: {
+          $in: ["present", "0.5 day present, 0.5 day absent", ""],
+        },
       },
+
       { createdAt: -1 },
       { _id: 0, __v: 0, checkin: 0, checkout: 0 }
     );
