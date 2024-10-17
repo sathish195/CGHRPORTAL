@@ -12,7 +12,12 @@ const getCurrentDayRange = () => {
 };
 
 const createAttendanceRecords = async (employees, status = "") => {
-  const absenceUpdates = employees.map((employee) => {
+  const activeEmployees = employees.filter(
+    (employee) =>
+      employee.work_info.employee_status.toLowerCase() !== "disable" &&
+      employee.work_info.employee_status.toLowerCase() !== "terminated"
+  );
+  const absenceUpdates = activeEmployees.map((employee) => {
     const newRecord = {
       organisation_id: employee.organisation_id,
       attendance_id: functions.get_random_string("A", 3, true) + Date.now(),
@@ -38,17 +43,22 @@ const updateAttendanceStatus = async () => {
     createdAt: { $gt: start, $lte: end },
   });
   const employees = await mongoFunctions.find("EMPLOYEE");
+  const activeEmployees = employees.filter(
+    (employee) =>
+      employee.work_info.employee_status.toLowerCase() !== "disable" &&
+      employee.work_info.employee_status.toLowerCase() !== "terminated"
+  );
 
   const employeeIdsInAttendance = attendanceRecord.map(
     (record) => record.employee_id
   );
-  const missingRecords = employees.filter(
+  const missingRecords = activeEmployees.filter(
     (employee) => !employeeIdsInAttendance.includes(employee.employee_id)
   );
 
   if (attendanceRecord.length === 0 || missingRecords.length > 0) {
     const recordsToCreate =
-      attendanceRecord.length === 0 ? employees : missingRecords;
+      attendanceRecord.length === 0 ? activeEmployees : missingRecords;
     await createAttendanceRecords(
       recordsToCreate,
       attendanceRecord.length === 0 ? "" : ""
@@ -62,14 +72,19 @@ const updateStatusInWeekends = async () => {
     createdAt: { $gt: start, $lte: end },
   });
   const employees = await mongoFunctions.find("EMPLOYEE");
+  const activeEmployees = employees.filter(
+    (employee) =>
+      employee.work_info.employee_status.toLowerCase() !== "disable" &&
+      employee.work_info.employee_status.toLowerCase() !== "terminated"
+  );
 
   if (attendanceRecord.length === 0) {
-    await createAttendanceRecords(employees, "weekend");
+    await createAttendanceRecords(activeEmployees, "weekend");
   } else {
     const employeeIdsInAttendance = attendanceRecord.map(
       (record) => record.employee_id
     );
-    const missingRecords = employees.filter(
+    const missingRecords = activeEmployees.filter(
       (employee) => !employeeIdsInAttendance.includes(employee.employee_id)
     );
 
@@ -90,6 +105,11 @@ const updateStatusOfNotCheckouts = async () => {
 
     // Fetch the list of employees
     const employees = await mongoFunctions.find("EMPLOYEE");
+    const activeEmployees = employees.filter(
+      (employee) =>
+        employee.work_info.employee_status.toLowerCase() !== "disable" &&
+        employee.work_info.employee_status.toLowerCase() !== "terminated"
+    );
 
     // Determine the employee IDs present in the attendance records
     const employeeIdsInAttendance = new Set(
@@ -97,7 +117,7 @@ const updateStatusOfNotCheckouts = async () => {
     );
 
     // Find missing employees
-    const missingEmployees = employees.filter(
+    const missingEmployees = activeEmployees.filter(
       (employee) => !employeeIdsInAttendance.has(employee.employee_id)
     );
 
