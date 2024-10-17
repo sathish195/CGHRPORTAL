@@ -103,18 +103,8 @@ module.exports = {
   },
   aggregate: async (collection, pipeline) => {
     return await eval(collection).aggregate(pipeline);
-
-    //   try {
-
-    //     // Perform the aggregation
-    //     const results = await TASKS.aggregate(pipeline); // Convert cursor to array
-
-    //     return results; // Return the results
-    //   } catch (error) {
-    //     console.error("Error performing aggregation:", error);
-    //     throw error; // Rethrow error to be handled by the caller
-    //   }
-    // }
-    // ,
+  },
+  count_documents: async (collection, condition = {}) => {
+    return await eval(collection).countDocuments(condition);
   },
 };

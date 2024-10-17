@@ -56,7 +56,7 @@ const updateAttendanceStatus = async () => {
   }
 };
 
-const updateStatusInHolidays = async () => {
+const updateStatusInWeekends = async () => {
   const { start, end } = getCurrentDayRange();
   const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
     createdAt: { $gt: start, $lte: end },
@@ -164,6 +164,27 @@ const updateStatusBasedOnHolidays = async () => {
   }
   console.log("Holiday not found");
 };
+const updateStatusOfNotCheckins = async () => {
+  const { start, end } = getCurrentDayRange();
+  const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
+    createdAt: { $gt: start, $lte: end },
+  });
+
+  // Update attendance status for records where the checkin array is empty
+  const updates = attendanceRecord
+    .filter((record) => !record.checkin || record.checkin.length === 0)
+    .map((record) => {
+      const newStatus = "absent";
+      return mongoFunctions.update_many(
+        "ATTENDANCE",
+        { attendance_id: record.attendance_id },
+        { $set: { attendance_status: newStatus, status: newStatus } }
+      );
+    });
+
+  // Await all updates to complete
+  await Promise.all(updates);
+};
 
 // Scheduling cron jobs
 cron.schedule(
@@ -172,7 +193,18 @@ cron.schedule(
     await updateAttendanceStatus();
     alertDev("Running cron to update status in weekdays");
     console.log(
-      "Running a job every day at 10:00 AM to update attendance status at Asia/Kolkata timezone"
+      "Running a job every day at 9:30 AM to update attendance status at Asia/Kolkata timezone"
+    );
+  },
+  { scheduled: true, timezone: "Asia/Kolkata" }
+);
+cron.schedule(
+  "25 11 * * 1-5",
+  async () => {
+    await updateStatusOfNotCheckins();
+    alertDev("Running cron to update absent status in weekdays");
+    console.log(
+      "Running a job every day at 11:05 AM to update attendance status at Asia/Kolkata timezone"
     );
   },
   { scheduled: true, timezone: "Asia/Kolkata" }
@@ -181,10 +213,10 @@ cron.schedule(
 cron.schedule(
   "30 9 * * 6,0",
   async () => {
-    await updateStatusInHolidays();
+    await updateStatusInWeekends();
     alertDev("Running cron to update status in holidays and weekends");
     console.log(
-      "Running a job every day at 12:00 PM to update attendance status in weekends at Asia/Kolkata timezone"
+      "Running a job every day at 9:30 AM to update attendance status in weekends at Asia/Kolkata timezone"
     );
   },
   { scheduled: true, timezone: "Asia/Kolkata" }
@@ -198,7 +230,7 @@ cron.schedule(
 
     alertDev("Running cron to update status of not checked outs");
     console.log(
-      "Running a job every day at 11:59 PM to update attendance of not checked outs at Asia/Kolkata timezone"
+      "Running a job every day at 11:30 PM to update attendance of not checked outs at Asia/Kolkata timezone"
     );
   },
   { scheduled: true, timezone: "Asia/Kolkata" }

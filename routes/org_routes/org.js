@@ -549,6 +549,11 @@ router.post(
       },
     });
 
+    let total_emp_count = await mongoFunctions.count_documents("EMPLOYEE", {
+      organisation_id: req.employee.organisation_id,
+      "work_info.employee_status": { $regex: /^active$/i }, // Case-insensitive regex
+    });
+
     let dashborad = {
       recent_hires: recent_hires,
       birthdays: birthdays,
@@ -557,6 +562,7 @@ router.post(
       employee_id: employee_id,
       today_attendance: today_attendance,
       stats: statss,
+      total_emp_count: total_emp_count,
     };
     // await redis.update_redis("ORGANISATIONS", org_data);
     return res.status(200).send(dashborad);
@@ -1283,6 +1289,18 @@ router.post(
       { createdAt: -1 },
       { _id: 0, __v: 0, checkin: 0, checkout: 0 }
     );
+    let absent = await mongoFunctions.find(
+      "ATTENDANCE",
+      {
+        createdAt: {
+          $gte: start_day,
+          $lte: end_day,
+        },
+        attendance_status: "absent",
+      },
+      { createdAt: -1 },
+      { _id: 0, __v: 0, checkin: 0, checkout: 0 }
+    );
 
     let leave = await mongoFunctions.find(
       "ATTENDANCE",
@@ -1297,7 +1315,7 @@ router.post(
       { _id: 0, __v: 0, checkin: 0, checkout: 0 }
     );
 
-    return res.status(200).send({ present, leave });
+    return res.status(200).send({ present, leave, absent });
   })
 );
 

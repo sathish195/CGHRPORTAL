@@ -665,20 +665,26 @@ router.post(
     // Set the end of the day for toDate to include all times on that day
     // toDate.setHours(23, 59, 59, 999);
     let to_date = new Date(data.to_date);
-    const over_lapping_leaves = await mongoFunctions.find_one("LEAVE", {
-      organisation_id: find_emp.organisation_id,
-      employee_id: find_emp.employee_id,
-      // from_date: { $gte: new Date(data.from_date) },
-      // to_date: {
-      //   $lt: new Date(
-      //     new Date(data.to_date).setDate(new Date(data.to_date).getDate() + 1)
-      //   ),
-      // },
-      from_date: { $lte: new Date(data.to_date) },
-      to_date: { $gte: new Date(data.from_date) },
-      // from_date: { $gte: data.from_date},
-      // to_date: { $lte:data.to_date},
-    });
+    const over_lapping_leaves = await mongoFunctions.find_one(
+      "LEAVE",
+      {
+        organisation_id: find_emp.organisation_id,
+        employee_id: find_emp.employee_id,
+        // from_date: { $gte: new Date(data.from_date) },
+        // to_date: {
+        //   $lt: new Date(
+        //     new Date(data.to_date).setDate(new Date(data.to_date).getDate() + 1)
+        //   ),
+        // },
+        from_date: { $lte: new Date(data.to_date) },
+        to_date: { $gte: new Date(data.from_date) },
+
+        // from_date: { $gte: data.from_date},
+        // to_date: { $lte:data.to_date},
+      },
+      {},
+      { createdAt: -1 }
+    );
     console.log(new Date(data.from_date));
     console.log(new Date(data.to_date));
 
@@ -689,9 +695,16 @@ router.post(
     );
 
     console.log(over_lapping_leaves);
+    console.log(over_lapping_leaves.leave_status);
 
-    if (over_lapping_leaves)
+    if (
+      over_lapping_leaves &&
+      (over_lapping_leaves.leave_status === "Approved" ||
+        over_lapping_leaves.leave_status === "Pending")
+    ) {
       return res.status(400).send("Leave Already Applied On Selected Dates");
+    }
+
     let leaves_count = await functions.calculate_leave_days(
       data.from_date,
       data.to_date
