@@ -1312,7 +1312,11 @@ router.post(
         .send("No Leave Record Found For The Given Leave Type");
     }
 
-    if (leaveRecord && leaveRecord.remaining_leaves <= 0) {
+    if (
+      data.leave_status === "Approved" &&
+      leaveRecord &&
+      leaveRecord.remaining_leaves <= 0
+    ) {
       return res
         .status(400)
         .send("Limit Exceeded: Employee Has No Remaining Leaves");
