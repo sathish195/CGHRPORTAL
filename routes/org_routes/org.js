@@ -1274,8 +1274,22 @@ router.post(
   Auth,
   Async(async (req, res) => {
     const now = new Date();
-    const start_day = new Date(now.setHours(0, 0, 0, 0));
-    const end_day = new Date(now.setHours(23, 59, 59, 999));
+    let start_day, end_day;
+    // Validate data
+    const { error, value } = validations.get_attendance_stats(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const data = value;
+
+    // Check if a date is provided in the request
+    if (data.date) {
+      const providedDate = new Date(data.date);
+      start_day = new Date(providedDate.setHours(0, 0, 0, 0));
+      end_day = new Date(providedDate.setHours(23, 59, 59, 999));
+    } else {
+      start_day = new Date(now.setHours(0, 0, 0, 0));
+      end_day = new Date(now.setHours(23, 59, 59, 999));
+    }
 
     let present = await mongoFunctions.find(
       "ATTENDANCE",
@@ -1292,7 +1306,7 @@ router.post(
       },
 
       { createdAt: -1 },
-      { _id: 0, __v: 0, checkin: 0, checkout: 0 }
+      { _id: 0, __v: 0 }
     );
     let absent = await mongoFunctions.find(
       "ATTENDANCE",
@@ -1305,7 +1319,7 @@ router.post(
         attendance_status: "absent",
       },
       { createdAt: -1 },
-      { _id: 0, __v: 0, checkin: 0, checkout: 0 }
+      { _id: 0, __v: 0 }
     );
 
     let leave = await mongoFunctions.find(
@@ -1319,7 +1333,7 @@ router.post(
         status: "leave",
       },
       { createdAt: -1 },
-      { _id: 0, __v: 0, checkin: 0, checkout: 0 }
+      { _id: 0, __v: 0 }
     );
 
     return res.status(200).send({ present, leave, absent });

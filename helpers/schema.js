@@ -654,6 +654,12 @@ function add_holidays(data) {
   });
   return schema.validate(data);
 }
+function get_attendance_stats(data) {
+  const schema = Joi.object({
+    date: Joi.date().optional().allow(""),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -692,4 +698,5 @@ module.exports = {
   get_emp_attendance_by_admin,
   add_admin_emp,
   add_holidays,
+  get_attendance_stats,
 };
