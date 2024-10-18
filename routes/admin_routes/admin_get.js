@@ -273,7 +273,7 @@ router.post(
     }
 
     // Add date range to the query
-    query.createdAt = { $gte: startOfMonth, $lte: endOfMonth };
+    query.from_date = { $gte: startOfMonth, $lte: endOfMonth };
 
     if (data.leave_status && data.leave_status.length > 5) {
       if (roleName === "2") {
