@@ -779,7 +779,7 @@ router.post(
       "work_info.employee_status": { $regex: /^active$/i },
     };
     if (roleName === "2") {
-      query["work_info.admin_type"] = { $in: ["3", "4"] };
+      query["work_info.admin_type"] = { $in: ["2", "3", "4"] };
     } else if (roleName === "1") {
     } else if (roleName === "3") {
       query["work_info.department_id"] = req.employee.department_id;
@@ -1285,7 +1285,7 @@ router.post(
           $gte: start_day,
           $lte: end_day,
         },
-        status: {$in: ["checkin","checkout"]},
+        status: { $in: ["checkin", "checkout"] },
         attendance_status: {
           $in: ["present", "0.5 day present, 0.5 day absent", ""],
         },
