@@ -333,7 +333,7 @@ router.post(
     }
 
     // Add date range to the query
-    query.from_date = { $gte: startOfMonth, $lte: endOfMonth };
+    query.createdAt = { $gte: startOfMonth, $lte: endOfMonth };
 
     // Add date range to the query
     query.createdAt = { $gte: startOfMonth, $lte: endOfMonth };
