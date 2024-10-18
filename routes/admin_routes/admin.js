@@ -1665,6 +1665,7 @@ router.post(
       update = {
         checkin: check_in_obj,
         status: "checkin",
+        attendance_status:""
       };
     } else {
       const in_time = new Date(data.in_time);
