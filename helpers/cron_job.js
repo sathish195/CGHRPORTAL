@@ -2,6 +2,8 @@ const cron = require("node-cron");
 const mongoFunctions = require("./mongoFunctions");
 const { alertDev } = require("./telegram");
 const functions = require("./functions");
+const { checkPreferences } = require("joi");
+const { calculate_working_minutes } = require("./stats");
 
 const getCurrentDayRange = () => {
   const now = new Date();
@@ -121,21 +123,30 @@ const updateStatusOfNotCheckouts = async () => {
       (employee) => !employeeIdsInAttendance.has(employee.employee_id)
     );
 
-    // Update attendance status for records without a status
-    const updates = attendanceRecords
-      .filter((record) => !record.attendance_status)
-      .map((record) => {
-        const newStatus = "absent";
-        return mongoFunctions.update_many(
-          // Change to updateMany if necessary
-          "ATTENDANCE",
-          { attendance_id: record.attendance_id },
-          { $set: { attendance_status: newStatus } }
-        );
-      });
+    const updates = await Promise.all(
+      attendanceRecords
+        .filter((record) => !record.attendance_status) // Synchronous filter
+        .map(async (record) => {
+          // Asynchronous map
+          const checkout = {
+            out_time: new Date(),
+          };
+          let check = await mongoFunctions.find_one_and_update(
+            "ATTENDANCE",
+            { attendance_id: record.attendance_id },
+            { $push: { checkout: checkout } }, // Ensure the field name is correct
+            { new: true } // Return the updated document
+          );
+
+          const minutes = await calculate_working_minutes(check);
+          console.log(
+            `Working minutes for ${record.attendance_id}: ${minutes}`
+          );
+        })
+    );
 
     // Await all updates to complete
-    await Promise.all(updates);
+    // await Promise.all(updates);
 
     // Create attendance records for missing employees
     if (missingEmployees.length > 0) {
@@ -243,7 +254,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "30 23 * * *",
+  "00 21 * * *",
   async () => {
     console.log("running cron");
     await updateStatusOfNotCheckouts();
