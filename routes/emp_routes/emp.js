@@ -807,17 +807,17 @@ router.post(
     console.log(time_diff);
 
     if (data.type === "checkin") {
-      if (!today_record || today_record.checkin.length === 0) {
-        console.log(time_diff);
-        console.log(-14 < -30);
-        if (time_diff > 30 || time_diff < -30) {
-          return res
-            .status(400)
-            .send(
-              "Check-In Time Must Be Within 30 Minutes Before Or After The Scheduled Time[10:00 AM]."
-            );
-        }
-      }
+      // if (!today_record || today_record.checkin.length === 0) {
+      //   console.log(time_diff);
+      //   console.log(-14 < -30);
+      //   if (time_diff > 30 || time_diff < -30) {
+      //     return res
+      //       .status(400)
+      //       .send(
+      //         "Check-In Time Must Be Within 30 Minutes Before Or After The Scheduled Time[10:00 AM]."
+      //       );
+      //   }
+      // }
       alertDev(emp_in_time);
       if (today_record) {
         if (today_record.checkout.length < today_record.checkin.length) {
