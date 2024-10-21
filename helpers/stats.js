@@ -365,13 +365,13 @@ async function calculate_working_minutes(attendance) {
 
     console.log(totalTimeMinutes);
     let newStatus;
-    if (totalTimeMinutes < 240) {
+    if (totalTimeMinutes < 270) {
       // Less than 4.5 hours
       newStatus = "absent";
-    } else if (totalTimeMinutes < 540) {
+    } else if (totalTimeMinutes < 510) {
       // Less than 9 hours
       // If it is 4.5 hours or more but less than 9 hours
-      newStatus = "0.5 day present, 0.5 day absent";
+      newStatus = "half day";
     } else {
       // Greater than or equal to 9 hours
       newStatus = "present";

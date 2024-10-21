@@ -1301,7 +1301,7 @@ router.post(
         },
         status: { $in: ["checkin", "checkout"] },
         attendance_status: {
-          $in: ["present", "0.5 day present, 0.5 day absent", ""],
+          $in: ["present", "0.5 day present, 0.5 day absent", "", "half day"],
         },
       },
 
