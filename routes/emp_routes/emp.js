@@ -793,6 +793,10 @@ router.post(
 
     // let emp_checkin_time = new Date(nowUTC.getTime() + istOffset);
     // console.log("in_timeeeeee", emp_checkin_time);
+    const cutoffTime = new Date();
+
+    // Set cutoff time to today at 2:30 PM
+    cutoffTime.setHours(14, 30, 0, 0);
     const checkin_time = "10:00";
     const checkout_time = "7:00";
     let actual_in_time = await functions.get_full_date_time(checkin_time);
@@ -809,8 +813,10 @@ router.post(
     if (data.type === "checkin") {
       if (!today_record || today_record.checkin.length === 0) {
         console.log(time_diff);
-        if (time_diff > 271) {
-          return res.status(400).send("Check-In Must Be Done Before 2:30 Pm");
+        if (now > cutoffTime) {
+          return res
+            .status(400)
+            .send("Check-Ins Are Not Allowed After 2:30 PM.");
         }
       }
       alertDev(emp_in_time);
