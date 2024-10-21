@@ -660,6 +660,12 @@ function get_attendance_stats(data) {
   });
   return schema.validate(data);
 }
+function delete_data(data) {
+  const schema = Joi.object({
+    id: Joi.string().required(),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -699,4 +705,5 @@ module.exports = {
   add_admin_emp,
   add_holidays,
   get_attendance_stats,
+  delete_data,
 };

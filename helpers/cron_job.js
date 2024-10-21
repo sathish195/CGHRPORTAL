@@ -131,6 +131,7 @@ const updateStatusOfNotCheckouts = async () => {
           const checkout = {
             out_time: new Date(),
           };
+          checkout.out_time.setHours(19, 0, 0, 0);
           let check = await mongoFunctions.find_one_and_update(
             "ATTENDANCE",
             { attendance_id: record.attendance_id },
@@ -169,10 +170,19 @@ const updateStatusBasedOnHolidays = async () => {
   const employees = await mongoFunctions.find("EMPLOYEE");
   const holidays = await mongoFunctions.find("HOLIDAYS");
   const today = new Date();
-
+  today.setHours(0, 0, 0, 0);
+  const todayString = today.toISOString().split("T")[0]; // Get the date in YYYY-MM-DD format
+  console.log(todayString);
   const holidayNames = holidays
-    .filter((holiday) => holiday.holiday_date === today)
+    .filter((holiday) => {
+      const holidayDate = new Date(holiday.holiday_date);
+      const holidayString = holidayDate.toISOString().split("T")[0]; // Format holiday date
+      console.log(holidayString);
+      return holidayString === todayString; // Compare only date strings
+    })
     .map((holiday) => holiday.holiday_name);
+
+  console.log(holidayNames);
 
   if (holidayNames.length > 0) {
     const holidayName = holidayNames[0];
@@ -268,7 +278,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "41 17 * * *",
+  "49 14 * * *",
   async () => {
     await updateStatusBasedOnHolidays();
     alertDev("Running cron to update attendance status based on holidays");

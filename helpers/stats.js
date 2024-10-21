@@ -365,7 +365,7 @@ async function calculate_working_minutes(attendance) {
 
     console.log(totalTimeMinutes);
     let newStatus;
-    if (totalTimeMinutes < 270) {
+    if (totalTimeMinutes < 240) {
       // Less than 4.5 hours
       newStatus = "absent";
     } else if (totalTimeMinutes < 540) {

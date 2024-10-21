@@ -1340,4 +1340,35 @@ router.post(
   })
 );
 
+router.post(
+  "/delete_holiday",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    const { error, value } = validations.delete_data(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const data = value;
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director Or Manager Can Access This Endpoint");
+    }
+
+    let findId = await mongoFunctions.find_one("HOLIDAYS", {
+      organisation_id: req.employee.organisation_id,
+      holiday_id: data.id,
+    });
+    if (!findId) {
+      return res.status(400).send("Holiday Doesn't Exists");
+    }
+    let removeId = await mongoFunctions.find_one_and_delete("HOLIDAYS", {
+      organisation_id: req.employee.organisation_id,
+      holiday_id: data.id,
+    });
+    return res.status(200).send("Holiday Removed Successfully..!");
+  })
+);
+
 module.exports = router;
