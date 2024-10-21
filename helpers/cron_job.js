@@ -173,11 +173,19 @@ const updateStatusBasedOnHolidays = async () => {
   today.setHours(0, 0, 0, 0);
   const todayString = today.toISOString().split("T")[0]; // Get the date in YYYY-MM-DD format
   console.log(todayString);
+
   const holidayNames = holidays
     .filter((holiday) => {
       const holidayDate = new Date(holiday.holiday_date);
+
+      // Check if holidayDate is valid
+      if (isNaN(holidayDate)) {
+        console.error(`Invalid date for holiday: ${holiday.holiday_date}`);
+        return false; // Skip invalid dates
+      }
       const holidayString = holidayDate.toISOString().split("T")[0]; // Format holiday date
       console.log(holidayString);
+
       return holidayString === todayString; // Compare only date strings
     })
     .map((holiday) => holiday.holiday_name);
@@ -278,7 +286,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "49 14 * * *",
+  "33 16 * * *",
   async () => {
     await updateStatusBasedOnHolidays();
     alertDev("Running cron to update attendance status based on holidays");
