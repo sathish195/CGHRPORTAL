@@ -286,7 +286,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "33 16 * * *",
+  "00 11 * * *",
   async () => {
     await updateStatusBasedOnHolidays();
     alertDev("Running cron to update attendance status based on holidays");
