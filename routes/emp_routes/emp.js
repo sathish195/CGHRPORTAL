@@ -794,7 +794,7 @@ router.post(
 
     // let emp_checkin_time = new Date(nowUTC.getTime() + istOffset);
     // console.log("in_timeeeeee", emp_checkin_time);
-    // const currentHour = time.getHours();
+    const currentHour = time.getHours();
 
     // Check if the current time is after 10 AM
     console.log(currentHour);
@@ -814,10 +814,14 @@ router.post(
     if (data.type === "checkin") {
       if (!today_record || today_record.checkin.length === 0) {
         console.log(time_diff);
-        if (time_diff < 270) {
-          console.log(time_diff);
-          console.log("flow came here");
-          return res.status(400).send(" Check-Ins Not Allowed After Half Day");
+        if (currentHour >= 10) {
+          if (time_diff < 270) {
+            console.log(time_diff);
+            console.log("flow came here");
+            return res
+              .status(400)
+              .send(" Check-Ins Not Allowed After Half Day");
+          }
         }
       }
 
