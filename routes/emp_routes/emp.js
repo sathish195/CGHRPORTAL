@@ -814,14 +814,10 @@ router.post(
     if (data.type === "checkin") {
       if (!today_record || today_record.checkin.length === 0) {
         console.log(time_diff);
-        if (currentHour >= 10) {
-          if (time_diff < 270) {
-            console.log(time_diff);
-            console.log("flow came here");
-            return res
-              .status(400)
-              .send(" Check-Ins Not Allowed After Half Day");
-          }
+        if (time_diff < -270) {
+          console.log(time_diff);
+          console.log("flow came here");
+          return res.status(400).send(" Check-Ins Not Allowed After Half Day");
         }
       }
 
