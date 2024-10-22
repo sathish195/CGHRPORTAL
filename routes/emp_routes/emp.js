@@ -811,14 +811,14 @@ router.post(
     console.log(time_diff);
 
     if (data.type === "checkin") {
-      if (!today_record || today_record.checkin.length === 0) {
-        console.log(time_diff);
-        if (now > cutoffTime) {
-          return res
-            .status(400)
-            .send("Check-Ins Are Not Allowed After 2:30 PM.");
-        }
-      }
+      // if (!today_record || today_record.checkin.length === 0) {
+      //   console.log(time_diff);
+      //   if (now > cutoffTime) {
+      //     return res
+      //       .status(400)
+      //       .send("Check-Ins Are Not Allowed After 2:30 PM.");
+      //   }
+      // }
       alertDev(emp_in_time);
       if (today_record) {
         if (today_record.checkout.length < today_record.checkin.length) {
