@@ -822,7 +822,7 @@ router.post(
             console.log("absolute time diff", Math.abs(time_diff));
             return res
               .status(400)
-              .send("Check-Ins Are Not Allowed After 2:30 PM.");
+              .send(" Check-Ins Not Allowed After Half Day");
           }
         }
       }
