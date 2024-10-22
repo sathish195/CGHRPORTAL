@@ -813,6 +813,8 @@ router.post(
     if (data.type === "checkin") {
       if (!today_record || today_record.checkin.length === 0) {
         console.log(time_diff);
+        console.log("absolute time diff", math.abs(time_diff));
+        console.log(currentHour);
         if (currentHour >= 10) {
           if (Math.abs(time_diff) > 270) {
             console.log(time_diff);
