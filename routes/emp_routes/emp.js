@@ -813,7 +813,8 @@ router.post(
     if (data.type === "checkin") {
       if (!today_record || today_record.checkin.length === 0) {
         console.log(time_diff);
-        if (now > cutoffTime) {
+        if (time_diff > 270) {
+          console.log(time_diff);
           return res
             .status(400)
             .send("Check-Ins Are Not Allowed After 2:30 PM.");
