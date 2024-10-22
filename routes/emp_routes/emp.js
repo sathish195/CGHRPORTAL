@@ -821,6 +821,8 @@ router.post(
         }
       }
 
+      alertDev(time_diff);
+
       alertDev(emp_in_time);
       if (today_record) {
         if (today_record.checkout.length < today_record.checkin.length) {
