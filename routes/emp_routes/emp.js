@@ -816,7 +816,7 @@ router.post(
         if (currentHour >= 10) {
           if (Math.abs(time_diff) > 270) {
             console.log(time_diff);
-            console.log(math.abs(time_diff));
+            console.log("absolute time diff", math.abs(time_diff));
             return res
               .status(400)
               .send("Check-Ins Are Not Allowed After 2:30 PM.");
