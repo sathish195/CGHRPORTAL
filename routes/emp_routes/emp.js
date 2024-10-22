@@ -757,6 +757,7 @@ router.post(
     // if (req.employee.admin_type === "1") {
     //   return res.status(400).send("Admin Do Not Checkin");
     // }
+    console.log(-269 > -270);
 
     let org_data = await redis.redisGet(
       "CRM_ORGANISATIONS",
@@ -793,7 +794,7 @@ router.post(
 
     // let emp_checkin_time = new Date(nowUTC.getTime() + istOffset);
     // console.log("in_timeeeeee", emp_checkin_time);
-    const currentHour = time.getHours();
+    // const currentHour = time.getHours();
 
     // Check if the current time is after 10 AM
     console.log(currentHour);
@@ -813,17 +814,10 @@ router.post(
     if (data.type === "checkin") {
       if (!today_record || today_record.checkin.length === 0) {
         console.log(time_diff);
-        console.log("absolute time diff", Math.abs(time_diff));
-        console.log(currentHour);
-        if (currentHour >= 10) {
-          if (Math.abs(time_diff) > 270) {
-            console.log(time_diff);
-            console.log("flow came here");
-            console.log("absolute time diff", Math.abs(time_diff));
-            return res
-              .status(400)
-              .send(" Check-Ins Not Allowed After Half Day");
-          }
+        if (time_diff < 270) {
+          console.log(time_diff);
+          console.log("flow came here");
+          return res.status(400).send(" Check-Ins Not Allowed After Half Day");
         }
       }
 
