@@ -816,6 +816,7 @@ router.post(
         if (currentHour >= 10) {
           if (Math.abs(time_diff) > 270) {
             console.log(time_diff);
+            console.log("flow came here");
             console.log("absolute time diff", math.abs(time_diff));
             return res
               .status(400)
