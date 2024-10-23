@@ -825,7 +825,7 @@ router.post(
 
       alertDev(emp_in_time);
       if (today_record) {
-        if (today_record.checkout.length < today_record.checkin.length) {
+        if (today_record.checkin.length === 1) {
           return res.status(400).send("Already Checked In..!");
         } else {
           let check_in_obj = {
