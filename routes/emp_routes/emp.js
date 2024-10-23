@@ -826,7 +826,7 @@ router.post(
       alertDev(emp_in_time);
       if (today_record) {
         if (today_record.checkin.length === 1) {
-          return res.status(400).send("Already Checked In..!");
+          return res.status(400).send("Already Checked In..Contact HR Manager!");
         } else {
           let check_in_obj = {
             in_time: emp_in_time,
