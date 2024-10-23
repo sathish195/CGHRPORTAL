@@ -1146,11 +1146,11 @@ router.post(
 
       if (holiday_exists) {
         // Check if the existing record matches the holiday name
-        if (holiday_exists.holiday_name === data.holiday_name.toLowerCase()) {
-          return res
-            .status(400)
-            .send("Holiday With This Name Already Exists..!");
-        }
+        // if (holiday_exists.holiday_name === data.holiday_name.toLowerCase()) {
+        //   return res
+        //     .status(400)
+        //     .send("Holiday With This Name Already Exists..!");
+        // }
 
         // Check if the existing record matches the holiday date
         if (
@@ -1191,9 +1191,9 @@ router.post(
         organisation_id: req.employee.organisation_id,
         holiday_name: data.holiday_name.toLowerCase(),
       });
-      if (holiday_exist) {
-        return res.status(400).send("Holiday Already Exists..!");
-      }
+      // if (holiday_exist) {
+      //   return res.status(400).send("Holiday Already Exists..!");
+      // }
       // Add new holiday
       const new_holiday_data = {
         organisation_id: req.employee.organisation_id,
