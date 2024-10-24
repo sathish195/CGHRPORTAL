@@ -368,7 +368,7 @@ async function calculate_working_minutes(attendance) {
     if (totalTimeMinutes < 270) {
       // Less than 4.5 hours
       newStatus = "absent";
-    } else if (totalTimeMinutes < 510) {
+    } else if (totalTimeMinutes < 480) {
       // Less than 9 hours
       // If it is 4.5 hours or more but less than 9 hours
       newStatus = "half day";

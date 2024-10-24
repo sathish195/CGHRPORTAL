@@ -1246,8 +1246,9 @@ router.post(
   })
 );
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({
+  limits: { fileSize: 2 * 1024 * 1024 },
+});
 
 router.post(
   "/upload_pdf_file",
@@ -1256,6 +1257,11 @@ router.post(
   Async(async (req, res) => {
     if (!req.file) {
       return res.status(400).send("No file uploaded.");
+    }
+    console.log(req.file.size);
+    // Check if file is within size limit
+    if (req.file.size > 1 * 1024 * 1024) {
+      return res.status(400).send("File size must be between 1 MB and 2 MB.");
     }
 
     const base64_string = req.file.buffer.toString("base64");
