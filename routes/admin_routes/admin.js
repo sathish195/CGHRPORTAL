@@ -1665,7 +1665,7 @@ router.post(
       update = {
         checkin: check_in_obj,
         status: "checkin",
-        attendance_status:""
+        attendance_status: "",
       };
     } else {
       const in_time = new Date(data.in_time);
@@ -1725,5 +1725,59 @@ router.post(
         attendance_obj.total_working_minutes,
       ],
     });
+  })
+);
+router.post(
+  "/remove_checkout",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let data = req.body;
+    const { error } = validations.delete_data(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director Or Manager Can Update The Attendance");
+    }
+
+    let org_data = await redis.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data)
+      return res.status(400).send("Access Denied; Organisation Not Found!");
+
+    let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+      organisation_id: req.employee.organisation_id,
+      employee_id: req.employee.employee_id,
+    });
+    if (!find_emp) return res.status(400).send("Employee Not Found..!");
+    let find_attendance = await mongoFunctions.find_one("ATTENDANCE", {
+      organisation_id: req.employee.organisation_id,
+      attendance_id: data.id,
+    });
+    if (!find_attendance) return res.status(400).send("Attendance Not Found");
+    const update = {
+      checkout: [],
+      total_working_minutes: 0,
+      attendance_status: "",
+      status: "checkin",
+    };
+    let attendance_obj = await mongoFunctions.find_one_and_update(
+      "ATTENDANCE",
+      { attendance_id: data.id },
+      {
+        $set: update,
+      },
+      { new: true } // This option should be here
+    );
+    if (!attendance_obj) {
+      return res.status(400).send("Failed To Delete Checkout");
+    }
+    return res.status(200).send("Checkout Removed Successfully..!");
   })
 );
