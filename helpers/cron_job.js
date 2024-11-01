@@ -26,6 +26,37 @@ const createAttendanceRecords = async (employees, status = "") => {
       employee_id: employee.employee_id,
       employee_name: `${employee.basic_info.first_name} ${employee.basic_info.last_name}`,
       attendance_status: status,
+      // status:stat
+    };
+    return mongoFunctions.create_new_record("ATTENDANCE", newRecord);
+  });
+
+  await Promise.all(absenceUpdates);
+  console.log(
+    `Attendance records created for all employees with status '${status}'.`
+  );
+  alertDev(
+    `Attendance records created for all employees with status '${status}'.`
+  );
+};
+const createHolidayRecords = async (
+  employees,
+  attendance_status = "",
+  status
+) => {
+  const activeEmployees = employees.filter(
+    (employee) =>
+      employee.work_info.employee_status.toLowerCase() !== "disable" &&
+      employee.work_info.employee_status.toLowerCase() !== "terminated"
+  );
+  const absenceUpdates = activeEmployees.map((employee) => {
+    const newRecord = {
+      organisation_id: employee.organisation_id,
+      attendance_id: functions.get_random_string("A", 3, true) + Date.now(),
+      employee_id: employee.employee_id,
+      employee_name: `${employee.basic_info.first_name} ${employee.basic_info.last_name}`,
+      attendance_status: attendance_status,
+      status: status,
     };
     return mongoFunctions.create_new_record("ATTENDANCE", newRecord);
   });
@@ -204,11 +235,11 @@ const updateStatusBasedOnHolidays = async () => {
       );
 
       if (missingEmployees.length > 0) {
-        await createAttendanceRecords(missingEmployees, holidayName);
+        await createHolidayRecords(missingEmployees, holidayName, "holiday");
       }
     } else {
       // If no attendance records exist, create for all employees
-      await createAttendanceRecords(employees, holidayName);
+      await createHolidayRecords(employees, holidayName, "holiday");
     }
   }
   console.log("Holiday not found");
