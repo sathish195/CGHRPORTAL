@@ -201,23 +201,19 @@ const updateStatusBasedOnHolidays = async () => {
   const employees = await mongoFunctions.find("EMPLOYEE");
   const holidays = await mongoFunctions.find("HOLIDAYS");
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  console.log(today);
+  // today.setHours(0, 0, 0, 0);
   const todayString = today.toISOString().split("T")[0]; // Get the date in YYYY-MM-DD format
   console.log(todayString);
 
   const holidayNames = holidays
     .filter((holiday) => {
       const holidayDate = new Date(holiday.holiday_date);
-
-      // Check if holidayDate is valid
-      if (isNaN(holidayDate)) {
-        console.error(`Invalid date for holiday: ${holiday.holiday_date}`);
-        return false; // Skip invalid dates
-      }
-      const holidayString = holidayDate.toISOString().split("T")[0]; // Format holiday date
-      console.log(holidayString);
-
-      return holidayString === todayString; // Compare only date strings
+      const holidayString = holidayDate.toISOString().split("T")[0];
+      console.log(
+        `Checking holiday: ${holidayString} against today: ${todayString}`
+      );
+      return holidayString === todayString;
     })
     .map((holiday) => holiday.holiday_name);
 
@@ -251,8 +247,15 @@ const updateStatusOfNotCheckins = async () => {
   });
 
   // Update attendance status for records where the checkin array is empty
+  // const updates = attendanceRecord
+  //   .filter((record) => (!record.checkin || (record.checkin.length === 0 && record.attendance_status==="")))
+  //   .map((record) => {
   const updates = attendanceRecord
-    .filter((record) => !record.checkin || record.checkin.length === 0)
+    .filter(
+      (record) =>
+        record.attendance_status === "" &&
+        (!record.checkin || record.checkin.length === 0)
+    )
     .map((record) => {
       const newStatus = "absent";
       return mongoFunctions.update_many(
@@ -317,7 +320,7 @@ cron.schedule(
 );
 
 cron.schedule(
-  "00 11 * * *",
+  "00 9 * * *",
   async () => {
     await updateStatusBasedOnHolidays();
     alertDev("Running cron to update attendance status based on holidays");
