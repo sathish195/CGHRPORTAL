@@ -101,6 +101,10 @@ router.post(
       },
       { _id: 0, __v: 0 }
     );
+    let total_emp_count = await mongoFunctions.count_documents("EMPLOYEE", {
+      organisation_id: req.employee.organisation_id,
+      "work_info.employee_status": { $regex: /^active$/i }, // Case-insensitive regex
+    });
 
     let dashborad = {
       recent_hires: recent_hires,
@@ -108,6 +112,7 @@ router.post(
       organisation_details: filtered_org_data,
       stats: statss,
       today_attendance: today_attendance,
+      total_emp_count: total_emp_count,
     };
     console.log("dashboard data fetched successfully");
     return res.status(200).send(dashborad);
