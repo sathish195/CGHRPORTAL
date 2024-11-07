@@ -564,6 +564,14 @@ router.post(
       // team: { $elemMatch: { employee_id: req.employee.employee_id } },
     });
     if (!findId) return res.status(400).send("Task ID does not exist");
+    let modified_by = {
+      employee_id: req.employee.employee_id,
+      employee_name: req.employee.first_name + " " + req.employee.last_name,
+      employee_email: req.employee.email,
+      modifiedAt: new Date(),
+      prevStatus: findId.status,
+      currentStatus: data.status,
+    };
     const task_data_up = await mongoFunctions.find_one_and_update(
       "TASKS",
       {
@@ -574,20 +582,18 @@ router.post(
         $set: {
           status: data.status,
         },
-        $push: {
-          modified_by: {
-            employee_id: req.employee.employee_id,
-            employee_name:
-              req.employee.first_name + " " + req.employee.last_name,
-            employee_email: req.employee.email,
-            modifiedAt: new Date(),
-            prevStatus: findId.status,
-            currentStatus: data.status,
-          },
-        },
+        $push: { modified_by: modified_by },
       },
       { new: true } // Optionally return the updated document
     );
+    let s = await stats.calculate_working_time(
+      modified_by.modifiedAt,
+      findId.due_date,
+      findId.status,
+      findId.task_id
+    );
+    console.log(s);
+
     if (!task_data_up) return res.status(400).send("Task Update Failed");
     if (findId.status !== data.status) {
       await stats.update_stats(
@@ -826,7 +832,9 @@ router.post(
       alertDev(emp_in_time);
       if (today_record) {
         if (today_record.checkin.length === 1) {
-          return res.status(400).send("Already Checked In..Contact HR Manager!");
+          return res
+            .status(400)
+            .send("Already Checked In..Contact HR Manager!");
         } else {
           let check_in_obj = {
             in_time: emp_in_time,

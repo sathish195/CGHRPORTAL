@@ -853,6 +853,96 @@ router.post(
   })
 );
 
+router.post(
+  "/update_task_team",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let data = req.body;
+
+    // Validate request data
+    const { error } = validations.update_task_team(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const userRole = req.employee.admin_type;
+    // Find the project
+    const project = await mongoFunctions.find_one("PROJECTS", {
+      project_id: data.project_id,
+    });
+    if (!project) return res.status(400).send("Project Not Found");
+
+    // Check if task_id is provided and belongs to the project
+    if (data.task_id && data.task_id.length > 9) {
+      const task = await mongoFunctions.find_one("TASKS", {
+        task_id: data.task_id,
+        project_id: data.project_id,
+      });
+      if (!task)
+        return res.status(400).send("Task Does Not Belong To The Project");
+      let employee = await mongoFunctions.find_one("EMPLOYEE", {
+        employee_id: data.employee_id,
+      });
+
+      if (data.action.toLowerCase() === "add") {
+        if (!employee) return res.status(400).send(`Employee Not Found`);
+        const newAssignTrack = {
+          assigned_by: {
+            employee_id: req.employee.employee_id,
+            employee_name:
+              req.employee.first_name + " " + req.employee.last_name,
+            employee_email: req.employee.email,
+            date_time: new Date(),
+          },
+          assigned_to: {
+            employee_id: data.employee_id,
+            employee_name:
+              employee.basic_info.first_name +
+              " " +
+              employee.basic_info.last_name,
+            date_time: new Date(),
+          },
+        };
+        await mongoFunctions.find_one_and_update(
+          "TASKS",
+          { project_id: data.project_id, task_id: data.task_id },
+          {
+            $set: {
+              employee_id: data.employee_id,
+              employee_name:
+                employee.basic_info.first_name +
+                " " +
+                employee.basic_info.last_name,
+            },
+            $push: {
+              assign_track: newAssignTrack,
+            },
+          }
+        );
+        return res.status(200).send("Team Member Added Successfully..!");
+      }
+      if (data.action.toLowerCase() === "remove") {
+        if (data.task_id && data.task_id.length > 9) {
+          // Remove team member from task
+          await mongoFunctions.find_one_and_update(
+            "TASKS",
+            { project_id: data.project_id, task_id: data.task_id },
+            {
+              $pull: {
+                employee_id: data.employee_id,
+                employee_name:
+                  employee.basic_info.first_name +
+                  " " +
+                  employee.basic_info.last_name,
+              },
+            }
+          );
+        }
+        return res.status(200).send("Team Member Removed Successfully..!");
+      }
+    }
+  })
+);
+
 module.exports = router;
 
 router.post(
@@ -869,7 +959,7 @@ router.post(
 
     // Check user role
     const userRole = req.employee.admin_type;
-    const admin_types = ["3", "2"];
+    const admin_types = ["3", "2", "1"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res
         .status(403)
@@ -915,7 +1005,7 @@ router.post(
             status: data.status,
             description: data.description,
             task_status: data.task_status,
-            due_date: data.due_date,
+            due_date: new Date(data.due_date),
             priority: data.priority,
             completed_date: data.completed_date
               ? data.completed_date
@@ -957,10 +1047,11 @@ router.post(
         project_id: data.project_id,
         project_name: findId.project_name,
         task_name: data.task_name.toLowerCase(),
+        department_id: req.employee.department_id,
         // start_date: data.start_date,
         // end_date: data.end_date,
         description: data.description,
-        due_date: data.due_date,
+        due_date: new Date(data.due_date),
         priority: data.priority,
         status: data.status,
         task_status: data.task_status,

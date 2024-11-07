@@ -336,6 +336,39 @@ async function update_stats(
     };
   }
 }
+
+//calculate worked_hours of tasks
+
+async function calculate_working_time(date1, date2, status, task_id) {
+  const startDate = new Date(date1);
+  const endDate = new Date(date2);
+
+  const diffInMilliseconds = endDate - startDate;
+  console.log(diffInMilliseconds);
+
+  // if (diffInMilliseconds < 0) {
+  //   return "The first date is after the second date.";
+  // }
+
+  const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
+  console.log(diffInMinutes);
+
+  let statuses = ["under_review", "completed", "pause"];
+  if (statuses.includes(status)) {
+    await mongoFunctions.find_one_and_update(
+      "TASKS",
+      { task_id: task_id },
+      {
+        $inc: {
+          worked_hours: +diffInMinutes,
+        },
+      },
+      { new: true }
+    );
+  }
+  return true;
+}
+
 //calculate working minutes
 
 async function calculate_working_minutes(attendance) {
@@ -455,4 +488,5 @@ module.exports = {
   parseDependentDetails,
   parseEducationalDetails,
   parseWorkExperience,
+  calculate_working_time,
 };

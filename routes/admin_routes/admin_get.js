@@ -96,6 +96,65 @@ router.post(
   })
 );
 
+//get employee list with tasks count
+
+router.post(
+  "/get_employees_with_tasks",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    console.log("get employee list route hit");
+    const emp = req.employee;
+    const LIMIT = 50;
+    const data = req.body;
+    const { error } = validations.skip(data);
+
+    if (error) return res.status(400).send(error.details[0].message);
+    let query = { organisation_id: req.employee.organisation_id };
+    if (emp.admin_type === "1") {
+      // query["work_info.admin_type"] = { $ne: "1" };
+    } else if (emp.admin_type === "2") {
+      query["work_info.admin_type"] = { $nin: ["1"] };
+    } else if (emp.admin_type === "3") {
+      query["work_info.department_id"] = emp.department_id;
+      query["work_info.admin_type"] = { $nin: ["1", "2"] };
+      // Logic for team incharge
+    } else {
+      return res.status(403).send("Forbidden: Not Administrator");
+    }
+    //  Logic for director or manager
+    let employees = await mongoFunctions.lazy_loading(
+      "EMPLOYEE",
+      query,
+      {
+        employee_id: 1,
+        // images: 1,
+        basic_info: 1,
+      },
+      { _id: -1 },
+      LIMIT,
+      data.skip
+    );
+    let tasks_count = await mongoFunctions.find_one("TASKS", {
+      organisation_id: req.employee.organisation_id,
+      department_id: req.employee.department_id,
+      status: "inprogress",
+    });
+    let tasks = [tasks_count];
+    let employees_with_task_count = employees.map((employee) => {
+      let employee_tasks = tasks.filter(
+        (task) => task.employee_id === employee.employee_id
+      );
+
+      return {
+        ...employee,
+        task_count: employee_tasks.length,
+      };
+    });
+    return res.status(200).send(employees_with_task_count);
+  })
+);
+
 router.post(
   "/get_project_by_id",
   Auth,

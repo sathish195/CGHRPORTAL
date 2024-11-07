@@ -146,12 +146,7 @@ router.post(
       findTask = await mongoFunctions.find("TASKS", {
         organisation_id: req.employee.organisation_id,
         status: { $nin: [/^completed$/i, /^under_review$/i] },
-        team: { $elemMatch: { employee_id: req.employee.employee_id } },
-        assign_track: {
-          $elemMatch: {
-            "assigned_to.employee_id": req.employee.employee_id,
-          },
-        },
+        employee_id: req.employee.employee_id,
       });
       return res.status(200).send(findTask);
     }
@@ -195,7 +190,7 @@ router.post(
     let query = {
       organisation_id: req.employee.organisation_id,
     };
-    if (userRole === "2") {
+    if (userRole === "2" || userRole === "1") {
       if (data.status) {
         query.status = data.status;
       }
@@ -214,7 +209,7 @@ router.post(
       query = {
         $or: [
           { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
-          { team: { $elemMatch: { employee_id: req.employee.employee_id } } }, // Tasks where employee is in the team array
+          { employee_id: req.employee.employee_id }, // Tasks where employee is in the team array
         ],
       };
 
@@ -233,7 +228,8 @@ router.post(
       }
     } else {
       // query.status = { $nin: [/^completed$/i, /^under_review$/i] };
-      query.team = { $elemMatch: { employee_id: req.employee.employee_id } };
+      // query.team = { $elemMatch: { employee_id: req.employee.employee_id } };
+      query.employee_id = req.employee.employee_id;
       // { $elemMatch: { employee_id: req.employee.employee_id } };
 
       if (data.status) {

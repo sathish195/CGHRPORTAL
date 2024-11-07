@@ -415,11 +415,19 @@ function add_remove_team(data) {
   const schema = Joi.object({
     action: Joi.string().valid("remove", "add").required(),
     employee_id: Joi.array().min(1).required().messages({
-      "array.min":
-        "You Must Provide At Least One Employee Id To Remove From Team.",
+      "array.min": "You Must Provide At Least One Employee Id To Update Team.",
     }),
     project_id: Joi.string().min(5).max(12).required(),
     task_id: Joi.string().optional().allow(""),
+  });
+  return schema.validate(data);
+}
+function update_task_team(data) {
+  const schema = Joi.object({
+    action: Joi.string().valid("remove", "add").required(),
+    employee_id: Joi.string().required(),
+    project_id: Joi.string().min(5).max(12).required(),
+    task_id: Joi.string().required().allow(""),
   });
   return schema.validate(data);
 }
@@ -441,7 +449,7 @@ function add_update_task(data) {
     status: Joi.string()
       .valid("new", "in_progress", "under_review", "completed", "manager")
       .required(),
-    due_date: Joi.date().required(),
+    due_date: Joi.string().required(),
     priority: Joi.string().valid("high", "medium", "low").required(),
     task_status: Joi.string()
       .valid("active", "in_active", "completed")
@@ -477,7 +485,7 @@ function update_task(data) {
   const schema = Joi.object({
     task_id: Joi.string().min(5).max(12).required(),
     status: Joi.string()
-      .valid("new", "in_progress", "under_review", "completed")
+      .valid("new", "in_progress", "under_review", "completed", "pause")
       .required(),
   });
   return schema.validate(data);
@@ -706,4 +714,5 @@ module.exports = {
   add_holidays,
   get_attendance_stats,
   delete_data,
+  update_task_team,
 };
