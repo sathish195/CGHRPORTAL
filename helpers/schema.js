@@ -427,7 +427,7 @@ function update_task_team(data) {
     action: Joi.string().valid("remove", "add").required(),
     employee_id: Joi.string().required(),
     project_id: Joi.string().min(5).max(12).required(),
-    task_id: Joi.string().required().allow(""),
+    task_id: Joi.string().required(),
   });
   return schema.validate(data);
 }
