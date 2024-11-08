@@ -128,7 +128,7 @@ router.post(
 
     const userRole = req.employee.admin_type;
     let findTask;
-    if (userRole === "2") {
+    if (userRole === "2" || userRole === "1") {
       findTask = await mongoFunctions.find("TASKS", {
         organisation_id: req.employee.organisation_id,
         status: { $nin: [/^completed$/i] },

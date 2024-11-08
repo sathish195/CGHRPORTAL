@@ -978,6 +978,9 @@ router.post(
       project_id: data.project_id,
       // team: { $elemMatch: { employee_id: req.employee.employee_id } }
     });
+    if (!findId) {
+      return res.status(400).send("Project Does Not Exist");
+    }
 
     if (userRole === "3") {
       const findId = await mongoFunctions.find_one("PROJECTS", {
@@ -988,7 +991,7 @@ router.post(
         // { $elemMatch: { employee_id: req.employee.employee_id } }
       });
 
-      if (!findId) return res.status(400).send("Project ID Does Not Exist");
+      if (!findId) return res.status(400).send("Project Does Not Exist");
     }
 
     if (data.task_id && data.task_id.length > 9) {
