@@ -455,6 +455,14 @@ router.post(
           "Only Director Or Manager Or Tl Can Access Tasks Count Of Employee"
         );
     }
+    findId = await mongoFunctions.find_one("EMPLOYEE", {
+      organisation_id: req.employee.organisation_id,
+      employee_id: data.employee_id,
+    });
+
+    if (!findId) {
+      return res.status(200).send("Employee Not Found");
+    }
 
     // const now = new Date();
 

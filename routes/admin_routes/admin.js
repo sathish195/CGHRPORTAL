@@ -921,6 +921,7 @@ router.post(
         return res.status(200).send("Team Member Added Successfully..!");
       }
       if (data.action.toLowerCase() === "remove") {
+        if (!employee) return res.status(400).send(`Employee Not Found`);
         if (data.task_id && data.task_id.length > 9) {
           // Remove team member from task
           await mongoFunctions.find_one_and_update(
