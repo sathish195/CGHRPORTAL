@@ -448,37 +448,45 @@ router.post(
     const { error } = validations.tasks_count(data);
     if (error) return res.status(400).send(error.details[0].message);
     const admin_types = ["1", "2", "3"];
-    if (!admin_types.includes(req.employee.admin_type)) {
-      return res
-        .status(403)
-        .send(
-          "Only Director Or Manager Or Tl Can Access Tasks Count Of Employee"
-        );
-    }
+    // if (!admin_types.includes(req.employee.admin_type)) {
+    //   return res
+    //     .status(403)
+    //     .send(
+    //       "Only Director Or Manager Or Tl Can Access Tasks Count Of Employee"
+    //     );
+    // }
 
-    const now = new Date();
+    // const now = new Date();
 
-    const start_day = new Date(now.getFullYear(), now.getMonth(), 1);
+    // const start_day = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const end_day = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0,
-      23,
-      59,
-      59,
-      999
-    );
-    console.log(start_day);
-    console.log(end_day);
+    // const end_day = new Date(
+    //   now.getFullYear(),
+    //   now.getMonth() + 1,
+    //   0,
+    //   23,
+    //   59,
+    //   59,
+    //   999
+    // );
+    // console.log(start_day);
+    // console.log(end_day);
+
+    from_date = new Date(data.from_date);
+    to_date = new Date(data.to_date);
+    console.log(to_date);
+    to_date.setDate(to_date.getDate() + 1);
+
+    console.log(from_date);
+    console.log(to_date);
 
     const completed = await mongoFunctions.find(
       "TASKS",
       {
         organisation_id: req.employee.organisation_id,
         createdAt: {
-          $gte: start_day,
-          $lte: end_day,
+          $gt: from_date,
+          $lt: to_date,
         },
         status: { $regex: "completed", $options: "i" },
         employee_id: data.employee_id,
@@ -493,8 +501,8 @@ router.post(
       {
         organisation_id: req.employee.organisation_id,
         createdAt: {
-          $gte: start_day,
-          $lte: end_day,
+          $gt: from_date,
+          $lt: to_date,
         },
         status: { $regex: "pause", $options: "i" },
         employee_id: data.employee_id,
@@ -508,8 +516,8 @@ router.post(
       {
         organisation_id: req.employee.organisation_id,
         createdAt: {
-          $gte: start_day,
-          $lte: end_day,
+          $gt: from_date,
+          $lt: to_date,
         },
         status: { $regex: "under_review", $options: "i" },
         employee_id: data.employee_id,
@@ -522,8 +530,8 @@ router.post(
       {
         organisation_id: req.employee.organisation_id,
         createdAt: {
-          $gte: start_day,
-          $lte: end_day,
+          $gt: from_date,
+          $lt: to_date,
         },
         status: { $regex: "new", $options: "i" },
         employee_id: data.employee_id,
@@ -536,8 +544,8 @@ router.post(
       {
         organisation_id: req.employee.organisation_id,
         createdAt: {
-          $gte: start_day,
-          $lte: end_day,
+          $gt: from_date,
+          $lt: to_date,
         },
         status: { $regex: "in_progress", $options: "i" },
         employee_id: data.employee_id,
