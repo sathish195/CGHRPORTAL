@@ -674,6 +674,12 @@ function delete_data(data) {
   });
   return schema.validate(data);
 }
+function tasks_count(data) {
+  const schema = Joi.object({
+    employee_id: Joi.string().required(),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -715,4 +721,5 @@ module.exports = {
   get_attendance_stats,
   delete_data,
   update_task_team,
+  tasks_count,
 };

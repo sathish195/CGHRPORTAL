@@ -439,4 +439,122 @@ router.post(
   })
 );
 
+router.post(
+  "/emp_tasks_count",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    let data = req.body;
+    const { error } = validations.tasks_count(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    const admin_types = ["1", "2", "3"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send(
+          "Only Director Or Manager Or Tl Can Access Tasks Count Of Employee"
+        );
+    }
+
+    const now = new Date();
+
+    const start_day = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const end_day = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999
+    );
+    console.log(start_day);
+    console.log(end_day);
+
+    const completed = await mongoFunctions.find(
+      "TASKS",
+      {
+        organisation_id: req.employee.organisation_id,
+        createdAt: {
+          $gte: start_day,
+          $lte: end_day,
+        },
+        status: { $regex: "completed", $options: "i" },
+        employee_id: data.employee_id,
+      },
+
+      { createdAt: -1 },
+      { _id: 0, __v: 0 }
+    );
+    console.log(completed);
+    const pause = await mongoFunctions.find(
+      "TASKS",
+      {
+        organisation_id: req.employee.organisation_id,
+        createdAt: {
+          $gte: start_day,
+          $lte: end_day,
+        },
+        status: { $regex: "pause", $options: "i" },
+        employee_id: data.employee_id,
+      },
+      { createdAt: -1 },
+      { _id: 0, __v: 0 }
+    );
+
+    const under_review = await mongoFunctions.find(
+      "TASKS",
+      {
+        organisation_id: req.employee.organisation_id,
+        createdAt: {
+          $gte: start_day,
+          $lte: end_day,
+        },
+        status: { $regex: "under_review", $options: "i" },
+        employee_id: data.employee_id,
+      },
+      { createdAt: -1 },
+      { _id: 0, __v: 0 }
+    );
+    const new_tasks = await mongoFunctions.find(
+      "TASKS",
+      {
+        organisation_id: req.employee.organisation_id,
+        createdAt: {
+          $gte: start_day,
+          $lte: end_day,
+        },
+        status: { $regex: "new", $options: "i" },
+        employee_id: data.employee_id,
+      },
+      { createdAt: -1 },
+      { _id: 0, __v: 0 }
+    );
+    const in_progress = await mongoFunctions.find(
+      "TASKS",
+      {
+        organisation_id: req.employee.organisation_id,
+        createdAt: {
+          $gte: start_day,
+          $lte: end_day,
+        },
+        status: { $regex: "in_progress", $options: "i" },
+        employee_id: data.employee_id,
+      },
+      { createdAt: -1 },
+      { _id: 0, __v: 0 }
+    );
+    let count = {
+      new: new_tasks.length,
+      in_progress: in_progress.length,
+      pause: pause.length,
+      under_review: under_review.length,
+      completed: completed.length,
+    };
+
+    return res.status(200).send(count);
+  })
+);
+
 module.exports = router;
