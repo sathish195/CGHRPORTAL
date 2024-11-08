@@ -132,6 +132,9 @@ router.post(
       findTask = await mongoFunctions.find("TASKS", {
         organisation_id: req.employee.organisation_id,
         status: { $nin: [/^completed$/i] },
+        task_status: {
+          $not: /in_active/i,
+        },
       });
       return res.status(200).send(findTask);
     }
@@ -139,6 +142,9 @@ router.post(
       findTask = await mongoFunctions.find("TASKS", {
         organisation_id: req.employee.organisation_id,
         status: { $nin: [/^completed$/i, /^manager$/i] },
+        task_status: {
+          $not: /in_active/i,
+        },
         "created_by.employee_id": req.employee.employee_id,
       });
       return res.status(200).send(findTask);
@@ -146,6 +152,9 @@ router.post(
       findTask = await mongoFunctions.find("TASKS", {
         organisation_id: req.employee.organisation_id,
         status: { $nin: [/^completed$/i, /^under_review$/i] },
+        task_status: {
+          $not: /in_active/i,
+        },
         employee_id: req.employee.employee_id,
       });
       return res.status(200).send(findTask);
@@ -189,6 +198,9 @@ router.post(
 
     let query = {
       organisation_id: req.employee.organisation_id,
+      task_status: {
+        $not: /in_active/i,
+      },
     };
     if (userRole === "2" || userRole === "1") {
       if (data.status) {

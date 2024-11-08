@@ -613,6 +613,13 @@ router.post(
         { project_id: data.project_id },
         { $set: { project_name: data.project_name } }
       );
+      if (project_data_up.project_status.toLowerCase() === "in_active") {
+        await mongoFunctions.update_many(
+          "TASKS",
+          { project_id: data.project_id },
+          { $set: { task_status: "in_active" } }
+        );
+      }
       return res.status(200).send("Project Updated Successfully");
     } else {
       // Check if project name already exists

@@ -139,6 +139,9 @@ router.post(
       organisation_id: req.employee.organisation_id,
       department_id: req.employee.department_id,
       status: "inprogress",
+      task_status: {
+        $not: /in_active/i,
+      },
     });
     let tasks = [tasks_count];
     let employees_with_task_count = employees.map((employee) => {
@@ -188,6 +191,9 @@ router.post(
     if (userRole === "1" || userRole === "2") {
       const projects = await mongoFunctions.find("PROJECTS", {
         organisation_id: organisationId,
+        project_status: {
+          $not: /in_active/i,
+        },
       });
       console.log("successfully fetched projects");
       return res.status(200).send(projects);
@@ -197,6 +203,9 @@ router.post(
       const projects = await mongoFunctions.find("PROJECTS", {
         organisation_id: organisationId,
         team: { $elemMatch: { employee_id: employeeId } },
+        project_status: {
+          $not: /in_active/i,
+        },
         //
       });
       console.log("successfully fetched projects");
@@ -207,6 +216,9 @@ router.post(
           $match: {
             organisation_id: organisationId,
             team: { $elemMatch: { employee_id: employeeId } },
+            project_status: {
+              $not: /in_active/i,
+            },
             // { $elemMatch: { employee_id: employeeId }
           },
         },
@@ -497,6 +509,9 @@ router.post(
           $lt: to_date,
         },
         status: { $regex: "completed", $options: "i" },
+        task_status: {
+          $not: /in_active/i,
+        },
         employee_id: data.employee_id,
       },
 
@@ -513,6 +528,9 @@ router.post(
           $lt: to_date,
         },
         status: { $regex: "pause", $options: "i" },
+        task_status: {
+          $not: /in_active/i,
+        },
         employee_id: data.employee_id,
       },
       { createdAt: -1 },
@@ -528,6 +546,9 @@ router.post(
           $lt: to_date,
         },
         status: { $regex: "under_review", $options: "i" },
+        task_status: {
+          $not: /in_active/i,
+        },
         employee_id: data.employee_id,
       },
       { createdAt: -1 },
@@ -542,6 +563,9 @@ router.post(
           $lt: to_date,
         },
         status: { $regex: "new", $options: "i" },
+        task_status: {
+          $not: /in_active/i,
+        },
         employee_id: data.employee_id,
       },
       { createdAt: -1 },
@@ -556,6 +580,9 @@ router.post(
           $lt: to_date,
         },
         status: { $regex: "in_progress", $options: "i" },
+        task_status: {
+          $not: /in_active/i,
+        },
         employee_id: data.employee_id,
       },
       { createdAt: -1 },
