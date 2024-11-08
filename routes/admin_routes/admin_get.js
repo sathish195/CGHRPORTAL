@@ -448,13 +448,13 @@ router.post(
     const { error } = validations.tasks_count(data);
     if (error) return res.status(400).send(error.details[0].message);
     const admin_types = ["1", "2", "3"];
-    // if (!admin_types.includes(req.employee.admin_type)) {
-    //   return res
-    //     .status(403)
-    //     .send(
-    //       "Only Director Or Manager Or Tl Can Access Tasks Count Of Employee"
-    //     );
-    // }
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send(
+          "Only Director Or Manager Or Tl Can Access Tasks Count Of Employee"
+        );
+    }
 
     // const now = new Date();
 
