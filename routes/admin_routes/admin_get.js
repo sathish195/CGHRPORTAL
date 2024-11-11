@@ -152,7 +152,8 @@ router.post(
 
       return {
         ...employee,
-        in_progress: employee_tasks.length,
+        status: "in_progress",
+        task_count: employee_tasks.length,
       };
     });
     return res.status(200).send(employees_with_task_count);

@@ -25,6 +25,7 @@ const Task_schema = new mongoose.Schema(
     completed_date: { type: Date, required: true, default: new Date() },
     assign_track: { type: Array, required: true },
     worked_hours: { type: Number, default: 0 },
+    assigned_at: { type: Date, default: new Date() },
   },
   { timestamps: true }
 );
