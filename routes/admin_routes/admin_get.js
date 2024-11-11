@@ -593,19 +593,20 @@ router.post(
     let count = {
       employee_id: findId.employee_id,
       basic_info: findId.basic_info,
-      status: "new",
-      task_count: new_tasks.length,
-      status: "in_progress",
+      new_status: "new",
+      new: new_tasks.length,
+      in_progress_status: "in_progress",
       in_progress: in_progress.length,
-      status: "pause",
+      pause_status: "pause",
       pause: pause.length,
-      status: "under_review",
+      under_review_status: "under_review",
       under_review: under_review.length,
-      status: "completed",
+      completed_status: "completed",
       completed: completed.length,
     };
+    console.log(count);
 
-    return res.status(200).send(count);
+    return res.status(200).send([count]);
   })
 );
 
