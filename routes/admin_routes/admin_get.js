@@ -591,10 +591,17 @@ router.post(
       { _id: 0, __v: 0 }
     );
     let count = {
-      new: new_tasks.length,
+      employee_id: findId.employee_id,
+      basic_info: findId.basic_info,
+      status: "new",
+      task_count: new_tasks.length,
+      status: "in_progress",
       in_progress: in_progress.length,
+      status: "pause",
       pause: pause.length,
+      status: "under_review",
       under_review: under_review.length,
+      status: "completed",
       completed: completed.length,
     };
 
