@@ -135,7 +135,7 @@ router.post(
       LIMIT,
       data.skip
     );
-    let tasks_count = await mongoFunctions.find_one("TASKS", {
+    let tasks_count = await mongoFunctions.find("TASKS", {
       organisation_id: req.employee.organisation_id,
       department_id: req.employee.department_id,
       status: "inprogress",
@@ -144,6 +144,7 @@ router.post(
       },
     });
     let tasks = [tasks_count];
+
     let employees_with_task_count = employees.map((employee) => {
       let employee_tasks = tasks.filter(
         (task) => task.employee_id === employee.employee_id
