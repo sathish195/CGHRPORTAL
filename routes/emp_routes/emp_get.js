@@ -198,6 +198,9 @@ router.post(
 
     let query = {
       organisation_id: req.employee.organisation_id,
+      status: {
+        $nin: [/completed/i],
+      },
       task_status: {
         $not: /in_active/i,
       },
