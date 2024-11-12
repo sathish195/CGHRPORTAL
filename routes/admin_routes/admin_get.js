@@ -144,13 +144,14 @@ router.post(
           $not: /in_active/i,
         },
       });
-      let tasks = [tasks_count];
+      let tasks = tasks_count;
       console.log(tasks);
 
       let employees_with_task_count = employees.map((employee) => {
         let employee_tasks = tasks.filter(
           (task) => task.employee_id === employee.employee_id
         );
+
         console.log(employee_tasks);
 
         return {
