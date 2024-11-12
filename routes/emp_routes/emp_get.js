@@ -215,7 +215,7 @@ router.post(
     };
     console.log(query);
     if (userRole === "2" || userRole === "1") {
-      if (data.status && data.status === "") {
+      if (data.status && data.status.length > 1) {
         query.status = data.status;
       }
       console.log(query);
@@ -239,7 +239,7 @@ router.post(
         ],
       };
 
-      if (data.status && data.status === "") {
+      if (data.status && data.status.length > 1) {
         query.status = data.status;
       }
 
@@ -258,7 +258,7 @@ router.post(
       query.employee_id = req.employee.employee_id;
       // { $elemMatch: { employee_id: req.employee.employee_id } };
 
-      if (data.status && data.status === "") {
+      if (data.status && data.status.length > 1) {
         query.status = data.status;
       }
 
