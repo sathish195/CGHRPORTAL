@@ -676,9 +676,10 @@ function delete_data(data) {
 }
 function tasks_count(data) {
   const schema = Joi.object({
-    employee_id: Joi.string().required(),
+    employee_id: Joi.string().optional().allow(""),
     from_date: Joi.string().required(),
     to_date: Joi.string().required(),
+    skip: Joi.number().min(0).required(),
   });
   return schema.validate(data);
 }
