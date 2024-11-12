@@ -126,12 +126,17 @@ router.post(
   Async(async (req, res) => {
     console.log("get tasks route hit");
 
+    let data = req.body;
+    const { error } = validations.get_project_by_id(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
     const userRole = req.employee.admin_type;
     let findTask;
     if (userRole === "2" || userRole === "1") {
       findTask = await mongoFunctions.find("TASKS", {
         organisation_id: req.employee.organisation_id,
         status: { $nin: [/^completed$/i] },
+        project_id:data.project_id,
         task_status: {
           $not: /in_active/i,
         },
@@ -142,6 +147,7 @@ router.post(
       findTask = await mongoFunctions.find("TASKS", {
         organisation_id: req.employee.organisation_id,
         status: { $nin: [/^completed$/i, /^manager$/i] },
+        project_id:data.project_id,
         task_status: {
           $not: /in_active/i,
         },
@@ -152,6 +158,7 @@ router.post(
       findTask = await mongoFunctions.find("TASKS", {
         organisation_id: req.employee.organisation_id,
         status: { $nin: [/^completed$/i, /^under_review$/i] },
+        project_id:data.project_id,
         task_status: {
           $not: /in_active/i,
         },
