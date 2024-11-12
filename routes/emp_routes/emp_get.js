@@ -13,6 +13,7 @@ const slowDown = require("../../middlewares/slow_down");
 const multer = require("multer");
 const XLSX = require("xlsx");
 const { Query } = require("mongoose");
+const { alertDev } = require("../../helpers/telegram");
 
 //get employee profile
 
@@ -391,6 +392,7 @@ router.post(
     console.log("all tasks fetched successfully");
     console.log(findTask);
     console.log(query);
+    alertDev(query);
 
     return res.status(200).send(findTask);
   })
