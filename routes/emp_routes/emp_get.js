@@ -136,7 +136,7 @@ router.post(
       findTask = await mongoFunctions.find("TASKS", {
         organisation_id: req.employee.organisation_id,
         status: { $nin: [/^completed$/i] },
-        project_id:data.project_id,
+        project_id: data.project_id,
         task_status: {
           $not: /in_active/i,
         },
@@ -147,7 +147,7 @@ router.post(
       findTask = await mongoFunctions.find("TASKS", {
         organisation_id: req.employee.organisation_id,
         status: { $nin: [/^completed$/i, /^manager$/i] },
-        project_id:data.project_id,
+        project_id: data.project_id,
         task_status: {
           $not: /in_active/i,
         },
@@ -158,7 +158,7 @@ router.post(
       findTask = await mongoFunctions.find("TASKS", {
         organisation_id: req.employee.organisation_id,
         status: { $nin: [/^completed$/i, /^under_review$/i] },
-        project_id:data.project_id,
+        project_id: data.project_id,
         task_status: {
           $not: /in_active/i,
         },
@@ -213,7 +213,7 @@ router.post(
       },
     };
     if (userRole === "2" || userRole === "1") {
-      if (data.status) {
+      if (data.status.length !== 0) {
         query.status = data.status;
       }
 
