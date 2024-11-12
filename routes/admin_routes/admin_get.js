@@ -139,7 +139,7 @@ router.post(
       let tasks_count = await mongoFunctions.find("TASKS", {
         organisation_id: req.employee.organisation_id,
         department_id: req.employee.department_id,
-        status: "inprogress",
+        status: "in_progress",
         task_status: {
           $not: /in_active/i,
         },
@@ -150,6 +150,7 @@ router.post(
         let employee_tasks = tasks.filter(
           (task) => task.employee_id === employee.employee_id
         );
+        console.log(employee_tasks);
 
         return {
           ...employee,
@@ -263,6 +264,7 @@ router.post(
       { createdAt: -1 },
       { _id: 0, __v: 0 }
     );
+    console.log(in_progress);
     let count = {
       employee_id: findId.employee_id,
       basic_info: findId.basic_info,
