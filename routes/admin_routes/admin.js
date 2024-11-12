@@ -892,6 +892,11 @@ router.post(
 
       if (data.action.toLowerCase() === "add") {
         if (!employee) return res.status(400).send(`Employee Not Found`);
+        if (task.employee_id && task.employee_id === data.employee_id) {
+          return res
+            .status(400)
+            .send("Employee Is Already Assigned To The Task.");
+        }
         const newAssignTrack = {
           assigned_by: {
             employee_id: req.employee.employee_id,
@@ -930,6 +935,12 @@ router.post(
       if (data.action.toLowerCase() === "remove") {
         if (!employee) return res.status(400).send(`Employee Not Found`);
         if (data.task_id && data.task_id.length > 9) {
+          if (!task.employee_id === data.employee_id) {
+            return res
+              .status(400)
+              .send("Employee Is Already Removed From The Task.");
+          }
+
           // Remove team member from task
           await mongoFunctions.find_one_and_update(
             "TASKS",

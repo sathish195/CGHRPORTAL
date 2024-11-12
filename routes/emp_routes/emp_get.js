@@ -12,6 +12,7 @@ const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
 const multer = require("multer");
 const XLSX = require("xlsx");
+const { Query } = require("mongoose");
 
 //get employee profile
 
@@ -206,16 +207,18 @@ router.post(
     let query = {
       organisation_id: req.employee.organisation_id,
       status: {
-        $nin: [/completed/i],
+        $nin: ["completed"],
       },
       task_status: {
         $not: /in_active/i,
       },
     };
+    console.log(query);
     if (userRole === "2" || userRole === "1") {
-      if (data.status.length !== 0) {
+      if (data.status && data.status === "") {
         query.status = data.status;
       }
+      console.log(query);
 
       if (data.date) {
         const date = new Date(data.date);
@@ -228,6 +231,7 @@ router.post(
       }
     } else if (userRole === "3") {
       // query["created_by.employee_id"] = req.employee.employee_id;
+
       query = {
         $or: [
           { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
@@ -235,7 +239,7 @@ router.post(
         ],
       };
 
-      if (data.status) {
+      if (data.status && data.status === "") {
         query.status = data.status;
       }
 
@@ -254,7 +258,7 @@ router.post(
       query.employee_id = req.employee.employee_id;
       // { $elemMatch: { employee_id: req.employee.employee_id } };
 
-      if (data.status) {
+      if (data.status && data.status === "") {
         query.status = data.status;
       }
 
@@ -284,6 +288,8 @@ router.post(
       skip
     );
     console.log("all tasks fetched successfully");
+    console.log(findTask);
+    console.log(query);
 
     return res.status(200).send(findTask);
   })
