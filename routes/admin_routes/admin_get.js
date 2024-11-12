@@ -145,6 +145,7 @@ router.post(
         },
       });
       let tasks = [tasks_count];
+      console.log(tasks);
 
       let employees_with_task_count = employees.map((employee) => {
         let employee_tasks = tasks.filter(
