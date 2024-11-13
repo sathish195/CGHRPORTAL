@@ -7,7 +7,7 @@ const Task_schema = new mongoose.Schema(
     organisation_id: { type: String, required: true, index: true },
     project_id: { type: String, required: true, index: true },
     project_name: { type: String, required: true },
-    department_id: { type: String, required: true },
+    department_id: { type: String, default: "" },
     employee_id: { type: String, default: "" },
     employee_name: { type: String, default: "" },
     status: { type: String, required: true },

@@ -102,60 +102,58 @@ router.post(
   "/get_employees_with_tasks",
   Auth,
   slowDown,
-  Async(async (req, res) => {
-    console.log("get employee list route hit");
-    const emp = req.employee;
-    const LIMIT = 50;
-    const data = req.body;
-    const { error } = validations.skip(data);
+  Async(
+    async (req, res) => {
+      console.log("get employee list route hit");
+      const emp = req.employee;
+      const LIMIT = 50;
+      const data = req.body;
+      const { error } = validations.skip(data);
 
-    if (error) return res.status(400).send(error.details[0].message);
+      if (error) return res.status(400).send(error.details[0].message);
 
-    let query = { organisation_id: req.employee.organisation_id };
-    if (emp.admin_type === "1") {
-      // query["work_info.admin_type"] = { $ne: "1" };
-    } else if (emp.admin_type === "2") {
-      query["work_info.admin_type"] = { $nin: ["1"] };
-    } else if (emp.admin_type === "3") {
-      query["work_info.department_id"] = emp.department_id;
-      query["work_info.admin_type"] = { $nin: ["1", "2"] };
-      // Logic for team incharge
-    } else {
-      return res.status(403).send("Forbidden: Not Administrator");
-    }
-    //  Logic for director or manager
-    let employees = await mongoFunctions.lazy_loading(
-      "EMPLOYEE",
-      query,
-      {
-        employee_id: 1,
-        // images: 1,
-        basic_info: 1,
-      },
-      { _id: -1 },
-      LIMIT,
-      data.skip
-    );
-    let tasks_count;
-    if (req.employee.admin_type === "1" || "2") {
-      tasks_count = await mongoFunctions.find("TASKS", {
-        organisation_id: req.employee.organisation_id,
-        // department_id: req.employee.department_id,
-        status: "in_progress",
-        task_status: {
-          $not: /in_active/i,
+      let query = { organisation_id: req.employee.organisation_id };
+      if (emp.admin_type === "1") {
+        // query["work_info.admin_type"] = { $ne: "1" };
+      } else if (emp.admin_type === "2") {
+        query["work_info.admin_type"] = { $nin: ["1"] };
+      } else if (emp.admin_type === "3") {
+        query["work_info.department_id"] = emp.department_id;
+        query["work_info.admin_type"] = { $nin: ["1", "2"] };
+        // Logic for team incharge
+      } else {
+        return res.status(403).send("Forbidden: Not Administrator");
+      }
+      //  Logic for director or manager
+      let employees = await mongoFunctions.lazy_loading(
+        "EMPLOYEE",
+        query,
+        {
+          employee_id: 1,
+          // images: 1,
+          basic_info: 1,
         },
-      });
-      console.log("managerss", tasks_count);
-      tasks_count = await mongoFunctions.find("TASKS", {
-        organisation_id: req.employee.organisation_id,
-        department_id: req.employee.department_id,
-        status: "in_progress",
-        task_status: {
-          $not: /in_active/i,
-        },
-      });
-      let tasks = tasks_count;
+        { _id: -1 },
+        LIMIT,
+        data.skip
+      );
+      let tasks;
+      if (req.employee.admin_type === "1" || req.employee.admin_type === "2") {
+        tasks = await mongoFunctions.find("TASKS", {
+          organisation_id: req.employee.organisation_id,
+          status: "in_progress",
+          task_status: { $not: /in_active/i },
+        });
+        console.log("managers", tasks);
+      } else {
+        tasks = await mongoFunctions.find("TASKS", {
+          organisation_id: req.employee.organisation_id,
+          department_id: req.employee.department_id,
+          status: "in_progress",
+          task_status: { $not: /in_active/i },
+        });
+      }
+
       console.log("tasks----------------->", tasks);
 
       let employees_with_task_count = employees.map((employee) => {
@@ -295,7 +293,7 @@ router.post(
     //   };
     //   console.log(count);
     //   return res.status(200).send([count]);
-  })
+  )
 );
 
 router.post(
@@ -597,122 +595,55 @@ router.post(
   slowDown,
   Async(async (req, res) => {
     let data = req.body;
+
     const { error } = validations.tasks_count(data);
     if (error) return res.status(400).send(error.details[0].message);
-    const admin_types = ["1", "2", "3"];
-    if (!admin_types.includes(req.employee.admin_type)) {
-      return res
-        .status(403)
-        .send(
-          "Only Director Or Manager Or Tl Can Access Tasks Count Of Employee"
-        );
-    }
-    findId = await mongoFunctions.find_one("EMPLOYEE", {
+
+    const admin_types = ["1", "2"];
+
+    const findId = await mongoFunctions.find_one("EMPLOYEE", {
       organisation_id: req.employee.organisation_id,
       employee_id: data.employee_id,
     });
 
     if (!findId) {
-      return res.status(200).send("Employee Not Found");
+      return res.status(200).send("Employee not found.");
     }
 
-    from_date = new Date(data.from_date);
-    to_date = new Date(data.to_date);
-    console.log(to_date);
+    const from_date = new Date(data.from_date);
+    const to_date = new Date(data.to_date);
     to_date.setDate(to_date.getDate() + 1);
 
-    console.log(from_date);
-    console.log(to_date);
+    // Build the base query for tasks
+    const baseQuery = {
+      organisation_id: req.employee.organisation_id,
+      employee_id: data.employee_id,
+      createdAt: { $gt: from_date, $lt: to_date },
+      task_status: { $not: /in_active/i },
+    };
 
-    const completed = await mongoFunctions.find(
-      "TASKS",
-      {
-        organisation_id: req.employee.organisation_id,
-        createdAt: {
-          $gt: from_date,
-          $lt: to_date,
-        },
-        status: { $regex: "completed", $options: "i" },
-        task_status: {
-          $not: /in_active/i,
-        },
-        employee_id: data.employee_id,
-      },
+    if (!admin_types.includes(req.employee.admin_type)) {
+      baseQuery.department_id = req.employee.department_id;
+    }
 
-      { createdAt: -1 },
-      { _id: 0, __v: 0 }
-    );
-    console.log(completed);
-    const pause = await mongoFunctions.find(
-      "TASKS",
-      {
-        organisation_id: req.employee.organisation_id,
-        createdAt: {
-          $gt: from_date,
-          $lt: to_date,
-        },
-        status: { $regex: "pause", $options: "i" },
-        task_status: {
-          $not: /in_active/i,
-        },
-        employee_id: data.employee_id,
-      },
-      { createdAt: -1 },
-      { _id: 0, __v: 0 }
-    );
+    const getTaskCount = async (status) => {
+      return await mongoFunctions.find(
+        "TASKS",
+        { ...baseQuery, status: { $regex: status, $options: "i" } },
+        { createdAt: -1 },
+        { _id: 0, __v: 0 }
+      );
+    };
 
-    const under_review = await mongoFunctions.find(
-      "TASKS",
-      {
-        organisation_id: req.employee.organisation_id,
-        createdAt: {
-          $gt: from_date,
-          $lt: to_date,
-        },
-        status: { $regex: "under_review", $options: "i" },
-        task_status: {
-          $not: /in_active/i,
-        },
-        employee_id: data.employee_id,
-      },
-      { createdAt: -1 },
-      { _id: 0, __v: 0 }
-    );
-    const new_tasks = await mongoFunctions.find(
-      "TASKS",
-      {
-        organisation_id: req.employee.organisation_id,
-        createdAt: {
-          $gt: from_date,
-          $lt: to_date,
-        },
-        status: { $regex: "new", $options: "i" },
-        task_status: {
-          $not: /in_active/i,
-        },
-        employee_id: data.employee_id,
-      },
-      { createdAt: -1 },
-      { _id: 0, __v: 0 }
-    );
-    const in_progress = await mongoFunctions.find(
-      "TASKS",
-      {
-        organisation_id: req.employee.organisation_id,
-        createdAt: {
-          $gt: from_date,
-          $lt: to_date,
-        },
-        status: { $regex: "in_progress", $options: "i" },
-        task_status: {
-          $not: /in_active/i,
-        },
-        employee_id: data.employee_id,
-      },
-      { createdAt: -1 },
-      { _id: 0, __v: 0 }
-    );
-    let count = {
+    const [new_tasks, in_progress, pause, under_review, completed] =
+      await Promise.all([
+        getTaskCount("new"),
+        getTaskCount("in_progress"),
+        getTaskCount("pause"),
+        getTaskCount("under_review"),
+        getTaskCount("completed"),
+      ]);
+    const count = {
       employee_id: findId.employee_id,
       basic_info: findId.basic_info,
       new_status: "new",
@@ -726,8 +657,8 @@ router.post(
       completed_status: "completed",
       completed: completed.length,
     };
-    console.log(count);
 
+    console.log(count);
     return res.status(200).send([count]);
   })
 );

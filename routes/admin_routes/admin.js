@@ -924,6 +924,7 @@ router.post(
                 employee.basic_info.first_name +
                 " " +
                 employee.basic_info.last_name,
+              department_id: employee.department_id,
             },
             $push: {
               assign_track: newAssignTrack,
@@ -948,6 +949,7 @@ router.post(
             {
               employee_id: "",
               employee_name: "",
+              department_id: "",
             }
           );
         }
@@ -1064,7 +1066,6 @@ router.post(
         project_id: data.project_id,
         project_name: findId.project_name,
         task_name: data.task_name.toLowerCase(),
-        department_id: req.employee.department_id,
         // start_date: data.start_date,
         // end_date: data.end_date,
         description: data.description,
