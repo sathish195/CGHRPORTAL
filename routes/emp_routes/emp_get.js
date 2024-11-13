@@ -279,6 +279,7 @@ router.post(
           { department_id: req.employee.department_id }, // Tasks where employee is in the team array
         ],
       };
+      console.log(query);
 
       if (data.status && data.status.length > 1) {
         query.status = data.status;

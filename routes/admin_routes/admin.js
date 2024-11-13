@@ -924,7 +924,7 @@ router.post(
                 employee.basic_info.first_name +
                 " " +
                 employee.basic_info.last_name,
-              department_id: employee.department_id,
+              department_id: employee.work_info.department_id,
             },
             $push: {
               assign_track: newAssignTrack,
