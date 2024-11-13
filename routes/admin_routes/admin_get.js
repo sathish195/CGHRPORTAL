@@ -107,193 +107,194 @@ router.post(
     const emp = req.employee;
     const LIMIT = 50;
     const data = req.body;
-    const { error } = validations.tasks_count(data);
+    const { error } = validations.skip(data);
 
     if (error) return res.status(400).send(error.details[0].message);
-    if (!data.employee_id || data.employee_id.length === 0) {
-      let query = { organisation_id: req.employee.organisation_id };
-      if (emp.admin_type === "1") {
-        // query["work_info.admin_type"] = { $ne: "1" };
-      } else if (emp.admin_type === "2") {
-        query["work_info.admin_type"] = { $nin: ["1"] };
-      } else if (emp.admin_type === "3") {
-        query["work_info.department_id"] = emp.department_id;
-        query["work_info.admin_type"] = { $nin: ["1", "2"] };
-        // Logic for team incharge
-      } else {
-        return res.status(403).send("Forbidden: Not Administrator");
-      }
-      //  Logic for director or manager
-      let employees = await mongoFunctions.lazy_loading(
-        "EMPLOYEE",
-        query,
-        {
-          employee_id: 1,
-          // images: 1,
-          basic_info: 1,
-        },
-        { _id: -1 },
-        LIMIT,
-        data.skip
-      );
-      let tasks_count;
-      if (req.employee.admin_type === "1" || "2") {
-        tasks_count = await mongoFunctions.find("TASKS", {
-          organisation_id: req.employee.organisation_id,
-          // department_id: req.employee.department_id,
-          status: "in_progress",
-          task_status: {
-            $not: /in_active/i,
-          },
-        });
-        tasks_count = await mongoFunctions.find("TASKS", {
-          organisation_id: req.employee.organisation_id,
-          department_id: req.employee.department_id,
-          status: "in_progress",
-          task_status: {
-            $not: /in_active/i,
-          },
-        });
-        let tasks = tasks_count;
-        console.log("tasks----------------->", tasks);
 
-        let employees_with_task_count = employees.map((employee) => {
-          let employee_tasks = tasks.filter(
-            (task) => task.employee_id === employee.employee_id
-          );
-
-          console.log(employee_tasks);
-
-          return {
-            ...employee,
-            status: "in_progress",
-            task_count: employee_tasks.length,
-          };
-        });
-        return res.status(200).send(employees_with_task_count);
-      }
-      findId = await mongoFunctions.find_one("EMPLOYEE", {
-        organisation_id: req.employee.organisation_id,
-        employee_id: data.employee_id,
-      });
-
-      if (!findId) {
-        return res.status(200).send("Employee Not Found");
-      }
-      from_date = new Date(data.from_date);
-      to_date = new Date(data.to_date);
-      console.log(to_date);
-      to_date.setDate(to_date.getDate() + 1);
-
-      console.log(from_date);
-      console.log(to_date);
-
-      const completed = await mongoFunctions.find(
-        "TASKS",
-        {
-          organisation_id: req.employee.organisation_id,
-          createdAt: {
-            $gt: from_date,
-            $lt: to_date,
-          },
-          status: { $regex: "completed", $options: "i" },
-          task_status: {
-            $not: /in_active/i,
-          },
-          employee_id: data.employee_id,
-        },
-
-        { createdAt: -1 },
-        { _id: 0, __v: 0 }
-      );
-      console.log(completed);
-      const pause = await mongoFunctions.find(
-        "TASKS",
-        {
-          organisation_id: req.employee.organisation_id,
-          createdAt: {
-            $gt: from_date,
-            $lt: to_date,
-          },
-          status: { $regex: "pause", $options: "i" },
-          task_status: {
-            $not: /in_active/i,
-          },
-          employee_id: data.employee_id,
-        },
-        { createdAt: -1 },
-        { _id: 0, __v: 0 }
-      );
-
-      const under_review = await mongoFunctions.find(
-        "TASKS",
-        {
-          organisation_id: req.employee.organisation_id,
-          createdAt: {
-            $gt: from_date,
-            $lt: to_date,
-          },
-          status: { $regex: "under_review", $options: "i" },
-          task_status: {
-            $not: /in_active/i,
-          },
-          employee_id: data.employee_id,
-        },
-        { createdAt: -1 },
-        { _id: 0, __v: 0 }
-      );
-      const new_tasks = await mongoFunctions.find(
-        "TASKS",
-        {
-          organisation_id: req.employee.organisation_id,
-          createdAt: {
-            $gt: from_date,
-            $lt: to_date,
-          },
-          status: { $regex: "new", $options: "i" },
-          task_status: {
-            $not: /in_active/i,
-          },
-          employee_id: data.employee_id,
-        },
-        { createdAt: -1 },
-        { _id: 0, __v: 0 }
-      );
-      const in_progress = await mongoFunctions.find(
-        "TASKS",
-        {
-          organisation_id: req.employee.organisation_id,
-          createdAt: {
-            $gt: from_date,
-            $lt: to_date,
-          },
-          status: { $regex: "in_progress", $options: "i" },
-          task_status: {
-            $not: /in_active/i,
-          },
-          employee_id: data.employee_id,
-        },
-        { createdAt: -1 },
-        { _id: 0, __v: 0 }
-      );
-      console.log(in_progress);
-      let count = {
-        employee_id: findId.employee_id,
-        basic_info: findId.basic_info,
-        new_status: "new",
-        new: new_tasks.length,
-        in_progress_status: "in_progress",
-        in_progress: in_progress.length,
-        pause_status: "pause",
-        pause: pause.length,
-        under_review_status: "under_review",
-        under_review: under_review.length,
-        completed_status: "completed",
-        completed: completed.length,
-      };
-      console.log(count);
-      return res.status(200).send([count]);
+    let query = { organisation_id: req.employee.organisation_id };
+    if (emp.admin_type === "1") {
+      // query["work_info.admin_type"] = { $ne: "1" };
+    } else if (emp.admin_type === "2") {
+      query["work_info.admin_type"] = { $nin: ["1"] };
+    } else if (emp.admin_type === "3") {
+      query["work_info.department_id"] = emp.department_id;
+      query["work_info.admin_type"] = { $nin: ["1", "2"] };
+      // Logic for team incharge
+    } else {
+      return res.status(403).send("Forbidden: Not Administrator");
     }
+    //  Logic for director or manager
+    let employees = await mongoFunctions.lazy_loading(
+      "EMPLOYEE",
+      query,
+      {
+        employee_id: 1,
+        // images: 1,
+        basic_info: 1,
+      },
+      { _id: -1 },
+      LIMIT,
+      data.skip
+    );
+    let tasks_count;
+    if (req.employee.admin_type === "1" || "2") {
+      tasks_count = await mongoFunctions.find("TASKS", {
+        organisation_id: req.employee.organisation_id,
+        // department_id: req.employee.department_id,
+        status: "in_progress",
+        task_status: {
+          $not: /in_active/i,
+        },
+      });
+      console.log("managerss", tasks_count);
+      tasks_count = await mongoFunctions.find("TASKS", {
+        organisation_id: req.employee.organisation_id,
+        department_id: req.employee.department_id,
+        status: "in_progress",
+        task_status: {
+          $not: /in_active/i,
+        },
+      });
+      let tasks = tasks_count;
+      console.log("tasks----------------->", tasks);
+
+      let employees_with_task_count = employees.map((employee) => {
+        let employee_tasks = tasks.filter(
+          (task) => task.employee_id === employee.employee_id
+        );
+
+        console.log(employee_tasks);
+
+        return {
+          ...employee,
+          status: "in_progress",
+          task_count: employee_tasks.length,
+        };
+      });
+      return res.status(200).send(employees_with_task_count);
+    }
+
+    //   findId = await mongoFunctions.find_one("EMPLOYEE", {
+    //     organisation_id: req.employee.organisation_id,
+    //     employee_id: data.employee_id,
+    //   });
+
+    //   if (!findId) {
+    //     return res.status(200).send("Employee Not Found");
+    //   }
+    //   from_date = new Date(data.from_date);
+    //   to_date = new Date(data.to_date);
+    //   console.log(to_date);
+    //   to_date.setDate(to_date.getDate() + 1);
+
+    //   console.log(from_date);
+    //   console.log(to_date);
+
+    //   const completed = await mongoFunctions.find(
+    //     "TASKS",
+    //     {
+    //       organisation_id: req.employee.organisation_id,
+    //       createdAt: {
+    //         $gt: from_date,
+    //         $lt: to_date,
+    //       },
+    //       status: { $regex: "completed", $options: "i" },
+    //       task_status: {
+    //         $not: /in_active/i,
+    //       },
+    //       employee_id: data.employee_id,
+    //     },
+
+    //     { createdAt: -1 },
+    //     { _id: 0, __v: 0 }
+    //   );
+    //   console.log(completed);
+    //   const pause = await mongoFunctions.find(
+    //     "TASKS",
+    //     {
+    //       organisation_id: req.employee.organisation_id,
+    //       createdAt: {
+    //         $gt: from_date,
+    //         $lt: to_date,
+    //       },
+    //       status: { $regex: "pause", $options: "i" },
+    //       task_status: {
+    //         $not: /in_active/i,
+    //       },
+    //       employee_id: data.employee_id,
+    //     },
+    //     { createdAt: -1 },
+    //     { _id: 0, __v: 0 }
+    //   );
+
+    //   const under_review = await mongoFunctions.find(
+    //     "TASKS",
+    //     {
+    //       organisation_id: req.employee.organisation_id,
+    //       createdAt: {
+    //         $gt: from_date,
+    //         $lt: to_date,
+    //       },
+    //       status: { $regex: "under_review", $options: "i" },
+    //       task_status: {
+    //         $not: /in_active/i,
+    //       },
+    //       employee_id: data.employee_id,
+    //     },
+    //     { createdAt: -1 },
+    //     { _id: 0, __v: 0 }
+    //   );
+    //   const new_tasks = await mongoFunctions.find(
+    //     "TASKS",
+    //     {
+    //       organisation_id: req.employee.organisation_id,
+    //       createdAt: {
+    //         $gt: from_date,
+    //         $lt: to_date,
+    //       },
+    //       status: { $regex: "new", $options: "i" },
+    //       task_status: {
+    //         $not: /in_active/i,
+    //       },
+    //       employee_id: data.employee_id,
+    //     },
+    //     { createdAt: -1 },
+    //     { _id: 0, __v: 0 }
+    //   );
+    //   const in_progress = await mongoFunctions.find(
+    //     "TASKS",
+    //     {
+    //       organisation_id: req.employee.organisation_id,
+    //       createdAt: {
+    //         $gt: from_date,
+    //         $lt: to_date,
+    //       },
+    //       status: { $regex: "in_progress", $options: "i" },
+    //       task_status: {
+    //         $not: /in_active/i,
+    //       },
+    //       employee_id: data.employee_id,
+    //     },
+    //     { createdAt: -1 },
+    //     { _id: 0, __v: 0 }
+    //   );
+    //   console.log(in_progress);
+    //   let count = {
+    //     employee_id: findId.employee_id,
+    //     basic_info: findId.basic_info,
+    //     new_status: "new",
+    //     new: new_tasks.length,
+    //     in_progress_status: "in_progress",
+    //     in_progress: in_progress.length,
+    //     pause_status: "pause",
+    //     pause: pause.length,
+    //     under_review_status: "under_review",
+    //     under_review: under_review.length,
+    //     completed_status: "completed",
+    //     completed: completed.length,
+    //   };
+    //   console.log(count);
+    //   return res.status(200).send([count]);
   })
 );
 
@@ -614,22 +615,6 @@ router.post(
     if (!findId) {
       return res.status(200).send("Employee Not Found");
     }
-
-    // const now = new Date();
-
-    // const start_day = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    // const end_day = new Date(
-    //   now.getFullYear(),
-    //   now.getMonth() + 1,
-    //   0,
-    //   23,
-    //   59,
-    //   59,
-    //   999
-    // );
-    // console.log(start_day);
-    // console.log(end_day);
 
     from_date = new Date(data.from_date);
     to_date = new Date(data.to_date);

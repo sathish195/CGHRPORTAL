@@ -946,13 +946,8 @@ router.post(
             "TASKS",
             { project_id: data.project_id, task_id: data.task_id },
             {
-              $pull: {
-                employee_id: data.employee_id,
-                employee_name:
-                  employee.basic_info.first_name +
-                  " " +
-                  employee.basic_info.last_name,
-              },
+              employee_id: "",
+              employee_name: "",
             }
           );
         }

@@ -129,44 +129,82 @@ router.post(
     console.log("get tasks route hit");
 
     let data = req.body;
-    const { error } = validations.get_project_by_id(data);
+    const { error } = validations.get_tasks(data);
     if (error) return res.status(400).send(error.details[0].message);
 
     const userRole = req.employee.admin_type;
+
     let findTask;
-    if (userRole === "2" || userRole === "1") {
-      findTask = await mongoFunctions.find("TASKS", {
-        organisation_id: req.employee.organisation_id,
-        status: { $nin: [/^completed$/i] },
-        project_id: data.project_id,
-        task_status: {
-          $not: /in_active/i,
-        },
-      });
-      return res.status(200).send(findTask);
-    }
-    if (userRole === "3") {
-      findTask = await mongoFunctions.find("TASKS", {
-        organisation_id: req.employee.organisation_id,
-        status: { $nin: [/^completed$/i, /^manager$/i] },
-        project_id: data.project_id,
-        task_status: {
-          $not: /in_active/i,
-        },
-        "created_by.employee_id": req.employee.employee_id,
-      });
-      return res.status(200).send(findTask);
+    if (data.project_id && data.project_id.length > 1) {
+      if (userRole === "2" || userRole === "1") {
+        findTask = await mongoFunctions.find("TASKS", {
+          organisation_id: req.employee.organisation_id,
+          status: { $nin: [/^completed$/i] },
+          project_id: data.project_id,
+          task_status: {
+            $not: /in_active/i,
+          },
+        });
+        return res.status(200).send(findTask);
+      }
+      if (userRole === "3") {
+        findTask = await mongoFunctions.find("TASKS", {
+          organisation_id: req.employee.organisation_id,
+          status: { $nin: [/^completed$/i, /^manager$/i] },
+          project_id: data.project_id,
+          task_status: {
+            $not: /in_active/i,
+          },
+          "created_by.employee_id": req.employee.employee_id,
+        });
+        return res.status(200).send(findTask);
+      } else {
+        findTask = await mongoFunctions.find("TASKS", {
+          organisation_id: req.employee.organisation_id,
+          status: { $nin: [/^completed$/i, /^under_review$/i] },
+          project_id: data.project_id,
+          task_status: {
+            $not: /in_active/i,
+          },
+          employee_id: req.employee.employee_id,
+        });
+        return res.status(200).send(findTask);
+      }
     } else {
-      findTask = await mongoFunctions.find("TASKS", {
-        organisation_id: req.employee.organisation_id,
-        status: { $nin: [/^completed$/i, /^under_review$/i] },
-        project_id: data.project_id,
-        task_status: {
-          $not: /in_active/i,
-        },
-        employee_id: req.employee.employee_id,
-      });
-      return res.status(200).send(findTask);
+      if (userRole === "2" || userRole === "1") {
+        findTask = await mongoFunctions.find("TASKS", {
+          organisation_id: req.employee.organisation_id,
+          status: { $nin: [/^completed$/i] },
+          // project_id: data.project_id,
+          task_status: {
+            $not: /in_active/i,
+          },
+        });
+        return res.status(200).send(findTask);
+      }
+      if (userRole === "3") {
+        findTask = await mongoFunctions.find("TASKS", {
+          organisation_id: req.employee.organisation_id,
+          status: { $nin: [/^completed$/i, /^manager$/i] },
+          // project_id: data.project_id,
+          task_status: {
+            $not: /in_active/i,
+          },
+          "created_by.employee_id": req.employee.employee_id,
+        });
+        return res.status(200).send(findTask);
+      } else {
+        findTask = await mongoFunctions.find("TASKS", {
+          organisation_id: req.employee.organisation_id,
+          status: { $nin: [/^completed$/i, /^under_review$/i] },
+          // project_id: data.project_id,
+          task_status: {
+            $not: /in_active/i,
+          },
+          employee_id: req.employee.employee_id,
+        });
+        return res.status(200).send(findTask);
+      }
     }
   })
 );
@@ -191,110 +229,6 @@ router.post(
 
 //get all tasks with filters
 
-// router.post(
-//   "/get_all_tasks",
-//   Auth,
-//   slowDown,
-//   Async(async (req, res) => {
-//     console.log("get all tasks route hit");
-//     let data = req.body;
-//     const { error } = validations.get_all_tasks(data);
-//     if (error) return res.status(400).send(error.details[0].message);
-
-//     const limit = 40;
-//     const skip = data.skip; // Fixed limit value
-//     const userRole = req.employee.admin_type;
-
-//     let query = {
-//       organisation_id: req.employee.organisation_id,
-//       status: {
-//         $nin: ["completed"],
-//       },
-//       task_status: {
-//         $not: /in_active/i,
-//       },
-//     };
-//     console.log(query);
-//     if (userRole === "2" || userRole === "1") {
-//       if (data.status && data.status.length > 1) {
-//         query.status = data.status;
-//       }
-//       console.log(query);
-
-//       if (data.date) {
-//         const date = new Date(data.date);
-//         const start_day = new Date(date.setHours(0, 0, 0, 0));
-//         const end_day = new Date(date.setHours(23, 59, 59, 999));
-//         query.createdAt = {
-//           $gte: start_day, // Greater than or equal to start of the day
-//           $lte: end_day, // Less than end of the day
-//         };
-//       }
-//     } else if (userRole === "3") {
-//       // query["created_by.employee_id"] = req.employee.employee_id;
-
-//       query = {
-//         $or: [
-//           { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
-//           { employee_id: req.employee.employee_id }, // Tasks where employee is in the team array
-//         ],
-//       };
-
-//       if (data.status && data.status.length > 1) {
-//         query.status = data.status;
-//       }
-
-//       if (data.date) {
-//         const date = new Date(data.date);
-//         const start_day = new Date(date.setHours(0, 0, 0, 0));
-//         const end_day = new Date(date.setHours(23, 59, 59, 999));
-//         query.createdAt = {
-//           $gte: start_day, // Greater than or equal to start of the day
-//           $lt: end_day, // Less than end of the day
-//         };
-//       }
-//     } else {
-//       // query.status = { $nin: [/^completed$/i, /^under_review$/i] };
-//       // query.team = { $elemMatch: { employee_id: req.employee.employee_id } };
-//       query.employee_id = req.employee.employee_id;
-//       // { $elemMatch: { employee_id: req.employee.employee_id } };
-
-//       if (data.status && data.status.length > 1) {
-//         query.status = data.status;
-//       }
-
-//       if (data.date) {
-//         const date = new Date(data.date);
-//         const start_day = new Date(date.setHours(0, 0, 0, 0));
-//         const end_day = new Date(date.setHours(23, 59, 59, 999));
-//         query.team = {
-//           $elemMatch: {
-//             employee_id: req.employee.employee_id,
-//             date_time: {
-//               $gte: start_day, // Greater than or equal to the start of today
-//               $lt: end_day, // Less than the end of today
-//             },
-//           },
-//         };
-//       }
-//     }
-
-//     // Find tasks using the query object
-//     const findTask = await mongoFunctions.lazy_loading(
-//       "TASKS",
-//       query,
-//       { _id: 0, __v: 0 },
-//       { createdAt: -1 },
-//       limit,
-//       skip
-//     );
-//     console.log("all tasks fetched successfully");
-//     console.log(findTask);
-//     console.log(query);
-
-//     return res.status(200).send(findTask);
-//   })
-// );
 router.post(
   "/get_all_tasks",
   Auth,
@@ -312,31 +246,31 @@ router.post(
     let query = {
       organisation_id: req.employee.organisation_id,
       status: {
-        $nin: ["completed"], // Initially exclude completed tasks
+        $nin: ["completed"],
       },
       task_status: {
         $not: /in_active/i,
       },
     };
-
-    // If status is provided in data, apply the filter from the data
-    if (data.status && data.status.length > 0) {
-      query.status = data.status;
-    }
-
     console.log(query);
-
     if (userRole === "2" || userRole === "1") {
+      if (data.status && data.status.length > 1) {
+        query.status = data.status;
+      }
+      console.log(query);
+
       if (data.date) {
         const date = new Date(data.date);
         const start_day = new Date(date.setHours(0, 0, 0, 0));
         const end_day = new Date(date.setHours(23, 59, 59, 999));
         query.createdAt = {
           $gte: start_day, // Greater than or equal to start of the day
-          $lte: end_day, // Less than or equal to end of the day
+          $lte: end_day, // Less than end of the day
         };
       }
     } else if (userRole === "3") {
+      // query["created_by.employee_id"] = req.employee.employee_id;
+
       query = {
         $or: [
           { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
@@ -344,7 +278,7 @@ router.post(
         ],
       };
 
-      if (data.status && data.status.length > 0) {
+      if (data.status && data.status.length > 1) {
         query.status = data.status;
       }
 
@@ -358,9 +292,12 @@ router.post(
         };
       }
     } else {
+      // query.status = { $nin: [/^completed$/i, /^under_review$/i] };
+      // query.team = { $elemMatch: { employee_id: req.employee.employee_id } };
       query.employee_id = req.employee.employee_id;
+      // { $elemMatch: { employee_id: req.employee.employee_id } };
 
-      if (data.status && data.status.length > 0) {
+      if (data.status && data.status.length > 1) {
         query.status = data.status;
       }
 
@@ -392,7 +329,6 @@ router.post(
     console.log("all tasks fetched successfully");
     console.log(findTask);
     console.log(query);
-    alertDev(query);
 
     return res.status(200).send(findTask);
   })

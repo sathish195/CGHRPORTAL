@@ -466,6 +466,12 @@ function get_project_by_id(data) {
   });
   return schema.validate(data);
 }
+function get_tasks(data) {
+  const schema = Joi.object({
+    project_id: Joi.string().optional().allow(""),
+  });
+  return schema.validate(data);
+}
 function get_task_by_id(data) {
   const schema = Joi.object({
     task_id: Joi.string().min(5).max(12).required(),
@@ -676,10 +682,9 @@ function delete_data(data) {
 }
 function tasks_count(data) {
   const schema = Joi.object({
-    employee_id: Joi.string().optional().allow(""),
+    employee_id: Joi.string().required(),
     from_date: Joi.string().required(),
     to_date: Joi.string().required(),
-    skip: Joi.number().min(0).required(),
   });
   return schema.validate(data);
 }
@@ -725,4 +730,5 @@ module.exports = {
   delete_data,
   update_task_team,
   tasks_count,
+  get_tasks,
 };
