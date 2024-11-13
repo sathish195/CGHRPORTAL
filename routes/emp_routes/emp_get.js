@@ -275,7 +275,8 @@ router.post(
       query = {
         $or: [
           { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
-          { employee_id: req.employee.employee_id }, // Tasks where employee is in the team array
+          { employee_id: req.employee.employee_id },
+          { department_id: req.employee.department_id }, // Tasks where employee is in the team array
         ],
       };
 
