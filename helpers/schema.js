@@ -455,6 +455,8 @@ function add_update_task(data) {
       .valid("active", "in_active", "completed")
       .required(),
     task_id: Joi.string().optional().allow(""),
+    action: Joi.string().valid("remove", "add").required(),
+    employee_id: Joi.string().required(),
     completed_date: Joi.date().optional().allow(""),
   });
   return schema.validate(data);

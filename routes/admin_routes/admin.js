@@ -989,6 +989,9 @@ router.post(
     if (!findId) {
       return res.status(400).send("Project Does Not Exist");
     }
+    let employee = await mongoFunctions.find_one("EMPLOYEE", {
+      employee_id: data.employee_id,
+    });
 
     if (userRole === "3") {
       const findId = await mongoFunctions.find_one("PROJECTS", {
@@ -1010,6 +1013,97 @@ router.post(
       });
 
       if (!findId) return res.status(400).send("Task ID Does Not Exist");
+      let set_update;
+      let push_update;
+
+      if (data.action.length > 0 && data.action.toLowerCase() === "add") {
+        if (!employee) return res.status(400).send(`Employee Not Found`);
+        // if (findId.employee_id && findId.employee_id === data.employee_id) {
+        //   return res
+        //     .status(400)
+        //     .send("Employee Is Already Assigned To The Task.");
+        // }
+        const newAssignTrack = {
+          assigned_by: {
+            employee_id: req.employee.employee_id,
+            employee_name:
+              req.employee.first_name + " " + req.employee.last_name,
+            employee_email: req.employee.email,
+            date_time: new Date(),
+          },
+          assigned_to: {
+            employee_id: data.employee_id,
+            employee_name:
+              employee.basic_info.first_name +
+              " " +
+              employee.basic_info.last_name,
+            date_time: new Date(),
+          },
+        };
+        set_update = {
+          task_name: data.task_name.toLowerCase(),
+          status: data.status,
+          description: data.description,
+          task_status: data.task_status,
+          due_date: new Date(data.due_date),
+          priority: data.priority,
+          completed_date: data.completed_date
+            ? data.completed_date
+            : new Date(),
+          employee_id: data.employee_id,
+          employee_name:
+            employee.basic_info.first_name +
+            " " +
+            employee.basic_info.last_name,
+          department_id: employee.work_info.department_id,
+        };
+        push_update = {
+          assign_track: newAssignTrack,
+          modified_by: {
+            employee_id: req.employee.employee_id,
+            employee_name:
+              req.employee.first_name + " " + req.employee.last_name,
+            employee_email: req.employee.email,
+            modifiedAt: new Date(),
+            prevStatus: findId.status,
+            currentStatus: data.status,
+          },
+        };
+      }
+      if (data.action.length > 0 && data.action.toLowerCase() === "remove") {
+        if (!employee) return res.status(400).send(`Employee Not Found`);
+
+        if (!findId.employee_id === data.employee_id) {
+          return res
+            .status(400)
+            .send("Employee Is Already Removed From The Task.");
+        }
+        set_update = {
+          task_name: data.task_name.toLowerCase(),
+          status: data.status,
+          description: data.description,
+          task_status: data.task_status,
+          due_date: new Date(data.due_date),
+          priority: data.priority,
+          completed_date: data.completed_date
+            ? data.completed_date
+            : new Date(),
+          employee_id: "",
+          employee_name: "",
+          department_id: "",
+        };
+        push_update = {
+          modified_by: {
+            employee_id: req.employee.employee_id,
+            employee_name:
+              req.employee.first_name + " " + req.employee.last_name,
+            employee_email: req.employee.email,
+            modifiedAt: new Date(),
+            prevStatus: findId.status,
+            currentStatus: data.status,
+          },
+        };
+      }
 
       // Update task
       const task_data_up = await mongoFunctions.find_one_and_update(
@@ -1019,28 +1113,8 @@ router.post(
           task_id: data.task_id,
         },
         {
-          $set: {
-            task_name: data.task_name.toLowerCase(),
-            status: data.status,
-            description: data.description,
-            task_status: data.task_status,
-            due_date: new Date(data.due_date),
-            priority: data.priority,
-            completed_date: data.completed_date
-              ? data.completed_date
-              : new Date(),
-          },
-          $push: {
-            modified_by: {
-              employee_id: req.employee.employee_id,
-              employee_name:
-                req.employee.first_name + " " + req.employee.last_name,
-              employee_email: req.employee.email,
-              modifiedAt: new Date(),
-              prevStatus: findId.status,
-              currentStatus: data.status,
-            },
-          },
+          $set: set_update,
+          $push: push_update,
         },
         { new: true } // Optionally return the updated document
       );
@@ -1060,41 +1134,76 @@ router.post(
 
       return res.status(200).send("Task Updated Successfully");
     } else {
-      const new_task_data = {
-        organisation_id: req.employee.organisation_id,
-        task_id: functions.get_random_string("TA", 9, true),
-        project_id: data.project_id,
-        project_name: findId.project_name,
-        task_name: data.task_name.toLowerCase(),
-        // start_date: data.start_date,
-        // end_date: data.end_date,
-        description: data.description,
-        due_date: new Date(data.due_date),
-        priority: data.priority,
-        status: data.status,
-        task_status: data.task_status,
-        created_by: {
-          employee_id: req.employee.employee_id,
-          employee_name: req.employee.first_name + " " + req.employee.last_name,
-          email: req.employee.email,
-        },
-      };
-
-      // Create new project
-      const task_add = await mongoFunctions.create_new_record(
-        "TASKS",
-        new_task_data
-      );
-      if (!task_add) {
-        return res.status(400).send("Failed To Add New Task..");
+      if (!data.action) {
+        return res
+          .status(400)
+          .send("Action Is Required To Add Team Member Into Task");
       }
-      await stats.add_stats(
-        req.employee.employee_id,
-        req.employee.organisation_id,
-        new_task_data.status
-      );
+      if (data.action.toLowerCase() === "add") {
+        if (!employee) return res.status(400).send(`Employee Not Found`);
 
-      return res.status(201).send("Task Created Successfully");
+        const newAssignTrack = {
+          assigned_by: {
+            employee_id: req.employee.employee_id,
+            employee_name:
+              req.employee.first_name + " " + req.employee.last_name,
+            employee_email: req.employee.email,
+            date_time: new Date(),
+          },
+          assigned_to: {
+            employee_id: data.employee_id,
+            employee_name:
+              employee.basic_info.first_name +
+              " " +
+              employee.basic_info.last_name,
+            date_time: new Date(),
+          },
+        };
+
+        const new_task_data = {
+          organisation_id: req.employee.organisation_id,
+          task_id: functions.get_random_string("TA", 9, true),
+          project_id: data.project_id,
+          project_name: findId.project_name,
+          task_name: data.task_name.toLowerCase(),
+          employee_id: data.employee_id,
+          employee_name:
+            employee.basic_info.first_name +
+            " " +
+            employee.basic_info.last_name,
+          department_id: employee.work_info.department_id,
+          // start_date: data.start_date,
+          // end_date: data.end_date,
+          description: data.description,
+          due_date: new Date(data.due_date),
+          priority: data.priority,
+          status: data.status,
+          task_status: data.task_status,
+          created_by: {
+            employee_id: req.employee.employee_id,
+            employee_name:
+              req.employee.first_name + " " + req.employee.last_name,
+            email: req.employee.email,
+          },
+          assign_track: newAssignTrack,
+        };
+
+        // Create new project
+        const task_add = await mongoFunctions.create_new_record(
+          "TASKS",
+          new_task_data
+        );
+        if (!task_add) {
+          return res.status(400).send("Failed To Add New Task..");
+        }
+        await stats.add_stats(
+          req.employee.employee_id,
+          req.employee.organisation_id,
+          new_task_data.status
+        );
+
+        return res.status(201).send("Task Created Successfully");
+      }
     }
   })
 );
