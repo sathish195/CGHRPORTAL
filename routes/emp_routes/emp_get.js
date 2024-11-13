@@ -255,7 +255,7 @@ router.post(
     };
     console.log(query);
     if (userRole === "2" || userRole === "1") {
-      if (data.status && data.status.length > 1) {
+      if (data.status && data.status.length > 0) {
         query.status = data.status;
       }
       console.log(query);
@@ -278,10 +278,16 @@ router.post(
           { employee_id: req.employee.employee_id },
           { department_id: req.employee.department_id }, // Tasks where employee is in the team array
         ],
+        status: {
+          $nin: ["completed"],
+        },
+        task_status: {
+          $not: /in_active/i,
+        },
       };
       console.log(query);
 
-      if (data.status && data.status.length > 1) {
+      if (data.status && data.status.length > 0) {
         query.status = data.status;
       }
 
@@ -319,6 +325,7 @@ router.post(
         };
       }
     }
+    console.log("query------------------->", query);
 
     // Find tasks using the query object
     const findTask = await mongoFunctions.lazy_loading(
@@ -331,7 +338,6 @@ router.post(
     );
     console.log("all tasks fetched successfully");
     console.log(findTask);
-    console.log(query);
 
     return res.status(200).send(findTask);
   })
