@@ -349,7 +349,7 @@ router.post(
       console.log("successfully fetched projects");
       return res.status(200).send(projects);
     } else {
-      const projects = await mongoFunctions.aggregate("TASKS", [
+      const project = await mongoFunctions.aggregate("TASKS", [
         {
           $match: {
             organisation_id: organisationId,
@@ -382,6 +382,10 @@ router.post(
           },
         },
       ]);
+      const emp_projects = project.map((task) => task.project_id);
+      const projects = await mongoFunctions.find("PROJECTS", {
+        project_id: { $in: emp_projects },
+      });
 
       console.log("successfully fetched projects");
       return res.status(200).send(projects);
