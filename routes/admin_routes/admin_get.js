@@ -353,7 +353,8 @@ router.post(
         {
           $match: {
             organisation_id: organisationId,
-            team: { $elemMatch: { employee_id: employeeId } },
+            // team: { $elemMatch: { employee_id: employeeId } },
+            employee_id: req.employee.employee_id,
             project_status: {
               $not: /in_active/i,
             },
