@@ -1091,6 +1091,7 @@ router.post(
           employee_id: "",
           employee_name: "",
           department_id: "",
+          assign_track: [],
         };
         push_update = {
           modified_by: {
