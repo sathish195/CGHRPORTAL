@@ -640,11 +640,11 @@ router.post(
       );
     };
 
-    const [new_tasks, in_progress, pause, under_review, completed] =
+    const [new_tasks, in_progress, hold, under_review, completed] =
       await Promise.all([
         getTaskCount("new"),
         getTaskCount("in_progress"),
-        getTaskCount("pause"),
+        getTaskCount("hold"),
         getTaskCount("under_review"),
         getTaskCount("completed"),
       ]);
@@ -655,8 +655,8 @@ router.post(
       new: new_tasks.length,
       in_progress_status: "in_progress",
       in_progress: in_progress.length,
-      pause_status: "pause",
-      pause: pause.length,
+      pause_status: "hold",
+      pause: hold.length,
       under_review_status: "under_review",
       under_review: under_review.length,
       completed_status: "completed",

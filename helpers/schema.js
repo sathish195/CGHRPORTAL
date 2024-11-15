@@ -493,7 +493,7 @@ function update_task(data) {
   const schema = Joi.object({
     task_id: Joi.string().min(5).max(12).required(),
     status: Joi.string()
-      .valid("new", "in_progress", "under_review", "completed", "pause")
+      .valid("new", "in_progress", "under_review", "completed", "hold")
       .required(),
   });
   return schema.validate(data);

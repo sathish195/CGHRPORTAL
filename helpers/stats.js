@@ -353,7 +353,7 @@ async function calculate_working_time(date1, date2, status, task_id) {
   const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
   console.log(diffInMinutes);
 
-  let statuses = ["under_review", "completed", "pause"];
+  let statuses = ["under_review", "completed", "hold"];
   if (statuses.includes(status)) {
     await mongoFunctions.find_one_and_update(
       "TASKS",
