@@ -504,7 +504,7 @@ function get_all_tasks(data) {
     status: Joi.string()
       .optional()
       .allow("")
-      .valid("new", "in_progress", "under_review", "completed"),
+      .valid("new", "in_progress", "under_review", "completed", "hold"),
     date: Joi.date().optional().allow(""),
   });
   return schema.validate(data);
