@@ -1023,23 +1023,28 @@ router.post(
         //     .status(400)
         //     .send("Employee Is Already Assigned To The Task.");
         // }
-        const newAssignTrack = {
-          assigned_by: {
-            employee_id: req.employee.employee_id,
-            employee_name:
-              req.employee.first_name + " " + req.employee.last_name,
-            employee_email: req.employee.email,
-            date_time: new Date(),
-          },
-          assigned_to: {
-            employee_id: data.employee_id,
-            employee_name:
-              employee.basic_info.first_name +
-              " " +
-              employee.basic_info.last_name,
-            date_time: new Date(),
-          },
-        };
+        let newAssignTrack;
+        if (findId.assign_track.length === 0) {
+          newAssignTrack = {
+            assigned_by: {
+              employee_id: req.employee.employee_id,
+              employee_name:
+                req.employee.first_name + " " + req.employee.last_name,
+              employee_email: req.employee.email,
+              date_time: new Date(),
+            },
+            assigned_to: {
+              employee_id: data.employee_id,
+              employee_name:
+                employee.basic_info.first_name +
+                " " +
+                employee.basic_info.last_name,
+              date_time: new Date(),
+            },
+          };
+        } else {
+          newAssignTrack = {};
+        }
         set_update = {
           task_name: data.task_name.toLowerCase(),
           status: data.status,
