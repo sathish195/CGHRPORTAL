@@ -556,7 +556,7 @@ router.post(
       reporting_managers: reporting_manager,
       employee_id: employee_id,
       today_attendance: today_attendance,
-      stats: statss,
+      stats: statss || {},
       total_emp_count: total_emp_count,
     };
     // await redis.update_redis("ORGANISATIONS", org_data);

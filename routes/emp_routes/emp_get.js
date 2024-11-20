@@ -106,7 +106,7 @@ router.post(
       recent_hires: recent_hires,
       birthdays: birthdays,
       organisation_details: filtered_org_data,
-      stats: statss,
+      stats: statss || {},
       today_attendance: today_attendance,
       total_emp_count: total_emp_count,
     };
