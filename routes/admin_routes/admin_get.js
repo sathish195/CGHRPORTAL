@@ -114,7 +114,7 @@ router.post(
 
       let query = { organisation_id: req.employee.organisation_id };
       if (emp.admin_type === "1") {
-        // query["work_info.admin_type"] = { $ne: "1" };
+        query["work_info.admin_type"] = { $ne: "1" };
       } else if (emp.admin_type === "2") {
         query["work_info.admin_type"] = { $nin: ["1"] };
       } else if (emp.admin_type === "3") {
