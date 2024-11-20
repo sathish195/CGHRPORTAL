@@ -596,11 +596,15 @@ router.post(
 
     if (!task_data_up) return res.status(400).send("Task Update Failed");
     if (findId.status !== data.status) {
-      await stats.update_stats(
-        req.employee.employee_id,
-        req.employee.organisation_id,
-        findId.status,
-        data.status
+      await redis.update_task_status(
+        task_data_up.employee_id,
+        data.status,
+        findId.status
+      );
+      await redis.update_task_status(
+        findId.created_by.employee_id,
+        data.status,
+        findId.status
       );
       console.log("done adding stats");
     }

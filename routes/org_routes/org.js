@@ -542,12 +542,7 @@ router.post(
     let tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1); // Set to tomorrow
 
-    let statss = await mongoFunctions.find_one("STATS", {
-      createdAt: {
-        $gte: new Date(today.setHours(0, 0, 0, 0)), // Start of today
-        $lt: new Date(tomorrow.setHours(0, 0, 0, 0)), // Start of tomorrow
-      },
-    });
+    let statss = await redis.redisGetAll(req.employee.employee_id);
 
     let total_emp_count = await mongoFunctions.count_documents("EMPLOYEE", {
       organisation_id: req.employee.organisation_id,

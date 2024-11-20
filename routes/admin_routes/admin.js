@@ -986,6 +986,7 @@ router.post(
       project_id: data.project_id,
       // team: { $elemMatch: { employee_id: req.employee.employee_id } }
     });
+    console.log(data.roject_id);
     if (!findId) {
       return res.status(400).send("Project Does Not Exist");
     }
@@ -1109,6 +1110,7 @@ router.post(
             currentStatus: data.status,
           },
         };
+        await redis.remove_task_status(data.employee_id, data.status);
       }
 
       // Update task
@@ -1128,16 +1130,35 @@ router.post(
       console.log("task updated successfully");
 
       if (!task_data_up) return res.status(400).send("Task Update Failed");
-      if (findId.status !== data.status) {
-        const s = await stats.update_stats(
-          req.employee.employee_id,
-          req.employee.organisation_id,
-          findId.status,
-          task_data_up.status
-        );
-        console.log(s);
+      if (data.action === "add") {
+        if (
+          findId.employee_id === data.employee_id &&
+          findId.status !== data.status
+        ) {
+          await redis.update_task_status(
+            data.employee_id,
+            data.status,
+            findId.status
+          );
+          await redis.update_task_status(
+            findId.created_by.employee_id,
+            data.status,
+            findId.status
+          );
+        } else if (
+          findId.employee_id !== data.employee_id &&
+          findId.status !== data.status
+        ) {
+          await redis.add_task_status(data.employee_id, data.status);
+          await redis.update_task_status(
+            findId.created_by.employee_id,
+            data.status,
+            findId.status
+          );
+        } else if (findId.employee_id !== data.employee_id) {
+          await redis.add_task_status(data.employee_id, data.status);
+        }
       }
-
       return res.status(200).send("Task Updated Successfully");
     } else {
       if (!data.action) {
@@ -1202,9 +1223,12 @@ router.post(
         if (!task_add) {
           return res.status(400).send("Failed To Add New Task..");
         }
-        await stats.add_stats(
+        await redis.add_task_status(
           req.employee.employee_id,
-          req.employee.organisation_id,
+          new_task_data.status
+        );
+        await redis.add_task_status(
+          new_task_data.employee_id,
           new_task_data.status
         );
 

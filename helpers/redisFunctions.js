@@ -209,4 +209,105 @@ module.exports = {
     var dta = await client.del(key);
     return dta;
   },
+  add_task_status: async (employee_id, current_status) => {
+    try {
+      const key = employee_id;
+
+      // Check if the task already exists in Redis
+      const exists = await client.exists(key);
+
+      if (!exists) {
+        // Initialize status counts
+        const initial_status_counts = {
+          new: 0,
+          in_progress: 0,
+          under_review: 0,
+          completed: 0,
+          hold: 0,
+        };
+
+        // Increment the count for the current status
+        initial_status_counts[current_status] = 1;
+
+        // Store the object in Redis
+        await client.hSet(key, initial_status_counts);
+        console.log(`Initialized status for employee ${employee_id}`);
+      } else {
+        await client.hIncrBy(key, current_status, 1); // Increment current status
+        console.log(`Updated status for employee ${employee_id}`);
+      }
+
+      // Retrieve the updated status counts for verification
+      // const updatedStatusCounts = await client.hGetAll(key);
+      // console.log(
+      //   `Updated status counts for task ${employee_id}:`,
+      //   updatedStatusCounts
+      // );
+    } catch (error) {
+      console.error("Error managing task status:", error.message);
+    }
+  },
+  remove_task_status: async (employee_id, current_status) => {
+    try {
+      const key = employee_id;
+
+      // Check if the task already exists in Redis
+      const exists = await client.exists(key);
+
+      if (!exists) {
+        console.log("not found");
+      } else {
+        await client.hIncrBy(key, current_status, -1); // Decrement current status
+        console.log(`Updated status for employee ${employee_id}`);
+      }
+
+      // Retrieve the updated status counts for verification
+      // const updatedStatusCounts = await client.hGetAll(key);
+      // console.log(
+      //   `Updated status counts for task ${employee_id}:`,
+      //   updatedStatusCounts
+      // );
+    } catch (error) {
+      console.error("Error managing task status:", error.message);
+    }
+  },
+  update_task_status: async (employee_id, current_status, prev_status) => {
+    try {
+      const key = employee_id;
+
+      const exists = await client.exists(key);
+
+      if (!exists) {
+        // Initialize status counts
+        const initial_status_counts = {
+          new: 0,
+          in_progress: 0,
+          under_review: 0,
+          completed: 0,
+          hold: 0,
+        };
+
+        // Increment the count for the current status
+        initial_status_counts[current_status] = 1;
+
+        // Store the object in Redis
+        await client.hSet(key, initial_status_counts);
+        console.log(`Initialized status for employee ${employee_id}`);
+      } else {
+        await client.hIncrBy(key, prev_status, -1); // Decrement previous status
+
+        await client.hIncrBy(key, current_status, 1); // Increment current status
+        console.log(`Updated status for employee ${employee_id}`);
+      }
+
+      // Retrieve the updated status counts for verification
+      // const updatedStatusCounts = await client.hGetAll(key);
+      // console.log(
+      //   `Updated status counts for task ${employee_id}}:`,
+      //   updatedStatusCounts
+      // );
+    } catch (error) {
+      console.error("Error managing task status:", error.message);
+    }
+  },
 };

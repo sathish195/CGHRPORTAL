@@ -81,13 +81,7 @@ router.post(
     );
     console.log(birthdays);
 
-    let statss = await mongoFunctions.find_one("STATS", {
-      employee_id: req.employee.employee_id,
-      createdAt: {
-        $gte: new Date().setHours(0, 0, 0, 0),
-        $lt: new Date().setHours(24, 0, 0, 0),
-      },
-    });
+    let statss = await redis.redisGetAll(req.employee.employee_id);
     const now = new Date();
     const start_day = new Date(now.setHours(0, 0, 0, 0));
     const end_day = new Date(now.setHours(23, 59, 59, 999));

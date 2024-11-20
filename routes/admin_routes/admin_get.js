@@ -327,25 +327,33 @@ router.post(
     const employeeId = req.employee.employee_id;
 
     if (userRole === "1" || userRole === "2") {
-      const projects = await mongoFunctions.find("PROJECTS", {
-        organisation_id: organisationId,
-        project_status: {
-          $not: /in_active/i,
+      const projects = await mongoFunctions.find(
+        "PROJECTS",
+        {
+          organisation_id: organisationId,
+          project_status: {
+            $not: /in_active/i,
+          },
         },
-      });
+        { createdAt: -1 }
+      );
       console.log("successfully fetched projects");
       return res.status(200).send(projects);
     } else if (userRole === "3") {
       // Get only the projects where the team incharge's employee ID is in the team array
 
-      const projects = await mongoFunctions.find("PROJECTS", {
-        organisation_id: organisationId,
-        team: { $elemMatch: { employee_id: employeeId } },
-        project_status: {
-          $not: /in_active/i,
+      const projects = await mongoFunctions.find(
+        "PROJECTS",
+        {
+          organisation_id: organisationId,
+          team: { $elemMatch: { employee_id: employeeId } },
+          project_status: {
+            $not: /in_active/i,
+          },
+          //
         },
-        //
-      });
+        { createdAt: -1 }
+      );
       console.log("successfully fetched projects");
       return res.status(200).send(projects);
     } else {
@@ -383,9 +391,13 @@ router.post(
         },
       ]);
       const emp_projects = project.map((task) => task.project_id);
-      const projects = await mongoFunctions.find("PROJECTS", {
-        project_id: { $in: emp_projects },
-      });
+      const projects = await mongoFunctions.find(
+        "PROJECTS",
+        {
+          project_id: { $in: emp_projects },
+        },
+        { createdAt: -1 }
+      );
 
       console.log("successfully fetched projects");
       return res.status(200).send(projects);
