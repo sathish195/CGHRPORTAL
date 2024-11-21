@@ -447,7 +447,14 @@ function add_update_task(data) {
       })
       .trim(),
     status: Joi.string()
-      .valid("new", "in_progress", "under_review", "completed", "manager")
+      .valid(
+        "new",
+        "in_progress",
+        "under_review",
+        "completed",
+        "manager",
+        "hold"
+      )
       .required(),
     due_date: Joi.string().required(),
     priority: Joi.string().valid("high", "medium", "low").required(),
