@@ -341,11 +341,15 @@ router.post(
           "PROJECTS",
           {
             organisation_id: organisationId,
-            team: { $elemMatch: { employee_id: employeeId } },
+
             project_status: {
               $not: /in_active/i,
             },
-            "created_by.employee_id": employeeId,
+
+            $or: [
+              { team: { $elemMatch: { employee_id: employeeId } } },
+              { "created_by.employee_id": employeeId },
+            ],
           },
           { createdAt: -1 }
         );
