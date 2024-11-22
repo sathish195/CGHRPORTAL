@@ -142,7 +142,6 @@ router.post(
             { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
             { employee_id: req.employee.employee_id },
           ],
-          // "created_by.employee_id": req.employee.employee_id,
         });
         return res.status(200).send(findTask);
       }
