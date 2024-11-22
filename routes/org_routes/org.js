@@ -499,6 +499,9 @@ router.post(
       "EMPLOYEE",
       {
         organisation_id: req.employee.organisation_id,
+        "work_info.employee_status": {
+          $nin: [/^disable$/i, /^terminated$/i],
+        },
         "work_info.admin_type": { $in: ["1", "2"] },
       },
       { _id: -1 },

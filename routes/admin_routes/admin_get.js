@@ -112,7 +112,12 @@ router.post(
 
       if (error) return res.status(400).send(error.details[0].message);
 
-      let query = { organisation_id: req.employee.organisation_id };
+      let query = {
+        organisation_id: req.employee.organisation_id,
+        "work_info.employee_status": {
+          $nin: [/^disable$/i, /^terminated$/i],
+        },
+      };
       if (emp.admin_type === "1") {
         query["work_info.admin_type"] = { $ne: "1" };
       } else if (emp.admin_type === "2") {
@@ -327,16 +332,35 @@ router.post(
     const employeeId = req.employee.employee_id;
 
     if (userRole === "1" || userRole === "2") {
-      const projects = await mongoFunctions.find(
-        "PROJECTS",
-        {
-          organisation_id: organisationId,
-          project_status: {
-            $not: /in_active/i,
+      let projects;
+      if (
+        userRole === "2" &&
+        req.employee.designation_name.trim().toLowerCase() !== "project manager"
+      ) {
+        projects = await mongoFunctions.find(
+          "PROJECTS",
+          {
+            organisation_id: organisationId,
+            team: { $elemMatch: { employee_id: employeeId } },
+            project_status: {
+              $not: /in_active/i,
+            },
+            "created_by.employee_id": employeeId,
           },
-        },
-        { createdAt: -1 }
-      );
+          { createdAt: -1 }
+        );
+      } else {
+        projects = await mongoFunctions.find(
+          "PROJECTS",
+          {
+            organisation_id: organisationId,
+            project_status: {
+              $not: /in_active/i,
+            },
+          },
+          { createdAt: -1 }
+        );
+      }
       console.log("successfully fetched projects");
       return res.status(200).send(projects);
     } else if (userRole === "3") {

@@ -130,6 +130,22 @@ router.post(
 
     let findTask;
     if (!data.project_id || data.project_id.length < 1) {
+      if (userRole === "2" && userRole !== "project manager") {
+        findTask = await mongoFunctions.find("TASKS", {
+          organisation_id: req.employee.organisation_id,
+          status: { $nin: [/^completed$/i, /^manager$/i] },
+          // project_id: data.project_id,
+          task_status: {
+            $not: /in_active/i,
+          },
+          $or: [
+            { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
+            { employee_id: req.employee.employee_id },
+          ],
+          // "created_by.employee_id": req.employee.employee_id,
+        });
+        return res.status(200).send(findTask);
+      }
       if (userRole === "2" || userRole === "1") {
         findTask = await mongoFunctions.find("TASKS", {
           organisation_id: req.employee.organisation_id,
@@ -149,7 +165,12 @@ router.post(
           task_status: {
             $not: /in_active/i,
           },
-          "created_by.employee_id": req.employee.employee_id,
+          $or: [
+            { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
+            { employee_id: req.employee.employee_id },
+            { department_id: req.employee.department_id }, // Tasks where employee is in the team array
+          ],
+          // "created_by.employee_id": req.employee.employee_id,
         });
         return res.status(200).send(findTask);
       } else {
@@ -248,7 +269,38 @@ router.post(
       },
     };
     console.log(query);
-    if (userRole === "2" || userRole === "1") {
+    if (
+      userRole === "2" &&
+      req.employee.designation_name !== "project manager"
+    ) {
+      query = {
+        $or: [
+          { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
+          { employee_id: req.employee.employee_id },
+        ],
+        status: {
+          $nin: ["completed"],
+        },
+        task_status: {
+          $not: /in_active/i,
+        },
+      };
+      console.log(query);
+
+      if (data.status && data.status.length > 0) {
+        query.status = data.status;
+      }
+
+      if (data.date) {
+        const date = new Date(data.date);
+        const start_day = new Date(date.setHours(0, 0, 0, 0));
+        const end_day = new Date(date.setHours(23, 59, 59, 999));
+        query.createdAt = {
+          $gte: start_day, // Greater than or equal to start of the day
+          $lt: end_day, // Less than end of the day
+        };
+      }
+    } else if (userRole === "2" || userRole === "1") {
       if (data.status && data.status.length > 0) {
         query.status = data.status;
       }
