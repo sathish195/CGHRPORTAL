@@ -733,14 +733,12 @@ router.post(
           );
 
           if (existingEmployeeIds.length > 0) {
+            const employeeName = `${employee.basic_info.first_name} ${employee.basic_info.last_name}`;
             return res
               .status(400)
-              .send(
-                `Employees with IDs ${existingEmployeeIds.join(
-                  ", "
-                )} are already added to the task team.`
-              );
+              .send(`${employeeName} Is Already Added To The Project Team.`);
           }
+
           const team = {
             employee_id: employeeId,
             employee_name:
@@ -784,13 +782,10 @@ router.post(
           );
 
           if (existingEmployeeIds.length > 0) {
+            const employeeName = `${employee.basic_info.first_name} ${employee.basic_info.last_name}`;
             return res
               .status(400)
-              .send(
-                `Employees with IDs ${existingEmployeeIds.join(
-                  ", "
-                )} are already added to the project team.`
-              );
+              .send(`${employeeName} Is Already Added To The Project Team.`);
           }
 
           const newAssignTrack = {
@@ -844,6 +839,23 @@ router.post(
             { $pull: { team: { employee_id: employeeId } } }
           );
         } else {
+          const employee = await mongoFunctions.find_one("EMPLOYEE", {
+            employee_id: employeeId,
+          });
+          if (!employee)
+            return res
+              .status(400)
+              .send(`Employee with ID ${employeeId} not found`);
+          const existingEmployeeIds = employeeIds.filter((employeeId) =>
+            project.team.some((member) => member.employee_id === employeeId)
+          );
+
+          if (existingEmployeeIds.length === 0) {
+            const employeeName = `${employee.basic_info.first_name} ${employee.basic_info.last_name}`;
+            return res
+              .status(400)
+              .send(`${employeeName} Is Not Exist In The Project Team.`);
+          }
           // Remove team member from project
           await mongoFunctions.find_one_and_update(
             "PROJECTS",
