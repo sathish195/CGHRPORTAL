@@ -185,6 +185,21 @@ router.post(
         return res.status(200).send(findTask);
       }
     } else {
+      if (userRole === "2" && userRole !== "project manager") {
+        findTask = await mongoFunctions.find("TASKS", {
+          organisation_id: req.employee.organisation_id,
+          status: { $nin: [/^completed$/i, /^manager$/i] },
+          project_id: data.project_id,
+          task_status: {
+            $not: /in_active/i,
+          },
+          $or: [
+            { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
+            { employee_id: req.employee.employee_id },
+          ],
+        });
+        return res.status(200).send(findTask);
+      }
       if (userRole === "2" || userRole === "1") {
         findTask = await mongoFunctions.find("TASKS", {
           organisation_id: req.employee.organisation_id,
@@ -204,7 +219,12 @@ router.post(
           task_status: {
             $not: /in_active/i,
           },
-          "created_by.employee_id": req.employee.employee_id,
+          $or: [
+            { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
+            { employee_id: req.employee.employee_id },
+            { department_id: req.employee.department_id }, // Tasks where employee is in the team array
+          ],
+          // "created_by.employee_id": req.employee.employee_id,
         });
         return res.status(200).send(findTask);
       } else {
