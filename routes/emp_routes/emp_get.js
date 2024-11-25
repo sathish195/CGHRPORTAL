@@ -143,6 +143,7 @@ router.post(
             { employee_id: req.employee.employee_id },
           ],
         });
+        console.log(userRole);
         return res.status(200).send(findTask);
       }
       if (userRole === "2" || userRole === "1") {
@@ -154,6 +155,7 @@ router.post(
             $not: /in_active/i,
           },
         });
+        console.log(userRole);
         return res.status(200).send(findTask);
       }
       if (userRole === "3") {
@@ -185,7 +187,7 @@ router.post(
         return res.status(200).send(findTask);
       }
     } else {
-      if (userRole === "2" && userRole !== "project manager") {
+      if (userRole === "2" && req.employee.designation_name !== "project manager") {
         findTask = await mongoFunctions.find("TASKS", {
           organisation_id: req.employee.organisation_id,
           status: { $nin: [/^completed$/i, /^manager$/i] },
@@ -199,8 +201,7 @@ router.post(
           ],
         });
         return res.status(200).send(findTask);
-      }
-      if (userRole === "2" || userRole === "1") {
+      } else if (userRole === "2" || userRole === "1") {
         findTask = await mongoFunctions.find("TASKS", {
           organisation_id: req.employee.organisation_id,
           status: { $nin: [/^completed$/i] },
@@ -209,9 +210,9 @@ router.post(
             $not: /in_active/i,
           },
         });
+        console.log(userRole);
         return res.status(200).send(findTask);
-      }
-      if (userRole === "3") {
+      } else if (userRole === "3") {
         findTask = await mongoFunctions.find("TASKS", {
           organisation_id: req.employee.organisation_id,
           status: { $nin: [/^completed$/i, /^manager$/i] },
