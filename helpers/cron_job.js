@@ -271,7 +271,7 @@ const updateStatusOfNotCheckins = async () => {
 
 // Scheduling cron jobs
 cron.schedule(
-  "30 9 * * 1-5",
+  "22 16 * * 1-5",
   async () => {
     await updateAttendanceStatus();
     alertDev("Running cron to update status in weekdays");
@@ -282,7 +282,7 @@ cron.schedule(
   { scheduled: true, timezone: "Asia/Kolkata" }
 );
 cron.schedule(
-  "20 16 * * 1-5",
+  "00 11 * * 1-5",
   async () => {
     await updateStatusOfNotCheckins();
     alertDev("Running cron to update absent status in weekdays");
