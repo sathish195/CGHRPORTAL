@@ -351,7 +351,7 @@ async function calculate_working_time(statusUpdates, task_id) {
       const currentTime = new Date(current.modifiedAt).getTime();
       const nextTime = new Date(next.modifiedAt).getTime();
 
-      totalTime += (nextTime - currentTime) / (1000 * 60); // Convert milliseconds to minutes and add
+      totalTime += Math.round((nextTime - currentTime) / (1000 * 60)); // Convert to minutes and round to nearest whole number
     }
   }
   await mongoFunctions.find_one_and_update(
