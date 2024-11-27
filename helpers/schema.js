@@ -457,6 +457,7 @@ function add_update_task(data) {
       )
       .required(),
     due_date: Joi.string().required(),
+    time: Joi.string().required(),
     priority: Joi.string().valid("high", "medium", "low").required(),
     task_status: Joi.string()
       .valid("active", "in_active", "completed")

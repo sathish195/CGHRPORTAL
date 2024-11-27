@@ -1063,6 +1063,7 @@ router.post(
           description: data.description,
           task_status: data.task_status,
           due_date: new Date(data.due_date),
+          time: data.time,
           priority: data.priority,
           completed_date: data.completed_date
             ? data.completed_date
@@ -1102,6 +1103,7 @@ router.post(
           description: data.description,
           task_status: data.task_status,
           due_date: new Date(data.due_date),
+          time: data.time,
           priority: data.priority,
           completed_date: data.completed_date
             ? data.completed_date
@@ -1215,6 +1217,7 @@ router.post(
           // end_date: data.end_date,
           description: data.description,
           due_date: new Date(data.due_date),
+          time: data.time,
           priority: data.priority,
           status: data.status,
           task_status: data.task_status,

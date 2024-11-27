@@ -587,9 +587,7 @@ router.post(
       { new: true } // Optionally return the updated document
     );
     let s = await stats.calculate_working_time(
-      modified_by.modifiedAt,
-      findId.due_date,
-      findId.status,
+      findId.modified_by,
       findId.task_id
     );
     console.log(s);

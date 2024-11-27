@@ -339,33 +339,31 @@ async function update_stats(
 
 //calculate worked_hours of tasks
 
-async function calculate_working_time(date1, date2, status, task_id) {
-  const startDate = new Date(date1);
-  const endDate = new Date(date2);
+async function calculate_working_time(statusUpdates, task_id) {
+  const relevantStatuses = ["under_review", "hold"];
+  let totalTime = 0; // In milliseconds
 
-  const diffInMilliseconds = endDate - startDate;
-  console.log(diffInMilliseconds);
+  for (let i = 0; i < statusUpdates.length - 1; i++) {
+    const current = statusUpdates[i];
+    const next = statusUpdates[i + 1];
 
-  // if (diffInMilliseconds < 0) {
-  //   return "The first date is after the second date.";
-  // }
+    if (relevantStatuses.includes(next.currentStatus)) {
+      const currentTime = new Date(current.modifiedAt).getTime();
+      const nextTime = new Date(next.modifiedAt).getTime();
 
-  const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
-  console.log(diffInMinutes);
-
-  let statuses = ["under_review", "completed", "hold"];
-  if (statuses.includes(status)) {
-    await mongoFunctions.find_one_and_update(
-      "TASKS",
-      { task_id: task_id },
-      {
-        $inc: {
-          worked_hours: +diffInMinutes,
-        },
-      },
-      { new: true }
-    );
+      totalTime += (nextTime - currentTime) / (1000 * 60); // Convert milliseconds to minutes and add
+    }
   }
+  await mongoFunctions.find_one_and_update(
+    "TASKS",
+    { task_id: task_id },
+    {
+      $inc: {
+        worked_hours: +totalTime,
+      },
+    },
+    { new: true }
+  );
   return true;
 }
 
