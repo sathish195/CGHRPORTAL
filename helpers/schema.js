@@ -518,6 +518,7 @@ function update_task(data) {
 function get_all_tasks(data) {
   const schema = Joi.object({
     skip: Joi.number().integer().min(0).required(),
+    project_id: Joi.string().optional().allow(""),
     status: Joi.string()
       .optional()
       .allow("")
