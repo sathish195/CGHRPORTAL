@@ -12,6 +12,7 @@ const Task_schema = new mongoose.Schema(
     employee_name: { type: String, default: "" },
     status: { type: String, required: true },
     task_name: { type: String, required: true },
+    time: { type: String, required: true },
     description: { type: String, required: true },
     // start_date: {type: Date,required:false},
     // end_date: { type: Date,required:false},
