@@ -476,6 +476,15 @@ function get_project_by_id(data) {
   });
   return schema.validate(data);
 }
+function get_projects(data) {
+  const schema = Joi.object({
+    status: Joi.string()
+      .optional()
+      .allow("")
+      .valid("new", "in_progress", "under_review", "completed"),
+  });
+  return schema.validate(data);
+}
 function get_tasks(data) {
   const schema = Joi.object({
     project_id: Joi.string().optional().allow(""),
@@ -716,6 +725,7 @@ module.exports = {
   add_image,
   edit_profile,
   add_project,
+  get_projects,
   get_project_by_id,
   add_remove_team,
   add_update_task,

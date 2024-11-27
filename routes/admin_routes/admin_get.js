@@ -319,17 +319,36 @@ router.post(
   })
 );
 
+//get all projects route
 router.post(
   "/get_projects",
   Auth,
   slowDown,
   Async(async (req, res) => {
     console.log("get projects route hit");
+    let data = req.body;
+    var { error } = validations.get_projects(data);
+    if (error) return res.status(400).send(error.details[0].message);
 
     const userRole = req.employee.admin_type;
     console.log(userRole);
     const organisationId = req.employee.organisation_id;
     const employeeId = req.employee.employee_id;
+
+    const status = data.status;
+
+    // Base query for all users
+    let baseQuery = {
+      organisation_id: organisationId,
+      project_status: {
+        $not: /in_active/i,
+      },
+    };
+
+    // Add the status filter if provided in the request body
+    if (status) {
+      baseQuery.status = status;
+    }
 
     if (userRole === "1" || userRole === "2") {
       let projects;
@@ -337,51 +356,27 @@ router.post(
         userRole === "2" &&
         req.employee.designation_name.trim().toLowerCase() !== "project manager"
       ) {
-        projects = await mongoFunctions.find(
-          "PROJECTS",
-          {
-            organisation_id: organisationId,
+        baseQuery.$or = [
+          { team: { $elemMatch: { employee_id: employeeId } } },
+          { "created_by.employee_id": employeeId },
+        ];
 
-            project_status: {
-              $not: /in_active/i,
-            },
-
-            $or: [
-              { team: { $elemMatch: { employee_id: employeeId } } },
-              { "created_by.employee_id": employeeId },
-            ],
-          },
-          { createdAt: -1 }
-        );
+        projects = await mongoFunctions.find("PROJECTS", baseQuery, {
+          createdAt: -1,
+        });
       } else {
-        projects = await mongoFunctions.find(
-          "PROJECTS",
-          {
-            organisation_id: organisationId,
-            project_status: {
-              $not: /in_active/i,
-            },
-          },
-          { createdAt: -1 }
-        );
+        projects = await mongoFunctions.find("PROJECTS", baseQuery, {
+          createdAt: -1,
+        });
       }
       console.log("successfully fetched projects");
       return res.status(200).send(projects);
     } else if (userRole === "3") {
-      // Get only the projects where the team incharge's employee ID is in the team array
+      baseQuery.team = { $elemMatch: { employee_id: employeeId } };
 
-      const projects = await mongoFunctions.find(
-        "PROJECTS",
-        {
-          organisation_id: organisationId,
-          team: { $elemMatch: { employee_id: employeeId } },
-          project_status: {
-            $not: /in_active/i,
-          },
-          //
-        },
-        { createdAt: -1 }
-      );
+      const projects = await mongoFunctions.find("PROJECTS", baseQuery, {
+        createdAt: -1,
+      });
       console.log("successfully fetched projects");
       return res.status(200).send(projects);
     } else {
@@ -389,12 +384,10 @@ router.post(
         {
           $match: {
             organisation_id: organisationId,
-            // team: { $elemMatch: { employee_id: employeeId } },
-            employee_id: req.employee.employee_id,
+            employee_id: employeeId,
             project_status: {
               $not: /in_active/i,
             },
-            // { $elemMatch: { employee_id: employeeId }
           },
         },
         {
@@ -418,20 +411,132 @@ router.post(
           },
         },
       ]);
-      const emp_projects = project.map((task) => task.project_id);
-      const projects = await mongoFunctions.find(
-        "PROJECTS",
-        {
-          project_id: { $in: emp_projects },
-        },
-        { createdAt: -1 }
-      );
 
+      const emp_projects = project.map((task) => task.project_id);
+      baseQuery.project_id = { $in: emp_projects };
+
+      const projects = await mongoFunctions.find("PROJECTS", baseQuery, {
+        createdAt: -1,
+      });
       console.log("successfully fetched projects");
       return res.status(200).send(projects);
     }
   })
 );
+
+// router.post(
+//   "/get_projects",
+//   Auth,
+//   slowDown,
+//   Async(async (req, res) => {
+//     console.log("get projects route hit");
+
+//     const userRole = req.employee.admin_type;
+//     console.log(userRole);
+//     const organisationId = req.employee.organisation_id;
+//     const employeeId = req.employee.employee_id;
+
+//     if (userRole === "1" || userRole === "2") {
+//       let projects;
+//       if (
+//         userRole === "2" &&
+//         req.employee.designation_name.trim().toLowerCase() !== "project manager"
+//       ) {
+//         projects = await mongoFunctions.find(
+//           "PROJECTS",
+//           {
+//             organisation_id: organisationId,
+
+//             project_status: {
+//               $not: /in_active/i,
+//             },
+
+//             $or: [
+//               { team: { $elemMatch: { employee_id: employeeId } } },
+//               { "created_by.employee_id": employeeId },
+//             ],
+//           },
+//           { createdAt: -1 }
+//         );
+//       } else {
+//         projects = await mongoFunctions.find(
+//           "PROJECTS",
+//           {
+//             organisation_id: organisationId,
+//             project_status: {
+//               $not: /in_active/i,
+//             },
+//           },
+//           { createdAt: -1 }
+//         );
+//       }
+//       console.log("successfully fetched projects");
+//       return res.status(200).send(projects);
+//     } else if (userRole === "3") {
+//       // Get only the projects where the team incharge's employee ID is in the team array
+
+//       const projects = await mongoFunctions.find(
+//         "PROJECTS",
+//         {
+//           organisation_id: organisationId,
+//           team: { $elemMatch: { employee_id: employeeId } },
+//           project_status: {
+//             $not: /in_active/i,
+//           },
+//           //
+//         },
+//         { createdAt: -1 }
+//       );
+//       console.log("successfully fetched projects");
+//       return res.status(200).send(projects);
+//     } else {
+//       const project = await mongoFunctions.aggregate("TASKS", [
+//         {
+//           $match: {
+//             organisation_id: organisationId,
+//             // team: { $elemMatch: { employee_id: employeeId } },
+//             employee_id: req.employee.employee_id,
+//             project_status: {
+//               $not: /in_active/i,
+//             },
+//             // { $elemMatch: { employee_id: employeeId }
+//           },
+//         },
+//         {
+//           $project: {
+//             _id: 0,
+//             project_id: 1,
+//             project_name: 1,
+//           },
+//         },
+//         {
+//           $group: {
+//             _id: "$project_id",
+//             project_name: { $first: "$project_name" },
+//           },
+//         },
+//         {
+//           $project: {
+//             _id: 0,
+//             project_id: "$_id",
+//             project_name: 1,
+//           },
+//         },
+//       ]);
+//       const emp_projects = project.map((task) => task.project_id);
+//       const projects = await mongoFunctions.find(
+//         "PROJECTS",
+//         {
+//           project_id: { $in: emp_projects },
+//         },
+//         { createdAt: -1 }
+//       );
+
+//       console.log("successfully fetched projects");
+//       return res.status(200).send(projects);
+//     }
+//   })
+// );
 router.post(
   "/all_leave_applications",
   Auth,
