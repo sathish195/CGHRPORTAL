@@ -812,6 +812,8 @@ router.post(
               " " +
               employee.basic_info.last_name,
             date_time: new Date(),
+            department_id: employee.work_info.department_id,
+            department_name: employee.work_info.department_name,
           };
 
           await mongoFunctions.find_one_and_update(
