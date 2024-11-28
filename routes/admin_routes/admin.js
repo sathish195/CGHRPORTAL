@@ -815,6 +815,7 @@ router.post(
             department_id: employee.work_info.department_id,
             department_name: employee.work_info.department_name,
           };
+          
 
           await mongoFunctions.find_one_and_update(
             "PROJECTS",
