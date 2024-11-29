@@ -166,7 +166,7 @@ function add_employee_by_admin(data) {
       .regex(/^\S.*\S$/)
       .trim()
       .min(5)
-      .max(100)
+      .max(250)
       .pattern(/^[A-Za-z0-9\s.,-]+$/, "valid characters")
       .required()
       .messages({
