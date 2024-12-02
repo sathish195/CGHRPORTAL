@@ -1141,7 +1141,7 @@ router.post(
           $set: set_update,
           $push: push_update,
         },
-        { new: true } // Optionally return the updated document
+        { new: true } 
       );
       let s = await stats.calculate_working_time(
         task_data_up.modified_by,
