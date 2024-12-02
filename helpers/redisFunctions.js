@@ -310,4 +310,37 @@ module.exports = {
       console.error("Error managing task status:", error.message);
     }
   },
+  del_task_status: async (employee_id, current_status = null) => {
+    try {
+      const key = employee_id;
+
+      // Check if the task exists in Redis
+      const exists = await client.exists(key);
+
+      if (!exists) {
+        console.log(`No status found for employee ${employee_id}`);
+        return;
+      }
+
+      if (current_status) {
+        // Remove specific status from the hash
+        const removed = await client.hDel(key, current_status);
+        if (removed) {
+          console.log(
+            `Removed status "${current_status}" for employee ${employee_id}`
+          );
+        } else {
+          console.log(
+            `Status "${current_status}" not found for employee ${employee_id}`
+          );
+        }
+      } else {
+        // Delete the entire hash
+        await client.del(key);
+        console.log(`Deleted all status counts for employee ${employee_id}`);
+      }
+    } catch (error) {
+      console.error("Error removing task status:", error.message);
+    }
+  },
 };

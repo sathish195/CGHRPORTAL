@@ -1374,5 +1374,18 @@ router.post(
     return res.status(200).send("Holiday Removed Successfully..!");
   })
 );
+router.post(
+  "/delete_stats",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    const { error, value } = validations.delete_data(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const data = value;
+    await redis.del_task_status(data.id);
+    return res.status(200).send("success");
+  })
+);
 
 module.exports = router;
