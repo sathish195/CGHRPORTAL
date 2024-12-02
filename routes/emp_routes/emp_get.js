@@ -187,7 +187,10 @@ router.post(
         return res.status(200).send(findTask);
       }
     } else {
-      if (userRole === "2" && req.employee.designation_name !== "project manager") {
+      if (
+        userRole === "2" &&
+        req.employee.designation_name !== "project manager"
+      ) {
         findTask = await mongoFunctions.find("TASKS", {
           organisation_id: req.employee.organisation_id,
           status: { $nin: [/^completed$/i, /^manager$/i] },
@@ -288,6 +291,12 @@ router.post(
         $not: /in_active/i,
       },
     };
+    console.log(query);
+    // Add project_id filter if provided
+    if (data.project_id) {
+      query.project_id = data.project_id;
+    }
+
     console.log(query);
     if (
       userRole === "2" &&

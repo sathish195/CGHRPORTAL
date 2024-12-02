@@ -166,7 +166,7 @@ function add_employee_by_admin(data) {
       .regex(/^\S.*\S$/)
       .trim()
       .min(5)
-      .max(100)
+      .max(300)
       .pattern(/^[A-Za-z0-9\s.,-]+$/, "valid characters")
       .required()
       .messages({
@@ -457,6 +457,7 @@ function add_update_task(data) {
       )
       .required(),
     due_date: Joi.string().required(),
+    time: Joi.string().required(),
     priority: Joi.string().valid("high", "medium", "low").required(),
     task_status: Joi.string()
       .valid("active", "in_active", "completed")
@@ -472,6 +473,15 @@ function add_update_task(data) {
 function get_project_by_id(data) {
   const schema = Joi.object({
     project_id: Joi.string().min(5).max(12).required(),
+  });
+  return schema.validate(data);
+}
+function get_projects(data) {
+  const schema = Joi.object({
+    status: Joi.string()
+      .optional()
+      .allow("")
+      .valid("new", "in_progress", "under_review", "completed"),
   });
   return schema.validate(data);
 }
@@ -508,6 +518,7 @@ function update_task(data) {
 function get_all_tasks(data) {
   const schema = Joi.object({
     skip: Joi.number().integer().min(0).required(),
+    project_id: Joi.string().optional().allow(""),
     status: Joi.string()
       .optional()
       .allow("")
@@ -715,6 +726,7 @@ module.exports = {
   add_image,
   edit_profile,
   add_project,
+  get_projects,
   get_project_by_id,
   add_remove_team,
   add_update_task,

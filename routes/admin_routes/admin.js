@@ -812,6 +812,8 @@ router.post(
               " " +
               employee.basic_info.last_name,
             date_time: new Date(),
+            department_id: employee.work_info.department_id,
+            department_name: employee.work_info.department_name,
           };
 
           await mongoFunctions.find_one_and_update(
@@ -1063,6 +1065,7 @@ router.post(
           description: data.description,
           task_status: data.task_status,
           due_date: new Date(data.due_date),
+          time: data.time,
           priority: data.priority,
           completed_date: data.completed_date
             ? data.completed_date
@@ -1102,6 +1105,7 @@ router.post(
           description: data.description,
           task_status: data.task_status,
           due_date: new Date(data.due_date),
+          time: data.time,
           priority: data.priority,
           completed_date: data.completed_date
             ? data.completed_date
@@ -1136,8 +1140,19 @@ router.post(
           $set: set_update,
           $push: push_update,
         },
-        { new: true } // Optionally return the updated document
+        { new: true }
       );
+      if (
+        task_data_up.status === "under_review" ||
+        task_data_up.status === "hold"
+      ) {
+        let s = await stats.calculate_working_time(
+          task_data_up.modified_by,
+          task_data_up.task_id
+        );
+
+        console.log(s);
+      }
 
       console.log("task updated successfully");
 
@@ -1215,6 +1230,7 @@ router.post(
           // end_date: data.end_date,
           description: data.description,
           due_date: new Date(data.due_date),
+          time: data.time,
           priority: data.priority,
           status: data.status,
           task_status: data.task_status,
