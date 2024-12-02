@@ -340,12 +340,16 @@ async function update_stats(
 //calculate worked_hours of tasks
 
 async function calculate_working_time(statusUpdates, task_id) {
+  console.log("route hit");
   const relevantStatuses = ["under_review", "hold"];
   let totalTime = 0; // In milliseconds
 
   for (let i = 0; i < statusUpdates.length - 1; i++) {
     const current = statusUpdates[i];
+    console.log("current-------------", current);
     const next = statusUpdates[i + 1];
+    console.log("next------------------", next);
+    console.log(relevantStatuses.includes(next.currentStatus));
 
     if (relevantStatuses.includes(next.currentStatus)) {
       const currentTime = new Date(current.modifiedAt).getTime();
@@ -353,18 +357,19 @@ async function calculate_working_time(statusUpdates, task_id) {
 
       totalTime += Math.round((nextTime - currentTime) / (1000 * 60)); // Convert to minutes and round to nearest whole number
     }
-  }
-  await mongoFunctions.find_one_and_update(
-    "TASKS",
-    { task_id: task_id },
-    {
-      $inc: {
-        worked_hours: +totalTime,
+
+    await mongoFunctions.find_one_and_update(
+      "TASKS",
+      { task_id: task_id },
+      {
+        $inc: {
+          worked_hours: +totalTime,
+        },
       },
-    },
-    { new: true }
-  );
-  return true;
+      { new: true }
+    );
+    return true;
+  }
 }
 
 //calculate working minutes
