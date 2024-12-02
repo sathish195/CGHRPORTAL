@@ -586,11 +586,13 @@ router.post(
       },
       { new: true } // Optionally return the updated document
     );
-    let s = await stats.calculate_working_time(
-      task_data_up.modified_by,
-      task_data_up.task_id
-    );
-    console.log(s);
+    if (task_data_up.status === "under_review" || "completed") {
+      let s = await stats.calculate_working_time(
+        task_data_up.modified_by,
+        task_data_up.task_id
+      );
+      console.log(s);
+    }
 
     if (!task_data_up) return res.status(400).send("Task Update Failed");
     if (findId.status !== data.status) {

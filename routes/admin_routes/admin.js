@@ -815,7 +815,6 @@ router.post(
             department_id: employee.work_info.department_id,
             department_name: employee.work_info.department_name,
           };
-          
 
           await mongoFunctions.find_one_and_update(
             "PROJECTS",
@@ -1141,13 +1140,16 @@ router.post(
           $set: set_update,
           $push: push_update,
         },
-        { new: true } 
+        { new: true }
       );
-      let s = await stats.calculate_working_time(
-        task_data_up.modified_by,
-        task_data_up.task_id
-      );
-      console.log(s);
+      if (task_data_up.status === "under_review" || "completed") {
+        let s = await stats.calculate_working_time(
+          task_data_up.modified_by,
+          task_data_up.task_id
+        );
+
+        console.log(s);
+      }
 
       console.log("task updated successfully");
 
