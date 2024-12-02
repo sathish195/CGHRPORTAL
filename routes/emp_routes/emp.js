@@ -586,7 +586,11 @@ router.post(
       },
       { new: true } // Optionally return the updated document
     );
-    if (task_data_up.status === "under_review" || "completed") {
+    if (
+      task_data_up.status === "under_review" ||
+      task_data_up.status === "hold"
+    ) {
+      console.log("entered into flow");
       let s = await stats.calculate_working_time(
         task_data_up.modified_by,
         task_data_up.task_id

@@ -1142,7 +1142,10 @@ router.post(
         },
         { new: true }
       );
-      if (task_data_up.status === "under_review" || "completed") {
+      if (
+        task_data_up.status === "under_review" ||
+        task_data_up.status === "hold"
+      ) {
         let s = await stats.calculate_working_time(
           task_data_up.modified_by,
           task_data_up.task_id
