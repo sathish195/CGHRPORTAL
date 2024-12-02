@@ -343,32 +343,34 @@ async function calculate_working_time(statusUpdates, task_id) {
   console.log("route hit");
   const relevantStatuses = ["under_review", "hold"];
   let totalTime = 0; // In milliseconds
+  if (statusUpdates.length >= 2) {
+    const lastTwoUpdates = statusUpdates.slice(-2);
+    const current = lastTwoUpdates[0];
+    const next = lastTwoUpdates[1];
+    console.log("current", current);
+    console.log("next", next);
+    console.log(relevantStatuses.includes(next.currentStatus));
 
-  const lastTwoUpdates = statusUpdates.slice(-2);
-  const current = lastTwoUpdates[0];
-  const next = lastTwoUpdates[1];
-  console.log("current", current);
-  console.log("next", next);
-  console.log(relevantStatuses.includes(next.currentStatus));
+    if (relevantStatuses.includes(next.currentStatus)) {
+      const currentTime = new Date(current.modifiedAt).getTime();
+      const nextTime = new Date(next.modifiedAt).getTime();
 
-  if (relevantStatuses.includes(next.currentStatus)) {
-    const currentTime = new Date(current.modifiedAt).getTime();
-    const nextTime = new Date(next.modifiedAt).getTime();
+      totalTime += Math.round((nextTime - currentTime) / (1000 * 60)); // Convert to minutes and round to nearest whole number
+    }
 
-    totalTime += Math.round((nextTime - currentTime) / (1000 * 60)); // Convert to minutes and round to nearest whole number
-  }
-
-  await mongoFunctions.find_one_and_update(
-    "TASKS",
-    { task_id: task_id },
-    {
-      $inc: {
-        worked_hours: +totalTime,
+    await mongoFunctions.find_one_and_update(
+      "TASKS",
+      { task_id: task_id },
+      {
+        $inc: {
+          worked_hours: +totalTime,
+        },
       },
-    },
-    { new: true }
-  );
-  return true;
+      { new: true }
+    );
+    return true;
+  }
+  return false;
 }
 
 //calculate working minutes
