@@ -1029,7 +1029,7 @@ router.post(
 
       if (!findId) return res.status(400).send("Task ID Does Not Exist");
       let set_update;
-      let push_update;
+      let push_update = {};
 
       if (data.action.length > 0 && data.action.toLowerCase() === "add") {
         if (!employee) return res.status(400).send(`Employee Not Found`);
