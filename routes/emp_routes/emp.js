@@ -564,17 +564,15 @@ router.post(
       // team: { $elemMatch: { employee_id: req.employee.employee_id } },
     });
     if (!findId) return res.status(400).send("Task ID does not exist");
-    let push_update = {};
-    if (findId.status !== data.status) {
-      push_update = {
-        employee_id: req.employee.employee_id,
-        employee_name: req.employee.first_name + " " + req.employee.last_name,
-        employee_email: req.employee.email,
-        modifiedAt: new Date(),
-        prevStatus: findId.status,
-        currentStatus: data.status,
-      };
-    }
+
+    let modified_by = {
+      employee_id: req.employee.employee_id,
+      employee_name: req.employee.first_name + " " + req.employee.last_name,
+      employee_email: req.employee.email,
+      modifiedAt: new Date(),
+      prevStatus: findId.status,
+      currentStatus: data.status,
+    };
     const task_data_up = await mongoFunctions.find_one_and_update(
       "TASKS",
       {
@@ -585,7 +583,7 @@ router.post(
         $set: {
           status: data.status,
         },
-        $push: push_update,
+        $push: { modified_by: modified_by },
       },
       { new: true } // Optionally return the updated document
     );

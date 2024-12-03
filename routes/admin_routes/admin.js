@@ -1029,7 +1029,7 @@ router.post(
 
       if (!findId) return res.status(400).send("Task ID Does Not Exist");
       let set_update;
-      let push_update = {};
+      let push_update;
 
       if (data.action.length > 0 && data.action.toLowerCase() === "add") {
         if (!employee) return res.status(400).send(`Employee Not Found`);
@@ -1078,20 +1078,18 @@ router.post(
           department_id: employee.work_info.department_id,
           assign_track: newAssignTrack,
         };
-        if (findId.status !== data.status) {
-          push_update = {
-            // assign_track: newAssignTrack,
-            modified_by: {
-              employee_id: req.employee.employee_id,
-              employee_name:
-                req.employee.first_name + " " + req.employee.last_name,
-              employee_email: req.employee.email,
-              modifiedAt: new Date(),
-              prevStatus: findId.status,
-              currentStatus: data.status,
-            },
-          };
-        }
+        push_update = {
+          // assign_track: newAssignTrack,
+          modified_by: {
+            employee_id: req.employee.employee_id,
+            employee_name:
+              req.employee.first_name + " " + req.employee.last_name,
+            employee_email: req.employee.email,
+            modifiedAt: new Date(),
+            prevStatus: findId.status,
+            currentStatus: data.status,
+          },
+        };
       }
       if (data.action.length > 0 && data.action.toLowerCase() === "remove") {
         if (!employee) return res.status(400).send(`Employee Not Found`);
@@ -1117,19 +1115,17 @@ router.post(
           department_id: "",
           assign_track: [],
         };
-        if (findId.status !== data.status) {
-          push_update = {
-            modified_by: {
-              employee_id: req.employee.employee_id,
-              employee_name:
-                req.employee.first_name + " " + req.employee.last_name,
-              employee_email: req.employee.email,
-              modifiedAt: new Date(),
-              prevStatus: findId.status,
-              currentStatus: data.status,
-            },
-          };
-        }
+        push_update = {
+          modified_by: {
+            employee_id: req.employee.employee_id,
+            employee_name:
+              req.employee.first_name + " " + req.employee.last_name,
+            employee_email: req.employee.email,
+            modifiedAt: new Date(),
+            prevStatus: findId.status,
+            currentStatus: data.status,
+          },
+        };
         await redis.remove_task_status(data.employee_id, data.status);
       }
 
