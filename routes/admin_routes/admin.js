@@ -1078,7 +1078,6 @@ router.post(
           department_id: employee.work_info.department_id,
           assign_track: newAssignTrack,
         };
-        let push_update = {};
         if (findId.status !== data.status) {
           push_update = {
             // assign_track: newAssignTrack,
@@ -1118,7 +1117,6 @@ router.post(
           department_id: "",
           assign_track: [],
         };
-        let push_update = {};
         if (findId.status !== data.status) {
           push_update = {
             modified_by: {
@@ -1144,7 +1142,7 @@ router.post(
         },
         {
           $set: set_update,
-          ...(Object.keys(push_update).length > 0 && { $push: push_update }),
+          $push: push_update,
         },
         { new: true }
       );
