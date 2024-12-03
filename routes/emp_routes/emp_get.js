@@ -351,7 +351,8 @@ router.post(
         $or: [
           { "created_by.employee_id": req.employee.employee_id }, // Tasks created by the employee
           { employee_id: req.employee.employee_id },
-          { department_id: req.employee.department_id }, // Tasks where employee is in the team array
+          { department_id: req.employee.department_id },
+          // Tasks where employee is in the team array
         ],
         status: {
           $nin: ["completed"],
@@ -364,6 +365,9 @@ router.post(
 
       if (data.status && data.status.length > 0) {
         query.status = data.status;
+      }
+      if (data.project_id) {
+        query.project_id = data.project_id;
       }
 
       if (data.date) {
