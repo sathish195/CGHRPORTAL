@@ -700,10 +700,13 @@ router.post(
         // No additional conditions for 'director'
       } else if (
         roleName === "2" &&
-        req.employee.designation_name === "HR Manager"
+        req.employee.designation_name.toLowerCase() === "hr manager"
       ) {
         query.leave_status = status;
-      } else if (roleName === "2") {
+      } else if (
+        roleName === "2" &&
+        req.employee.designation_name === "Project Manager"
+      ) {
         query.reporting_manager = req.employee.email;
         query.leave_status = status;
         query["approved_by.manager.leave_status"] = status;
