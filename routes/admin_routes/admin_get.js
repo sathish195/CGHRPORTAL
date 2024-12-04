@@ -698,6 +698,11 @@ router.post(
       if (roleName === "1") {
         query.leave_status = status;
         // No additional conditions for 'director'
+      } else if (
+        roleName === "2" &&
+        req.employee.designation_name === "HR Manager"
+      ) {
+        query.leave_status = status;
       } else if (roleName === "2") {
         query.reporting_manager = req.employee.email;
         query.leave_status = status;
