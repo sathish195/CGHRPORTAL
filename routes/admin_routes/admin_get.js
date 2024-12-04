@@ -775,9 +775,17 @@ router.post(
     query.from_date = { $gte: startOfMonth, $lte: endOfMonth };
 
     if (data.leave_status && data.leave_status.length > 5) {
-      if (roleName === "2") {
+      if (
+        roleName === "2" &&
+        req.employee.designation_name.toLowerCase() !== "hr manager"
+      ) {
         query.reporting_manager = req.employee.email;
         query["approved_by.manager.leave_status"] = data.leave_status;
+      } else if (
+        roleName === "2" &&
+        req.employee.designation_name.toLowerCase() === "hr manager"
+      ) {
+        query.leave_status = data.leave_status;
       } else if (roleName === "3") {
         query.department_id = req.employee.department_id;
         query["approved_by.team_incharge.leave_status"] = data.leave_status;
