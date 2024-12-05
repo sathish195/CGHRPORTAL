@@ -705,7 +705,7 @@ router.post(
         query.leave_status = status;
       } else if (
         roleName === "2" &&
-        req.employee.designation_name === "Project Manager"
+        req.employee.designation_name.toLowerCase() === "project manager"
       ) {
         query.reporting_manager = req.employee.email;
         query.leave_status = status;
