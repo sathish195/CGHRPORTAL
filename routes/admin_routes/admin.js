@@ -1935,9 +1935,9 @@ router.post(
       const nine_thirty_AM = new Date(localInTime);
       nine_thirty_AM.setHours(9, 30, 0, 0);
 
-      if (localInTime < nine_thirty_AM) {
-        return res.status(400).send("Check-in Time Cannot Be Before 9:30 AM.");
-      }
+      // if (localInTime < nine_thirty_AM) {
+      //   return res.status(400).send("Check-in Time Cannot Be Before 9:30 AM.");
+      // }
 
       update = {
         checkin: check_in_obj,
@@ -1960,9 +1960,9 @@ router.post(
       const ten_AM = new Date(localOutTime);
       ten_AM.setHours(10, 0, 0, 0);
 
-      if (localInTime < nine_thirty_AM) {
-        return res.status(400).send("Check-in Time Cannot Be Before 9:30 AM.");
-      }
+      // if (localInTime < nine_thirty_AM) {
+      //   return res.status(400).send("Check-in Time Cannot Be Before 9:30 AM.");
+      // }
       if (localOutTime < ten_AM) {
         return res.status(400).send("Checkout Time Cannot Be Before 10 AM.");
       }
