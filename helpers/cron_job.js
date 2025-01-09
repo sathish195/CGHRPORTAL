@@ -246,6 +246,27 @@ const updateStatusOfNotCheckins = async () => {
     createdAt: { $gt: start, $lte: end },
   });
 
+  // Fetch the list of employees
+  const employees = await mongoFunctions.find("EMPLOYEE");
+  const activeEmployees = employees.filter(
+    (employee) =>
+      employee.work_info.employee_status.toLowerCase() !== "disable" &&
+      employee.work_info.employee_status.toLowerCase() !== "terminated"
+  );
+  // Determine the employee IDs present in the attendance records
+  const employeeIdsInAttendance = new Set(
+    attendanceRecord.map((record) => record.employee_id)
+  );
+  console.log(employeeIdsInAttendance);
+  // Find missing employees
+  const missingEmployees = activeEmployees.filter(
+    (employee) => !employeeIdsInAttendance.has(employee.employee_id)
+  );
+  console.log(missingEmployees);
+  if (missingEmployees.length > 0) {
+    await createAttendanceRecords(missingEmployees, "absent");
+  }
+
   // Update attendance status for records where the checkin array is empty
   // const updates = attendanceRecord
   //   .filter((record) => (!record.checkin || (record.checkin.length === 0 && record.attendance_status==="")))
@@ -282,7 +303,7 @@ cron.schedule(
   { scheduled: true, timezone: "Asia/Kolkata" }
 );
 cron.schedule(
-  "00 11 * * 1-5",
+  "53 12 * * 1-5",
   async () => {
     await updateStatusOfNotCheckins();
     alertDev("Running cron to update absent status in weekdays");
