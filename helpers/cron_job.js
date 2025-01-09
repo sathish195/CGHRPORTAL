@@ -303,7 +303,7 @@ cron.schedule(
   { scheduled: true, timezone: "Asia/Kolkata" }
 );
 cron.schedule(
-  "58 12 * * 1-5",
+  "00 11 * * 1-5",
   async () => {
     await updateStatusOfNotCheckins();
     alertDev("Running cron to update absent status in weekdays");
