@@ -1330,18 +1330,21 @@ router.post(
         .status(403)
         .send("Access denied: Not Team Incharge or Manager");
     }
-    if (req.employee.designation_name.toLowerCase() === "hr manager") {
+    const findId = await mongoFunctions.find_one("LEAVE", {
+      organisation_id: req.employee.organisation_id,
+      leave_application_id: data.leave_application_id,
+      // leave_status: data.leave_status
+    });
+    if (
+      req.employee.email.toLowerCase() !==
+      findId.reporting_manager.toLowerCase()
+    ) {
       return res
         .status(403)
         .send(
           "Access Denied..Only Reporting Manager Can Update The Leave Status"
         );
     }
-    const findId = await mongoFunctions.find_one("LEAVE", {
-      organisation_id: req.employee.organisation_id,
-      leave_application_id: data.leave_application_id,
-      // leave_status: data.leave_status
-    });
     if (!findId) return res.status(400).send("No Leave Application Found");
     console.log(findId);
     const findEmployee = await mongoFunctions.find_one("EMPLOYEE", {
