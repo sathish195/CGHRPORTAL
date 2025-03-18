@@ -1330,7 +1330,7 @@ router.post(
         .status(403)
         .send("Access denied: Not Team Incharge or Manager");
     }
-    if (req.employee.department_name.toLowerCase() === "hr manager") {
+    if (req.employee.designation_name.toLowerCase() === "hr manager") {
       return res
         .status(403)
         .send(
