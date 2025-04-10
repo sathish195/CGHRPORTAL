@@ -1336,8 +1336,9 @@ router.post(
       // leave_status: data.leave_status
     });
     if (
+      req.employee.admin_type === "2" &&
       req.employee.email.toLowerCase() !==
-      findId.reporting_manager.toLowerCase()
+        findId.reporting_manager.toLowerCase()
     ) {
       return res
         .status(403)
