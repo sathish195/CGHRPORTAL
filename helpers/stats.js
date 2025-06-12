@@ -166,6 +166,7 @@ async function employees_with_birthday_today(organisation_id) {
       "EMPLOYEE",
       {
         organisation_id: organisation_id,
+        "work_info.employee_status": { $regex: /^active$/i },
         "personal_details.date_of_birth": { $exists: true }, // Ensure date_of_birth exists
       },
       { _id: -1 },
