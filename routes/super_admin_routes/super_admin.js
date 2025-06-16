@@ -222,11 +222,20 @@ router.post(
       return res.status(403).send("Only Super Admin Can Add/Update Controls!!");
     }
 
+    let controls_object = {
+      email: req.employee.email,
+      login: data.login,
+      add_organisation: data.add_organisation,
+      add_admin: data.add_admin,
+      suspend_organisation: data.suspend_organisation,
+      approve_organisation: data.approve_organisation,
+    };
+
     // Update or insert admin controls
     const updated_controls = await mongoFunctions.find_one_and_update(
       "ADMIN_CONTROLS",
       { email: req.employee.email },
-      { $set: data },
+      { $set: controls_object },
       { upsert: true, new: true }
     );
 
