@@ -12,6 +12,7 @@ const { date, func } = require("joi");
 const { RFC_2822 } = require("moment");
 const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
+const redisFunctions = require("../../helpers/redisFunctions");
 
 //dummy route to add super admin
 
@@ -209,6 +210,42 @@ router.post(
     return res.status(200).send({
       success: "Success",
       // data: new_emp,
+    });
+  })
+);
+router.post(
+  "/add_update_admin_controls",
+  Auth,
+  Async(async (req, res) => {
+    const data = req.body;
+
+    // Validate input
+    var { error } = validations.add_update_admin_controls(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // Only Super Admin can perform this
+    let find_s_admin = await mongoFunctions.find_one("SUPER_ADMIN", {
+      email: req.employee.email,
+    });
+
+    if (!find_s_admin) {
+      return res.status(403).send("Only Super Admin Can Add/Update Controls!!");
+    }
+
+    // Update or insert admin controls
+    const updated_controls = await mongoFunctions.find_one_and_update(
+      "ADMIN_CONTROLS",
+      { email: data.email },
+      { $set: data },
+      { upsert: true, new: true }
+    );
+
+    // Update Redis
+    await redisFunctions.update_redis("ADMIN_CONTROLS", updated_controls);
+
+    return res.status(200).send({
+      message: "Admin Controls Added Successfully",
+      admin_controls: updated_controls,
     });
   })
 );

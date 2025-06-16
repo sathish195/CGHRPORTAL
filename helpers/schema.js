@@ -725,6 +725,17 @@ function Sadmin_login(data) {
   });
   return schema.validate(data);
 }
+function add_update_admin_controls(data) {
+  const schema = Joi.object({
+    email: Joi.string().required().max(55),
+    login: Joi.boolean().required(),
+    add_organisation: Joi.boolean().required(),
+    add_admin: Joi.boolean().required(),
+    suspend_organisation: Joi.boolean().required(),
+    approve_organisation: Joi.boolean().required(),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -771,4 +782,5 @@ module.exports = {
   get_tasks,
   add_super_admin,
   Sadmin_login,
+  add_update_admin_controls,
 };

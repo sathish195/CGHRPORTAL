@@ -55,7 +55,7 @@ module.exports = {
       obj.createdAt = undefined;
       obj.updatedAt = undefined;
       await client.hSet(
-        "CRM_ADMIN_CONTROLS",
+        "CGHR_ADMIN_CONTROLS",
         "ADMIN_CONTROLS",
         JSON.stringify(obj),
         (err, res) => {}
