@@ -708,6 +708,23 @@ function tasks_count(data) {
   });
   return schema.validate(data);
 }
+function add_super_admin(data) {
+  const schema = Joi.object({
+    email: Joi.string().required(),
+  });
+  return schema.validate(data);
+}
+function Sadmin_login(data) {
+  const schema = Joi.object({
+    email: Joi.string().required().max(55),
+    password: Joi.string().required().min(8).max(15),
+    last_ip: Joi.string().required(),
+    fcm_token: Joi.string().required(),
+    device_id: Joi.string().required(),
+    browserid: Joi.string().required(),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -752,4 +769,6 @@ module.exports = {
   update_task_team,
   tasks_count,
   get_tasks,
+  add_super_admin,
+  Sadmin_login,
 };
