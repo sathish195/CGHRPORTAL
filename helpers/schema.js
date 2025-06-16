@@ -727,7 +727,6 @@ function Sadmin_login(data) {
 }
 function add_update_admin_controls(data) {
   const schema = Joi.object({
-    email: Joi.string().required().max(55),
     login: Joi.boolean().required(),
     add_organisation: Joi.boolean().required(),
     add_admin: Joi.boolean().required(),

@@ -115,21 +115,11 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
-      $or: [
-        {
-          employee_id: data.employee_id.toUpperCase(),
-        },
-        {
-          "basic_info.email": data.email.toLowerCase(),
-        },
-      ],
+      "basic_info.email": data.email.toLowerCase(),
     });
 
-    if (
-      find_emp &&
-      find_emp.employee_id.toUpperCase() === data.employee_id.toUpperCase()
-    ) {
-      return res.status(400).send("Employee Id Already Exists");
+    if (find_emp) {
+      return res.status(400).send("Admin Already Exists");
     }
     if (
       find_emp &&
@@ -235,7 +225,7 @@ router.post(
     // Update or insert admin controls
     const updated_controls = await mongoFunctions.find_one_and_update(
       "ADMIN_CONTROLS",
-      { email: data.email },
+      { email: req.employee.email },
       { $set: data },
       { upsert: true, new: true }
     );
