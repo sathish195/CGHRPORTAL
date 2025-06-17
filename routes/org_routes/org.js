@@ -15,6 +15,7 @@ const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
 const { alertDev } = require("../../helpers/telegram");
 const multer = require("multer");
+const redisFunctions = require("../../helpers/redisFunctions");
 
 router.post(
   "/add_update_org_details",
@@ -25,8 +26,8 @@ router.post(
     let data = req.body;
     const { error } = validations.add_update_org(req.body);
     if (error) return res.status(400).send(error.details[0].message);
-    if (req.employee.admin_type !== "1")
-      return res.status(403).send("Only Admin Can Access This Endpoint");
+    // if (req.employee.admin_type !== "1")
+    //   return res.status(403).send("Only Admin Can Access This Endpoint");
 
     let find_org = await mongoFunctions.find_one("ORGANISATIONS", {
       email: req.employee.email,
@@ -53,12 +54,12 @@ router.post(
       console.log("organisation details updated");
     } else {
       let find_id = await mongoFunctions.find_one("ORGANISATIONS", {
-        employee_id: req.employee.employee_id,
+        email: req.employee.email,
       });
       if (find_id) {
         return res
           .status(400)
-          .send("Employee Id Already Exists For Another Organisation");
+          .send("Email Already Exists For Another Organisation");
       }
 
       let new_org_data = {
@@ -108,6 +109,24 @@ router.post(
       console.log("org id updated to admin record");
     }
     await redis.update_redis("ORGANISATIONS", org_data_up);
+    let stats = await mongoFunctions.find_one_and_update(
+      "ADMIN_STATS",
+      {},
+      {
+        $inc: {
+          no_of_orgs: 1,
+        },
+      },
+      {},
+      {
+        upsert: true,
+        returnDocument: "after",
+      }
+    );
+    if (!stats) {
+      return res.status(400).send("Stats Update Failed..!!");
+    }
+    await redisFunctions.update_redis("ADMIN_STATS", stats);
     return res
       .status(200)
       .send({ success: "Organisation Details Added..!", data: org_data_up });

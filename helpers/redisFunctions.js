@@ -61,6 +61,18 @@ module.exports = {
         (err, res) => {}
       );
       return true;
+    } else if (COLLECTION === "ADMIN_STATS") {
+      obj._id = undefined;
+      obj.__v = undefined;
+      obj.createdAt = undefined;
+      obj.updatedAt = undefined;
+      await client.hSet(
+        "CGHR_ADMIN_STATS",
+        "ADMIN_STATS",
+        JSON.stringify(obj),
+        (err, res) => {}
+      );
+      return true;
     } else if (COLLECTION === "USER") {
       obj._id = undefined;
       obj.__v = undefined;

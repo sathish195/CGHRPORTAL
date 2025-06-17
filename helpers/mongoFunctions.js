@@ -8,6 +8,7 @@ const { ATTENDANCE } = require("../models/add_attendance");
 const { HOLIDAYS } = require("../models/add_holiday");
 const { SUPER_ADMIN } = require("../models/add_super_admin");
 const { ADMIN_CONTROLS } = require("../models/add_admin_controls");
+const { ADMIN_STATS } = require("../models/stats");
 
 module.exports = {
   create_new_record: async (collection, data) => {
