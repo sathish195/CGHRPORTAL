@@ -372,9 +372,32 @@ router.post(
       "ADMIN_CONTROLS",
       true
     );
+    //find stats
+    const find_stats = await redisFunctions.redisGet(
+      "CGHR_ADMIN_STATS",
+      "ADMIN_STATS",
+      true
+    );
+    //recently added orgs
+
+    const recent_orgs = await mongoFunctions.find(
+      "ORGANISATIONS",
+      {},
+      { createdAt: -1 },
+      {
+        _id: 0,
+        organisation_name: 1,
+        organisation_id: 1,
+        images: 1,
+        createdAt: 1,
+      },
+      5
+    );
 
     return res.status(200).send({
       controls: find_controls,
+      no_of_orgs: find_stats,
+      recent_orgs: recent_orgs,
     });
   })
 );

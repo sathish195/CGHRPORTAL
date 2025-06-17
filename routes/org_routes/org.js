@@ -26,8 +26,8 @@ router.post(
     let data = req.body;
     const { error } = validations.add_update_org(req.body);
     if (error) return res.status(400).send(error.details[0].message);
-    // if (req.employee.admin_type !== "1")
-    //   return res.status(403).send("Only Admin Can Access This Endpoint");
+    if (req.employee.admin_type !== "1")
+      return res.status(403).send("Only Admin Can Access This Endpoint");
 
     let find_org = await mongoFunctions.find_one("ORGANISATIONS", {
       email: req.employee.email,
@@ -54,12 +54,12 @@ router.post(
       console.log("organisation details updated");
     } else {
       let find_id = await mongoFunctions.find_one("ORGANISATIONS", {
-        email: req.employee.email,
+        employee_id: req.employee.employee_id,
       });
       if (find_id) {
         return res
           .status(400)
-          .send("Email Already Exists For Another Organisation");
+          .send("Employee ID Already Exists For Another Organisation");
       }
 
       let new_org_data = {
@@ -123,9 +123,9 @@ router.post(
         returnDocument: "after",
       }
     );
-    if (!stats) {
-      return res.status(400).send("Stats Update Failed..!!");
-    }
+    // if (!stats) {
+    //   return res.status(400).send("Stats Update Failed..!!");
+    // }
     await redisFunctions.update_redis("ADMIN_STATS", stats);
     return res
       .status(200)
