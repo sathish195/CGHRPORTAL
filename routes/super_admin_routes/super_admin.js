@@ -109,6 +109,7 @@ router.post(
 
 router.post(
   "/add_update_admin",
+  Auth,
   Async(async (req, res) => {
     const data = req.body;
     console.log(req.employee);
