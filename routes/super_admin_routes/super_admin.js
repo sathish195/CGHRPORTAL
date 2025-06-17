@@ -396,7 +396,7 @@ router.post(
 
     return res.status(200).send({
       controls: find_controls,
-      no_of_orgs: find_stats,
+      no_of_orgs: find_stats.no_of_orgs,
       recent_orgs: recent_orgs,
     });
   })
