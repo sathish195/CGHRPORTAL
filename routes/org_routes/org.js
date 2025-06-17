@@ -121,6 +121,7 @@ router.post(
           returnDocument: "after",
         }
       );
+      console.log(stats);
       // if (!stats) {
       //   return res.status(400).send("Stats Update Failed..!!");
       // }
