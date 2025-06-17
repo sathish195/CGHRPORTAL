@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 // Define the main schema
 const stats_schema = new mongoose.Schema(
   {
+    stats_id: { type: Number },
     no_of_orgs: { type: Number },
   },
   { timestamps: true }

@@ -111,7 +111,7 @@ router.post(
     await redis.update_redis("ORGANISATIONS", org_data_up);
     let stats = await mongoFunctions.find_one_and_update(
       "ADMIN_STATS",
-      {},
+      { stats_id: "1" },
       {
         $inc: {
           no_of_orgs: 1,
@@ -123,9 +123,9 @@ router.post(
         returnDocument: "after",
       }
     );
-    // if (!stats) {
-    //   return res.status(400).send("Stats Update Failed..!!");
-    // }
+    if (!stats) {
+      return res.status(400).send("Stats Update Failed..!!");
+    }
     await redisFunctions.update_redis("ADMIN_STATS", stats);
     return res
       .status(200)
