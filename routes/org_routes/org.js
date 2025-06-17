@@ -121,9 +121,9 @@ router.post(
           returnDocument: "after",
         }
       );
-      if (!stats) {
-        return res.status(400).send("Stats Update Failed..!!");
-      }
+      // if (!stats) {
+      //   return res.status(400).send("Stats Update Failed..!!");
+      // }
       await redisFunctions.update_redis("ADMIN_STATS", stats);
     }
     await redis.update_redis("ORGANISATIONS", org_data_up);
