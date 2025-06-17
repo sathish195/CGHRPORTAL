@@ -111,6 +111,7 @@ router.post(
   "/add_update_admin",
   Async(async (req, res) => {
     const data = req.body;
+    console.log(req.employee);
 
     const { error } = validations.add_admin_emp(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -125,7 +126,7 @@ router.post(
     }
 
     const find_emp = await mongoFunctions.find_one("EMPLOYEE", {
-      "basic_info.email": data.email.toLowerCase(),
+      "basic_info.email": req.employee.email.toLowerCase(),
     });
 
     if (find_emp) {
