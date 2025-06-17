@@ -6,12 +6,12 @@ const EMPLOYEE_Schema = new mongoose.Schema(
     organisation_id: { type: String, required: true, index: true },
     organisation_name: { type: String, required: true },
     password: { type: String, required: true },
-    employee_id: { type: String, required: true, unique: true, index: true },
+    employee_id: { type: String, required: true, index: true },
     basic_info: {
       first_name: { type: String },
       last_name: { type: String },
       nick_name: { type: String },
-      email: { type: String, index: true },
+      email: { type: String, index: true, required: true, unique: true },
     },
     work_info: {
       department_id: { type: String },

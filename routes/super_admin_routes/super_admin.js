@@ -108,101 +108,123 @@ router.post(
 //route to add org admin
 
 router.post(
-  "/add_admin",
+  "/add_update_admin",
   Async(async (req, res) => {
     const data = req.body;
-    var { error } = validations.add_admin_emp(data);
+
+    const { error } = validations.add_admin_emp(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
+    // Only Super Admin can perform this
+    let find_s_admin = await mongoFunctions.find_one("SUPER_ADMIN", {
+      email: req.employee.email,
+    });
+
+    if (!find_s_admin) {
+      return res.status(403).send("Only Super Admin Can Add/Update Admins!!");
+    }
+
+    const find_emp = await mongoFunctions.find_one("EMPLOYEE", {
       "basic_info.email": data.email.toLowerCase(),
     });
 
     if (find_emp) {
       return res.status(400).send("Admin Already Exists");
     }
-    if (
-      find_emp &&
-      find_emp.basic_info.email.toLowerCase() === data.email.toLowerCase()
-    ) {
-      return res.status(400).send("Email Id Already Exists");
-    }
 
     const new_password = "Admin@1234";
-    let password_hash = await bcrypt.hash_password(new_password);
+    const password_hash = await bcrypt.hash_password(new_password);
 
-    let new_emp_data = {
+    const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
+
+    const new_emp_data = {
       organisation_id: functions.get_random_string("O", 5, true),
-      organisation_name: "CODEGENE TECHNOLOGIES PVT LTD",
+      organisation_name: "not_added",
       password: password_hash,
-      employee_id: data.employee_id,
+      employee_id: functions.get_random_string("O", 7, true),
+
       basic_info: {
-        first_name: "pavan",
-        last_name: "rebba",
-        nick_name: "pavan sir",
-        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        nick_name: "not_added",
+        email: data.email.toLowerCase(),
       },
+
       work_info: {
-        department_id: "D72FAFACC9E",
-        department_name: "admin",
-        role_id: "RD7FF12619090D2",
-        role_name: "admin",
+        department_id: "not_added",
+        department_name: "not_added",
+        role_id: "not_added",
+        role_name: "not_added",
         admin_type: "1",
-        designation_id: "DE2CDAC3B2C",
-        designation_name: "admin",
+        designation_id: "not_added",
+        designation_name: "not_added",
         employment_type: "Full-time",
-        employee_status: "active",
+        employee_status: data.status,
         source_of_hire: "Direct",
         reporting_manager: "",
-        date_of_join: "2024-09-02",
+        date_of_join: today,
       },
+
       personal_details: {
-        date_of_birth: "1996-09-12",
-        expertise: "everything",
-        gender: "male",
-        marital_status: "married",
-        about_me: "jhytgfcv\n",
+        date_of_birth: today,
+        expertise: "not_added",
+        gender: "not_added",
+        marital_status: "not_added",
+        about_me: "not_added",
       },
+
       identity_info: {
-        uan: "123456734563",
-        pan: "DCUPN1233A",
-        aadhaar: "987654321543",
-        passport: "234567891234",
+        uan: "not_added",
+        pan: "not_added",
+        aadhaar: "not_added",
+        passport: "not_added",
       },
+
       contact_details: {
-        mobile_number: "9876543456",
-        personal_email_address: "pavan@gmail.com",
-        seating_location: "second",
-        present_address: "telangana,ts",
-        permanent_address: "vijayawada,ap",
+        mobile_number: "not_added",
+        personal_email_address: "not_added",
+        seating_location: "not_added",
+        present_address: "not_added",
+        permanent_address: "not_added",
       },
+
       work_experience: [],
+
       educational_details: [
         {
-          institute_name: "testing",
-          degree: "testing",
-          specialization: "testing",
-          year_of_completion: 2023,
+          institute_name: "not_added",
+          degree: "not_added",
+          specialization: "not_added",
+          year_of_completion: 0,
         },
       ],
+
       dependent_details: [],
       leaves: [],
-
       images: {},
       files: {},
     };
-    let new_emp = await mongoFunctions.create_new_record(
+
+    const new_admin = await mongoFunctions.find_one_and_update(
       "EMPLOYEE",
-      new_emp_data
+      { "basic_info.email": new_emp_data.basic_info.email },
+      { $set: new_emp_data },
+      { upsert: true, new: true }
     );
+
     console.log("added admin in database");
 
     return res.status(200).send({
-      success: "Success",
-      // data: new_emp,
+      success: "Admin Details Added Successfully!!",
+      data: {
+        email: new_emp_data.basic_info.email,
+        first_name: new_emp_data.basic_info.first_name,
+        last_name: new_emp_data.basic_info.last_name,
+      },
     });
   })
 );
+
 router.post(
   "/add_update_admin_controls",
   Auth,
@@ -245,6 +267,112 @@ router.post(
     return res.status(200).send({
       message: "Admin Controls Added Successfully",
       admin_controls: updated_controls,
+    });
+  })
+);
+
+//-----------------------------------get routes---------------------------------------------
+
+router.post(
+  "/get_admins",
+  Auth,
+  Async(async (req, res) => {
+    // Only Super Admin can perform this
+    let find_s_admin = await mongoFunctions.find_one("SUPER_ADMIN", {
+      email: req.employee.email,
+    });
+
+    if (!find_s_admin) {
+      return res.status(403).send("Only Super Admin Can Have Access!!");
+    }
+
+    // find_admins
+    const find_admins = await mongoFunctions.find(
+      "EMPLOYEE",
+      { "work_info.admin_type": "1" },
+      { createdAt: -1 }, // Sort by latest
+      {
+        _id: 0,
+        "basic_info.email": 1,
+        "basic_info.first_name": 1,
+        "basic_info.last_name": 1,
+        "work_info.employee_status": 1,
+      }
+    );
+
+    const flattenedAdmins = find_admins.map((admin) => ({
+      first_name: admin.basic_info.first_name,
+      last_name: admin.basic_info.last_name,
+      email: admin.basic_info.email,
+      employee_status: admin.work_info.employee_status,
+    }));
+
+    return res.status(200).send({
+      admins: flattenedAdmins,
+    });
+  })
+);
+
+//get orgs route
+
+router.post(
+  "/get_orgs",
+  Auth,
+  Async(async (req, res) => {
+    // Only Super Admin can perform this
+    let find_s_admin = await mongoFunctions.find_one("SUPER_ADMIN", {
+      email: req.employee.email,
+    });
+
+    if (!find_s_admin) {
+      return res.status(403).send("Only Super Admin Can Have Access!!");
+    }
+
+    // find_admins
+    const find_orgs = await mongoFunctions.find(
+      "ORGANISATIONS",
+      {},
+      { createdAt: -1 }, // Sort by latest
+      {
+        _id: 0,
+        organisation_id: 1,
+        organisation_name: 1,
+        organisation_details: 1,
+        email: 1,
+        images: 1,
+      }
+    );
+
+    return res.status(200).send({
+      orgs: find_orgs,
+    });
+  })
+);
+
+//universal route
+
+router.post(
+  "/universal",
+  Auth,
+  Async(async (req, res) => {
+    // Only Super Admin can perform this
+    let find_s_admin = await mongoFunctions.find_one("SUPER_ADMIN", {
+      email: req.employee.email,
+    });
+
+    if (!find_s_admin) {
+      return res.status(403).send("Only Super Admin Can Have Access!!");
+    }
+
+    // find_admins
+    const find_controls = await redisFunctions.redisGet(
+      "CGHR_ADMIN_CONTROLS",
+      "ADMIN_CONTROLS",
+      true
+    );
+
+    return res.status(200).send({
+      controls: find_controls,
     });
   })
 );

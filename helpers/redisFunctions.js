@@ -172,9 +172,11 @@ module.exports = {
     let check_exists = await client.exists(key);
     if (check_exists) {
       var value = await client.hGetAll(key);
+      console.log(value);
       if (value) {
         if (parse) {
           value = JSON.parse(value);
+          console.log("value-------", value);
         }
         return value;
       }

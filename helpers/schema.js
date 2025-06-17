@@ -664,21 +664,39 @@ function get_emp_attendance_by_admin(data) {
   return schema.validate(data);
 }
 function add_admin_emp(data) {
+  const namePattern = /^[A-Za-z\s'-]+$/;
+
   const schema = Joi.object({
-    employee_id: Joi.string().required().min(5).max(15),
     email: Joi.string()
-      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
+      .lowercase()
+      .pattern(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+      .email()
       .min(10)
       .max(55)
-      .email()
+      .required()
       .messages({
-        "string.pattern.base": "Email Should be valid mail",
-      })
-      .required(),
+        "string.pattern.base": "Email should be a valid format",
+      }),
+
+    first_name: Joi.string().trim().pattern(namePattern).required().messages({
+      "string.pattern.base":
+        "First name must contain only letters, spaces, hyphens, or apostrophes.",
+    }),
+
+    last_name: Joi.string().trim().pattern(namePattern).required().messages({
+      "string.pattern.base":
+        "Last name must contain only letters, spaces, hyphens, or apostrophes.",
+    }),
+
+    status: Joi.string().trim().valid("active", "disable").required().messages({
+      "any.only": "Status must be either 'active' or 'disable'",
+    }),
   });
+
   return schema.validate(data);
 }
+
 function add_holidays(data) {
   const schema = Joi.object({
     organisation_id: Joi.string().min(10).max(18).required(),
