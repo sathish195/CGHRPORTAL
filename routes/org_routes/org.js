@@ -115,7 +115,6 @@ router.post(
             no_of_orgs: 1,
           },
         },
-        {},
         {
           upsert: true,
           returnDocument: "after",
