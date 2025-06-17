@@ -107,26 +107,27 @@ router.post(
         { new: true }
       );
       console.log("org id updated to admin record");
+      let stats = await mongoFunctions.find_one_and_update(
+        "ADMIN_STATS",
+        { stats_id: "1" },
+        {
+          $inc: {
+            no_of_orgs: 1,
+          },
+        },
+        {},
+        {
+          upsert: true,
+          returnDocument: "after",
+        }
+      );
+      if (!stats) {
+        return res.status(400).send("Stats Update Failed..!!");
+      }
+      await redisFunctions.update_redis("ADMIN_STATS", stats);
     }
     await redis.update_redis("ORGANISATIONS", org_data_up);
-    let stats = await mongoFunctions.find_one_and_update(
-      "ADMIN_STATS",
-      { stats_id: "1" },
-      {
-        $inc: {
-          no_of_orgs: 1,
-        },
-      },
-      {},
-      {
-        upsert: true,
-        returnDocument: "after",
-      }
-    );
-    if (!stats) {
-      return res.status(400).send("Stats Update Failed..!!");
-    }
-    await redisFunctions.update_redis("ADMIN_STATS", stats);
+
     return res
       .status(200)
       .send({ success: "Organisation Details Added..!", data: org_data_up });
