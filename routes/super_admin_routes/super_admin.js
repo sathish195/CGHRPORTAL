@@ -455,11 +455,13 @@ router.post(
       return res.status(400).send("Password Should Not Same As Old Password");
 
     const hashedPassword = await bcrypt.hash_password(data.new_password);
-    await mongoFunctions.find_one_and_update(
+    let reset = await mongoFunctions.find_one_and_update(
       "SUPER_ADMIN",
       { email: find_s_admin.email },
       { password: hashedPassword }
     );
+    await redisFunctions.update_redis("SUPER_ADMIN", reset);
+
     return res.status(200).send({
       success: "Password Reset Done Successfully",
     });
@@ -499,8 +501,14 @@ router.post(
       // Update Redis
       await redisFunctions.update_redis("SUPER_ADMIN", find_super_admin);
     }
+    let profile_data = {
+      email: find_super_admin.email,
+      first_name: find_super_admin.first_name,
+      last_name: find_super_admin.last_name,
+      profile_picture: find_super_admin.profile_picture,
+    };
 
-    return res.status(200).send({ profile: find_super_admin });
+    return res.status(200).send({ profile: profile_data });
   })
 );
 
