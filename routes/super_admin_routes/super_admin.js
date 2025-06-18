@@ -50,8 +50,16 @@ router.post(
     console.log("added super admin in database");
     await redisFunctions.update_redis("SUPER_ADMIN", new_s_admin);
 
+    let super_admin_data = {
+      email: new_s_admin.email,
+      first_name: new_s_admin.first_name,
+      last_name: new_s_admin.last_name,
+      profile_picture: new_s_admin.profile_picture,
+    };
+
     return res.status(200).send({
       success: "Super Admin Added Successfully..!!",
+      super_admin_data: super_admin_data,
     });
   })
 );
