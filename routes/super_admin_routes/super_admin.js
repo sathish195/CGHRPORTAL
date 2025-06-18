@@ -44,7 +44,7 @@ router.post(
       "SUPER_ADMIN",
       { email: data.email },
       new_s_admin_data,
-      {},
+
       { upsert: true, returnDocument: "after" }
     );
     console.log("added super admin in database");
