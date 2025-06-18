@@ -33,7 +33,7 @@ const ORGANISATION_Schema = new mongoose.Schema(
 
     organisation_details: { type: Object, default: {} },
     images: { type: Object, default: {} },
-    emp_count: { type: Number, default: 0 },
+    // emp_count:{type:N}
   },
   { timestamps: true }
 );

@@ -305,15 +305,15 @@ router.post(
       return res.status(400).send("Failed To Add New Employee.");
     }
     //update stats
-    if (new_emp_data.work_info.employee_status.toLowerCase() === "active") {
-      let update_emp_count = await mongoFunctions.find_one_and_update(
-        "ORGANISATIONS",
-        { organisation_id: data.organisation_id },
-        { $inc: { emp_count: 1 } },
-        { returnDocument: "after" }
-      );
-      await redis.update_redis("ORGANISATIONS", update_emp_count);
-    }
+    // if (new_emp_data.work_info.employee_status.toLowerCase() === "active") {
+    //   let update_emp_count = await mongoFunctions.find_one_and_update(
+    //     "ORGANISATIONS",
+    //     { organisation_id: data.organisation_id },
+    //     { $inc: { emp_count: 1 } },
+    //     { returnDocument: "after" }
+    //   );
+    //   await redis.update_redis("ORGANISATIONS", update_emp_count);
+    // }
 
     // await redis.update_redis("EMPLOYEE", new_emp);
     // console.log("added emp in redis");
