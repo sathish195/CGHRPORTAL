@@ -13,11 +13,12 @@ const { RFC_2822 } = require("moment");
 const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const redisFunctions = require("../../helpers/redisFunctions");
+const slowDown = require("../../middlewares/slow_down");
 
 //dummy route to add super admin
 
 router.post(
-  "/add_super_admin",
+  "/add_update_super_admin",
   Async(async (req, res) => {
     const data = req.body;
     var { error } = validations.add_super_admin(data);
@@ -27,25 +28,27 @@ router.post(
       email: data.email.toLowerCase(),
     });
 
-    if (find_super_admin) {
-      return res.status(400).send("Super Admin Already Exists");
-    }
-
     const new_password = "Superadmin@1234";
-    const name = "super_admin";
+
     let password_hash = await bcrypt.hash_password(new_password);
 
     let new_s_admin_data = {
       password: password_hash,
 
       email: data.email,
-      name: name,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      profile_picture: data.profile_picture,
     };
-    let new_s_admin = await mongoFunctions.create_new_record(
+    let new_s_admin = await mongoFunctions.find_one_and_update(
       "SUPER_ADMIN",
-      new_s_admin_data
+      { email: data.email },
+      new_s_admin_data,
+      { _id: 0, __v: 0, password: 0 },
+      { upsert: true, returnDocument: "after" }
     );
     console.log("added super admin in database");
+    await redisFunctions.update_redis("SUPER_ADMIN", new_s_admin);
 
     return res.status(200).send({
       success: "Super Admin Added Successfully..!!",
@@ -64,11 +67,14 @@ router.post(
     //validate data
     var { error } = validations.Sadmin_login(data);
     if (error) return res.status(400).send(error.details[0].message);
-    const s_admin = await mongoFunctions.find_one("SUPER_ADMIN", {
-      email: data.email.toLowerCase(),
-    });
-    if (!s_admin)
-      return res.status(400).send("No Admin Found With The Given Email");
+    let s_admin = await redis.redisGet("CG_SUPER_ADMIN", data.email, true);
+
+    if (!s_admin) {
+      return res
+        .status(403)
+        .send("No Super Admin Found With The Given Email!!");
+    }
+
     const validPassword = await bcrypt.compare_password(
       data.password,
       s_admin.password
@@ -118,12 +124,14 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     // Only Super Admin can perform this
-    let find_s_admin = await mongoFunctions.find_one("SUPER_ADMIN", {
-      email: req.employee.email,
-    });
+    let find_s_admin = await redis.redisGet(
+      "CG_SUPER_ADMIN",
+      req.employee.email,
+      true
+    );
 
-    if (!find_s_admin) {
-      return res.status(403).send("Only Super Admin Can Add/Update Admins!!");
+    if (!find_s_admin || req.employee.email !== find_s_admin.email) {
+      return res.status(403).send("Only Super Admin Can Have Access!!");
     }
 
     const find_emp = await mongoFunctions.find_one("EMPLOYEE", {
@@ -238,12 +246,14 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     // Only Super Admin can perform this
-    let find_s_admin = await mongoFunctions.find_one("SUPER_ADMIN", {
-      email: req.employee.email,
-    });
+    let find_s_admin = await redis.redisGet(
+      "CG_SUPER_ADMIN",
+      req.employee.email,
+      true
+    );
 
-    if (!find_s_admin) {
-      return res.status(403).send("Only Super Admin Can Add/Update Controls!!");
+    if (!find_s_admin || req.employee.email !== find_s_admin.email) {
+      return res.status(403).send("Only Super Admin Can Have Access!!");
     }
 
     let controls_object = {
@@ -280,11 +290,13 @@ router.post(
   Auth,
   Async(async (req, res) => {
     // Only Super Admin can perform this
-    let find_s_admin = await mongoFunctions.find_one("SUPER_ADMIN", {
-      email: req.employee.email,
-    });
+    let find_s_admin = await redis.redisGet(
+      "CG_SUPER_ADMIN",
+      req.employee.email,
+      true
+    );
 
-    if (!find_s_admin) {
+    if (!find_s_admin || req.employee.email !== find_s_admin.email) {
       return res.status(403).send("Only Super Admin Can Have Access!!");
     }
 
@@ -322,11 +334,13 @@ router.post(
   Auth,
   Async(async (req, res) => {
     // Only Super Admin can perform this
-    let find_s_admin = await mongoFunctions.find_one("SUPER_ADMIN", {
-      email: req.employee.email,
-    });
+    let find_s_admin = await redis.redisGet(
+      "CG_SUPER_ADMIN",
+      req.employee.email,
+      true
+    );
 
-    if (!find_s_admin) {
+    if (!find_s_admin || req.employee.email !== find_s_admin.email) {
       return res.status(403).send("Only Super Admin Can Have Access!!");
     }
 
@@ -342,6 +356,7 @@ router.post(
         organisation_details: 1,
         email: 1,
         images: 1,
+        emp_count: 1,
       }
     );
 
@@ -358,11 +373,13 @@ router.post(
   Auth,
   Async(async (req, res) => {
     // Only Super Admin can perform this
-    let find_s_admin = await mongoFunctions.find_one("SUPER_ADMIN", {
-      email: req.employee.email,
-    });
+    let find_s_admin = await redis.redisGet(
+      "CG_SUPER_ADMIN",
+      req.employee.email,
+      true
+    );
 
-    if (!find_s_admin) {
+    if (!find_s_admin || req.employee.email !== find_s_admin.email) {
       return res.status(403).send("Only Super Admin Can Have Access!!");
     }
 
@@ -399,6 +416,91 @@ router.post(
       no_of_orgs: find_stats.no_of_orgs,
       recent_orgs: recent_orgs,
     });
+  })
+);
+
+//reset password  route
+router.post(
+  "/reset_password",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let data = req.body;
+    //validate data
+    var { error } = validations.emp_reset_password(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    // Only Super Admin can perform this
+    let find_s_admin = await redis.redisGet(
+      "CG_SUPER_ADMIN",
+      req.employee.email,
+      true
+    );
+
+    if (!find_s_admin || req.employee.email !== find_s_admin.email) {
+      return res.status(403).send("Only Super Admin Can Have Access!!");
+    }
+
+    const verifyOldPassword = await bcrypt.compare_password(
+      data.old_password,
+      find_s_admin.password
+    );
+    if (!verifyOldPassword)
+      return res.status(400).send("Incorrect Old Password");
+    const verifyPassword = await bcrypt.compare_password(
+      data.new_password,
+      find_s_admin.password
+    );
+
+    if (verifyPassword)
+      return res.status(400).send("Password Should Not Same As Old Password");
+
+    const hashedPassword = await bcrypt.hash_password(data.new_password);
+    await mongoFunctions.find_one_and_update(
+      "SUPER_ADMIN",
+      { email: find_s_admin.email },
+      { password: hashedPassword }
+    );
+    return res.status(200).send({
+      success: "Password Reset Done Successfully",
+    });
+  })
+);
+
+//get profile route
+
+router.post(
+  "/get_profile",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    // Try to get Super Admin from Redis
+    let find_super_admin = await redis.redisGet(
+      "CG_SUPER_ADMIN",
+      req.employee.email,
+      true
+    );
+
+    // If not found in Redis, get from MongoDB
+    if (!find_super_admin) {
+      // console.log("hahaha");
+      find_super_admin = await mongoFunctions.find_one(
+        "SUPER_ADMIN",
+        {
+          email: req.employee.email,
+        },
+        { _id: 0, __v: 0, password: 0 }
+      );
+
+      // If not found in DB
+      if (!find_super_admin || Object.keys(find_super_admin).length === 0) {
+        return res.status(403).send("Only Super Admin Can Have Access!!");
+      }
+
+      // Update Redis
+      await redisFunctions.update_redis("SUPER_ADMIN", find_super_admin);
+    }
+
+    return res.status(200).send({ profile: find_super_admin });
   })
 );
 

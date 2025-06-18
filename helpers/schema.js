@@ -68,13 +68,13 @@ function emp_reset_password(data) {
   return schema.validate(data);
 }
 
-// const base64ImageSizeValidator = (value, helpers) => {
-//     const buffer = Buffer.from(value, "base64");
-//     const sizeInBytes = buffer.length;
-//     const limitBytes = 250 * 1024;
-//     if (sizeInBytes <= limitBytes) return value;
-//     else return helpers.error("any.invalid");
-//   };
+const base64ImageSizeValidator = (value, helpers) => {
+  const buffer = Buffer.from(value, "base64");
+  const sizeInBytes = buffer.length;
+  const limitBytes = 250 * 1024;
+  if (sizeInBytes <= limitBytes) return value;
+  else return helpers.error("any.invalid");
+};
 function add_update_org(data) {
   const schema = Joi.object({
     organisation_name: Joi.string().min(5).max(50).required().trim(),
@@ -728,7 +728,25 @@ function tasks_count(data) {
 }
 function add_super_admin(data) {
   const schema = Joi.object({
-    email: Joi.string().required(),
+    email: Joi.string()
+      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+      .trim()
+      .min(10)
+      .max(55)
+      .email()
+      .messages({
+        "string.pattern.base": "Email Should be valid mail",
+      })
+      .required(),
+    first_name: Joi.string().trim().min(3).max(50).required(),
+    last_name: Joi.string().trim().min(3).max(50).required(),
+    profile_picture: Joi.string()
+      .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
+      .required()
+      .allow("")
+      .messages({
+        "any.invalid": "Size should be 250kb only",
+      }),
   });
   return schema.validate(data);
 }

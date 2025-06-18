@@ -73,6 +73,18 @@ module.exports = {
         (err, res) => {}
       );
       return true;
+    } else if (COLLECTION === "SUPER_ADMIN") {
+      obj._id = undefined;
+      obj.__v = undefined;
+      obj.createdAt = undefined;
+      obj.updatedAt = undefined;
+      await client.hSet(
+        "CG_SUPER_ADMIN",
+        obj.email,
+        JSON.stringify(obj),
+        (err, res) => {}
+      );
+      return true;
     } else if (COLLECTION === "USER") {
       obj._id = undefined;
       obj.__v = undefined;
