@@ -156,8 +156,7 @@ router.post(
           "basic_info.email": data.email,
           "basic_info.first_name": data.first_name,
           "basic_info.last_name": data.last_name,
-        },
-        { upsert: true, new: true }
+        }
       );
       return res.status(200).send({
         success: "Admin Details Updated Successfully!!",
