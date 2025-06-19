@@ -143,13 +143,33 @@ router.post(
     }
 
     const find_emp = await mongoFunctions.find_one("EMPLOYEE", {
-      "basic_info.email": req.employee.email.toLowerCase(),
+      "basic_info.email": data.email.toLowerCase(),
     });
 
     if (find_emp) {
-      return res.status(400).send("Admin Already Exists");
+      // console.log("ha");
+      const update_admin = await mongoFunctions.find_one_and_update(
+        "EMPLOYEE",
+        { "basic_info.email": data.email },
+        {
+          "work_info.employee_status": data.status,
+          "basic_info.email": data.email,
+          "basic_info.first_name": data.first_name,
+          "basic_info.last_name": data.last_name,
+        },
+        { upsert: true, new: true }
+      );
+      return res.status(200).send({
+        success: "Admin Details Updated Successfully!!",
+        data: {
+          email: data.email,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          status: data.status,
+        },
+      });
     }
-
+    // console.log("haha");
     const new_password = "Admin@1234";
     const password_hash = await bcrypt.hash_password(new_password);
 
@@ -223,11 +243,9 @@ router.post(
       files: {},
     };
 
-    const new_admin = await mongoFunctions.find_one_and_update(
+    const new_admin = await mongoFunctions.create_new_record(
       "EMPLOYEE",
-      { "basic_info.email": new_emp_data.basic_info.email },
-      { $set: new_emp_data },
-      { upsert: true, new: true }
+      new_emp_data
     );
 
     console.log("added admin in database");
@@ -238,6 +256,7 @@ router.post(
         email: new_emp_data.basic_info.email,
         first_name: new_emp_data.basic_info.first_name,
         last_name: new_emp_data.basic_info.last_name,
+        status: new_emp_data.work_info.employee_status,
       },
     });
   })
