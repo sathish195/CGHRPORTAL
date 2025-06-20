@@ -548,13 +548,27 @@ router.post(
     );
     //update stats
     if (
-      new_emp_data.work_info.employee_status.toLowerCase() === "disable" ||
-      "terminated"
+      find_emp.work_info.employee_status.toLowerCase() === "active" &&
+      (new_emp_data.work_info.employee_status.toLowerCase() === "disable" ||
+        new_emp_data.work_info.employee_status.toLowerCase() === "terminated")
     ) {
       let update_emp_count = await mongoFunctions.find_one_and_update(
         "ORGANISATIONS",
         { organisation_id: data.organisation_id },
         { $inc: { emp_count: -1 } },
+        { returnDocument: "after" }
+      );
+      await redis.update_redis("ORGANISATIONS", update_emp_count);
+    }
+    if (
+      (find_emp.work_info.employee_status.toLowerCase() === "disable" ||
+        find_emp.work_info.employee_status.toLowerCase() === "terminated") &&
+      new_emp_data.work_info.employee_status.toLowerCase() === "active"
+    ) {
+      let update_emp_count = await mongoFunctions.find_one_and_update(
+        "ORGANISATIONS",
+        { organisation_id: data.organisation_id },
+        { $inc: { emp_count: 1 } },
         { returnDocument: "after" }
       );
       await redis.update_redis("ORGANISATIONS", update_emp_count);
