@@ -368,6 +368,8 @@ router.post(
         "basic_info.first_name": 1,
         "basic_info.last_name": 1,
         "work_info.employee_status": 1,
+        organisation_id: 1,
+        organisation_name: 1,
       },
       { createdAt: -1 },
       data.limit,
@@ -379,6 +381,8 @@ router.post(
       last_name: admin.basic_info.last_name,
       email: admin.basic_info.email,
       employee_status: admin.work_info.employee_status,
+      organisation_id: 1,
+      organisation_name: 1,
     }));
 
     return res.status(200).send({
