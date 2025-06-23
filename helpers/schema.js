@@ -692,6 +692,9 @@ function add_admin_emp(data) {
     status: Joi.string().trim().valid("active", "disable").required().messages({
       "any.only": "Status must be either 'active' or 'disable'",
     }),
+    api_status: Joi.string().trim().valid("add", "update").required().messages({
+      "any.only": "Status must be either 'add' or 'update'",
+    }),
   });
 
   return schema.validate(data);

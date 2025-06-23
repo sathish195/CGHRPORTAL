@@ -146,7 +146,7 @@ router.post(
       "basic_info.email": data.email.toLowerCase(),
     });
 
-    if (find_emp) {
+    if (find_emp && data.api_status.toLowerCase() === "update") {
       // console.log("ha");
       const update_admin = await mongoFunctions.find_one_and_update(
         "EMPLOYEE",
@@ -169,6 +169,12 @@ router.post(
       });
     }
     // console.log("haha");
+    const find_new_emp = await mongoFunctions.find_one("EMPLOYEE", {
+      "basic_info.email": data.email.toLowerCase(),
+    });
+    if (find_new_emp) {
+      return res.status(400).send("Admin Already Exists!!");
+    }
     const new_password = "Admin@1234";
     const password_hash = await bcrypt.hash_password(new_password);
 
@@ -364,8 +370,8 @@ router.post(
         "work_info.employee_status": 1,
       },
       { createdAt: -1 },
-      { limit: data.limit },
-      { skip: data.skip }
+      data.limit,
+      data.skip
     );
 
     const flattenedAdmins = find_admins.map((admin) => ({
@@ -419,8 +425,8 @@ router.post(
         emp_count: 1,
       },
       { createdAt: -1 },
-      { limit: data.limit },
-      { skip: data.skip }
+      data.limit,
+      data.skip
     );
 
     return res.status(200).send({
