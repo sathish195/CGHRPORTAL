@@ -381,8 +381,8 @@ router.post(
       last_name: admin.basic_info.last_name,
       email: admin.basic_info.email,
       employee_status: admin.work_info.employee_status,
-      organisation_id: 1,
-      organisation_name: 1,
+      organisation_id: admin.organisation_id,
+      organisation_name: admin.organisation_name,
     }));
 
     return res.status(200).send({
