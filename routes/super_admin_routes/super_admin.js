@@ -248,6 +248,25 @@ router.post(
     );
 
     console.log("added admin in database");
+    //add stats
+    let stats = await mongoFunctions.find_one_and_update(
+      "ADMIN_STATS",
+      { stats_id: "1" },
+      {
+        $inc: {
+          no_of_admins: 1,
+        },
+      },
+      {
+        upsert: true,
+        returnDocument: "after",
+      }
+    );
+    console.log(stats);
+    // if (!stats) {
+    //   return res.status(400).send("Stats Update Failed..!!");
+    // }
+    await redisFunctions.update_redis("ADMIN_STATS", stats);
 
     return res.status(200).send({
       success: "Admin Details Added Successfully!!",
@@ -458,6 +477,7 @@ router.post(
     return res.status(200).send({
       controls: find_controls,
       no_of_orgs: find_stats.no_of_orgs,
+      no_of_admins: find_stats.no_of_admins,
       recent_orgs: recent_orgs,
     });
   })
