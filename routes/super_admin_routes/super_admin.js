@@ -315,6 +315,12 @@ router.post(
   "/get_admins",
   Auth,
   Async(async (req, res) => {
+    const data = req.body;
+
+    // Validate input
+    var { error } = validations.skipLimit(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
     // Only Super Admin can perform this
     let find_s_admin = await redis.redisGet(
       "CG_SUPER_ADMIN",
@@ -327,17 +333,20 @@ router.post(
     }
 
     // find_admins
-    const find_admins = await mongoFunctions.find(
+    const find_admins = await mongoFunctions.lazy_loading(
       "EMPLOYEE",
       { "work_info.admin_type": "1" },
-      { createdAt: -1 }, // Sort by latest
+      // Sort by latest
       {
         _id: 0,
         "basic_info.email": 1,
         "basic_info.first_name": 1,
         "basic_info.last_name": 1,
         "work_info.employee_status": 1,
-      }
+      },
+      { createdAt: -1 },
+      { limit: data.limit },
+      { skip: data.skip }
     );
 
     const flattenedAdmins = find_admins.map((admin) => ({
@@ -359,6 +368,12 @@ router.post(
   "/get_orgs",
   Auth,
   Async(async (req, res) => {
+    const data = req.body;
+
+    // Validate input
+    var { error } = validations.skipLimit(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
     // Only Super Admin can perform this
     let find_s_admin = await redis.redisGet(
       "CG_SUPER_ADMIN",
@@ -371,10 +386,10 @@ router.post(
     }
 
     // find_admins
-    const find_orgs = await mongoFunctions.find(
+    const find_orgs = await mongoFunctions.lazy_loading(
       "ORGANISATIONS",
       {},
-      { createdAt: -1 }, // Sort by latest
+      // Sort by latest
       {
         _id: 0,
         organisation_id: 1,
@@ -383,7 +398,10 @@ router.post(
         email: 1,
         images: 1,
         emp_count: 1,
-      }
+      },
+      { createdAt: -1 },
+      { limit: data.limit },
+      { skip: data.skip }
     );
 
     return res.status(200).send({

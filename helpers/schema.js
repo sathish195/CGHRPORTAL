@@ -771,6 +771,13 @@ function add_update_admin_controls(data) {
   });
   return schema.validate(data);
 }
+function skipLimit(data) {
+  const schema = Joi.object({
+    skip: Joi.number().required(),
+    limit: Joi.number().required(),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -818,4 +825,5 @@ module.exports = {
   add_super_admin,
   Sadmin_login,
   add_update_admin_controls,
+  skipLimit,
 };
