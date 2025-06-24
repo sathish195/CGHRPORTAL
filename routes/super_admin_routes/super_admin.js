@@ -679,4 +679,38 @@ router.post(
   })
 );
 
+//orgs data with deps
+
+router.post(
+  "/organisations_data",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    // Only Super Admin can perform this
+    let find_s_admin = await redis.redisGet(
+      "CG_SUPER_ADMIN",
+      req.employee.email,
+      true
+    );
+
+    if (!find_s_admin || req.employee.email !== find_s_admin.email) {
+      return res.status(403).send("Only Super Admin Can Have Access!!");
+    }
+
+    // Retrieve all organisations from Redis
+    let org_data = await redis.redisGetAll("CRM_ORGANISATIONS", true);
+    if (!org_data || Object.keys(org_data).length === 0) {
+      return res.status(400).send("Organisations Not Found!!");
+    }
+
+    const orgs = Object.values(org_data).map((org) => ({
+      organisation_id: org.organisation_id,
+      organisation_name: org.organisation_name,
+      departments: org.departments || [],
+    }));
+
+    return res.status(200).send({ organisations_data: orgs });
+  })
+);
+
 module.exports = router;
