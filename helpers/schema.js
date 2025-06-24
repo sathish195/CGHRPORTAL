@@ -781,6 +781,13 @@ function skipLimit(data) {
   });
   return schema.validate(data);
 }
+function department_tree(data) {
+  const schema = Joi.object({
+    department_id: Joi.string().required(),
+    organisation_id: Joi.string().required(),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -829,4 +836,5 @@ module.exports = {
   Sadmin_login,
   add_update_admin_controls,
   skipLimit,
+  department_tree,
 };

@@ -586,4 +586,97 @@ router.post(
   })
 );
 
+//give departments data with head and emp count
+router.post(
+  "/department_tree",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    let data = req.body;
+    //validate data
+    var { error } = validations.department_tree(data);
+    if (error) return res.status(400).send(error.details[0].message);
+    // Only Super Admin can perform this
+    let find_s_admin = await redis.redisGet(
+      "CG_SUPER_ADMIN",
+      req.employee.email,
+      true
+    );
+
+    if (!find_s_admin || req.employee.email !== find_s_admin.email) {
+      return res.status(403).send("Only Super Admin Can Have Access!!");
+    }
+    // Retrieve organisation data from Redis
+    let org_data = await redis.redisGet(
+      "CRM_ORGANISATIONS",
+      data.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+
+    const department = org_data.departments.find(
+      (e) => e.department_id.toLowerCase() === data.department_id.toLowerCase()
+    );
+    if (!department) {
+      return res.status(400).send("Department Not Found!!");
+    }
+    const department_employees = await mongoFunctions.find(
+      "EMPLOYEE",
+      { "work_info.department_id": data.department_id },
+      {},
+      {
+        employee_id: 1,
+        "basic_info.first_name": 1,
+        "basic_info.last_name": 1,
+        "basic_info.email": 1,
+        "work_info.department_name": 1,
+        "work_info.department_id": 1,
+        "work_info.designation_id": 1,
+        "work_info.designation_name": 1,
+        "work_info.reporting_manager": 1,
+        "work_info.admin_type": 1,
+        organisation_id: 1,
+        organisation_name: 1,
+      }
+    );
+    if (!department_employees || department_employees.length === 0) {
+      return res.status(404).send("No employees found in this department.");
+    }
+
+    // Identify department head
+    const department_head = department_employees.find(
+      (emp) => emp.work_info?.admin_type === "3"
+    );
+
+    const response = {
+      department_id: data.department_id,
+      department_name: department.department_name,
+      organisation_id: data.organisation_id,
+      organisation_name: department_head.organisation_name,
+      department_head: department_head
+        ? {
+            employee_id: department_head.employee_id,
+            name: `${department_head.basic_info.first_name} ${department_head.basic_info.last_name}`,
+            email: department_head.basic_info.email,
+            designation: department_head.work_info.designation_name,
+          }
+        : null,
+      employee_count: department_employees.length,
+      team_members: department_employees
+        .filter((emp) => emp.employee_id !== department_head?.employee_id)
+        .map((emp) => ({
+          employee_id: emp.employee_id,
+          name: `${emp.basic_info.first_name} ${emp.basic_info.last_name}`,
+          email: emp.basic_info.email,
+          designation: emp.work_info.designation_name,
+          reporting_manager: emp.work_info.reporting_manager || null,
+        })),
+    };
+
+    return res.status(200).send({ department_tree: response });
+  })
+);
+
 module.exports = router;
