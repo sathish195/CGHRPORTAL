@@ -641,6 +641,18 @@ router.post(
         organisation_name: 1,
       }
     );
+    const teamMembersRaw = department_employees
+      .filter((emp) => emp.employee_id !== department_head?.employee_id)
+      .map((emp) => ({
+        employee_id: emp.employee_id || null,
+        name:
+          emp.basic_info?.first_name && emp.basic_info?.last_name
+            ? `${emp.basic_info.first_name} ${emp.basic_info.last_name}`
+            : null,
+        email: emp.basic_info?.email || null,
+        designation: emp.work_info?.designation_name || null,
+        reporting_manager: emp.work_info?.reporting_manager || null,
+      }));
 
     // Identify department head
     const department_head = department_employees.find(
@@ -662,18 +674,7 @@ router.post(
       organisation_name:
         department_head?.organisation_name || org_data.organisation_name,
       employee_count: department_employees.length,
-      team_members: department_employees
-        .filter((emp) => emp.employee_id !== department_head?.employee_id)
-        .map((emp) => ({
-          employee_id: emp.employee_id || null,
-          name:
-            emp.basic_info?.first_name && emp.basic_info?.last_name
-              ? `${emp.basic_info.first_name} ${emp.basic_info.last_name}`
-              : null,
-          email: emp.basic_info?.email || null,
-          designation: emp.work_info?.designation_name || null,
-          reporting_manager: emp.work_info?.reporting_manager || null,
-        })),
+      team_members: teamMembersRaw.length > 0 ? teamMembersRaw : null,
     };
 
     return res.status(200).send({ department_tree: response });
