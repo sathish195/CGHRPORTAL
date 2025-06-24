@@ -701,8 +701,8 @@ router.post(
     const org_data = await mongoFunctions.find(
       "ORGANISATIONS",
       {},
-      { createdAt: -1 }, // Sort
-      { organisation_id: 1, organisation_name: 1, departments: 1 } // Projection
+      { createdAt: -1 },
+      { organisation_id: 1, organisation_name: 1, departments: 1 }
     );
 
     if (!org_data || org_data.length === 0) {
