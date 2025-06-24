@@ -654,7 +654,6 @@ router.post(
       department_id: data.department_id,
       department_name: department.department_name,
       organisation_id: data.organisation_id,
-      organisation_name: department_head.organisation_name,
       department_head: department_head
         ? {
             employee_id: department_head.employee_id,
@@ -663,6 +662,7 @@ router.post(
             designation: department_head.work_info.designation_name,
           }
         : null,
+      organisation_name: department_head.organisation_name,
       employee_count: department_employees.length,
       team_members: department_employees
         .filter((emp) => emp.employee_id !== department_head?.employee_id)
