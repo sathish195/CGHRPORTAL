@@ -687,7 +687,7 @@ router.post(
   slowDown,
   Async(async (req, res) => {
     // Only Super Admin can perform this
-    let find_s_admin = await redis.redisGet(
+    const find_s_admin = await redis.redisGet(
       "CG_SUPER_ADMIN",
       req.employee.email,
       true
@@ -697,13 +697,19 @@ router.post(
       return res.status(403).send("Only Super Admin Can Have Access!!");
     }
 
-    // Retrieve all organisations from Redis
-    let org_data = await redis.redisGetAll("CRM_ORGANISATIONS", true);
-    if (!org_data || Object.keys(org_data).length === 0) {
-      return res.status(400).send("Organisations Not Found!!");
+    // Retrieve all organisations from MongoDB
+    const org_data = await mongoFunctions.find(
+      "ORGANISATIONS",
+      {},
+      { createdAt: -1 }, // Sort
+      { organisation_id: 1, organisation_name: 1, departments: 1 } // Projection
+    );
+
+    if (!org_data || org_data.length === 0) {
+      return res.status(404).send("Organisations Not Found!!");
     }
 
-    const orgs = Object.values(org_data).map((org) => ({
+    const orgs = org_data.map((org) => ({
       organisation_id: org.organisation_id,
       organisation_name: org.organisation_name,
       departments: org.departments || [],

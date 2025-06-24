@@ -194,19 +194,28 @@ module.exports = {
   },
   redisGetAll: async (key, parse = false) => {
     let check_exists = await client.exists(key);
-    if (check_exists) {
-      var value = await client.hGetAll(key);
-      console.log(value);
-      if (value) {
-        if (parse) {
-          value = JSON.parse(value);
-          console.log("value-------", value);
+    if (!check_exists) return false;
+
+    let value = await client.hGetAll(key);
+    if (!value) return false;
+
+    if (parse) {
+      for (const k in value) {
+        if (typeof value[k] === "string") {
+          try {
+            value[k] = JSON.parse(value[k]);
+          } catch (err) {
+            console.error(
+              `❌ Error parsing JSON for key "${k}": ${err.message}`
+            );
+            console.error(`🔎 Value: ${value[k].slice(0, 100)}...`);
+            continue; // keep raw value if JSON parse fails
+          }
         }
-        return value;
       }
-      return false;
     }
-    return false;
+
+    return value;
   },
 
   redisSetSingle: async (hash, data, parse = false) => {
