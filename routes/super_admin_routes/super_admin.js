@@ -641,9 +641,6 @@ router.post(
         organisation_name: 1,
       }
     );
-    if (!department_employees || department_employees.length === 0) {
-      return res.status(404).send("No employees found in this department.");
-    }
 
     // Identify department head
     const department_head = department_employees.find(
@@ -662,16 +659,20 @@ router.post(
             designation: department_head.work_info.designation_name,
           }
         : null,
-      organisation_name: department_head.organisation_name,
+      organisation_name:
+        department_head?.organisation_name || org_data.organisation_name,
       employee_count: department_employees.length,
       team_members: department_employees
         .filter((emp) => emp.employee_id !== department_head?.employee_id)
         .map((emp) => ({
-          employee_id: emp.employee_id,
-          name: `${emp.basic_info.first_name} ${emp.basic_info.last_name}`,
-          email: emp.basic_info.email,
-          designation: emp.work_info.designation_name,
-          reporting_manager: emp.work_info.reporting_manager || null,
+          employee_id: emp.employee_id || null,
+          name:
+            emp.basic_info?.first_name && emp.basic_info?.last_name
+              ? `${emp.basic_info.first_name} ${emp.basic_info.last_name}`
+              : null,
+          email: emp.basic_info?.email || null,
+          designation: emp.work_info?.designation_name || null,
+          reporting_manager: emp.work_info?.reporting_manager || null,
         })),
     };
 
