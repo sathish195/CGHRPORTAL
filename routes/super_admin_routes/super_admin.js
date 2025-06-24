@@ -641,6 +641,11 @@ router.post(
         organisation_name: 1,
       }
     );
+
+    // Identify department head
+    const department_head = department_employees.find(
+      (emp) => emp.work_info?.admin_type === "3"
+    );
     const teamMembersRaw = department_employees
       .filter((emp) => emp.employee_id !== department_head?.employee_id)
       .map((emp) => ({
@@ -653,11 +658,6 @@ router.post(
         designation: emp.work_info?.designation_name || null,
         reporting_manager: emp.work_info?.reporting_manager || null,
       }));
-
-    // Identify department head
-    const department_head = department_employees.find(
-      (emp) => emp.work_info?.admin_type === "3"
-    );
 
     const response = {
       department_id: data.department_id,
