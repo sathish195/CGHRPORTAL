@@ -34,6 +34,12 @@ const ORGANISATION_Schema = new mongoose.Schema(
     organisation_details: { type: Object, default: {} },
     images: { type: Object, default: {} },
     emp_count: { type: Number },
+    billing_type: {
+      type: { type: String },
+      plan: { type: String },
+      payment_date: { type: Date },
+      exp_date: { type: Date },
+    },
   },
   { timestamps: true }
 );

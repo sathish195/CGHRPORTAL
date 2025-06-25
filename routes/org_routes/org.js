@@ -45,10 +45,52 @@ router.post(
       "images.logo": data.logo,
     };
     if (find_org) {
+      //billing
+      const updates = { ...org_data };
+
+      // Check if billing_type update is needed
+      let new_billing = data.billing_type;
+      const old_billing = find_org.billing_type;
+
+      let billingNeedsUpdate = false;
+
+      if (
+        new_billing &&
+        (!old_billing ||
+          old_billing.type !== new_billing.type ||
+          old_billing.plan !== new_billing.plan)
+      ) {
+        billingNeedsUpdate = true;
+
+        if (new_billing.type === "paid") {
+          const payment_date = new Date();
+          let expiry_date = new Date(payment_date);
+
+          switch (new_billing.plan) {
+            case "6_months":
+              expiry_date.setMonth(expiry_date.getMonth() + 6);
+              break;
+            case "3_months":
+              expiry_date.setMonth(expiry_date.getMonth() + 3);
+              break;
+            case "1_year":
+              expiry_date.setFullYear(expiry_date.getFullYear() + 1);
+              break;
+            default:
+              return res.status(400).send("Invalid billing plan.");
+          }
+
+          new_billing.payment_date = payment_date;
+          new_billing.exp_date = expiry_date;
+        }
+
+        updates.billing_type = new_billing;
+        console.log("Billing details updated.");
+      }
       org_data_up = await mongoFunctions.find_one_and_update(
         "ORGANISATIONS",
         { email: req.employee.email },
-        org_data,
+        updates,
         { new: true }
       );
       console.log("organisation details updated");
@@ -61,6 +103,35 @@ router.post(
           .status(400)
           .send("Employee ID Already Exists For Another Organisation");
       }
+      // 2. Set payment and expiry date
+      let billing_type = data.billing_type;
+      let payment_date = null;
+      let expiry_date = null;
+
+      if (billing_type.type === "paid") {
+        payment_date = new Date();
+        expiry_date = new Date(payment_date);
+
+        switch (billing_type.plan) {
+          case "6_months":
+            expiry_date.setMonth(expiry_date.getMonth() + 6);
+            break;
+          case "3_months":
+            expiry_date.setMonth(expiry_date.getMonth() + 3);
+            break;
+          case "1_year":
+            expiry_date.setFullYear(expiry_date.getFullYear() + 1);
+            break;
+          default:
+            return res.status(400).send("Invalid billing plan.");
+        }
+        console.log(payment_date);
+        console.log(expiry_date);
+
+        // attach dates to billing_type
+        billing_type.payment_date = payment_date;
+        billing_type.exp_date = expiry_date;
+      }
 
       let new_org_data = {
         organisation_id: functions.get_random_string("O", 15, true),
@@ -68,6 +139,7 @@ router.post(
         employee_id: req.employee.employee_id,
         email: req.employee.email,
         ...org_data,
+        billing_type: billing_type,
         roles: [
           {
             role_id: functions.get_random_string("R", 15, true),
