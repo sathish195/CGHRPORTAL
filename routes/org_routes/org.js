@@ -33,15 +33,6 @@ router.post(
       email: req.employee.email,
     });
 
-    // //restrict access
-    let find_access = await functions.hasAccess(
-      org_data.billing_type.type,
-      "controls"
-    );
-    if (!find_access) {
-      return res.status(400).send("Access Denied For This Feature!!");
-    }
-
     let org_data_up;
     let org_data = {
       email: req.employee.email,
@@ -54,6 +45,14 @@ router.post(
       "images.logo": data.logo,
     };
     if (find_org) {
+      // //restrict access
+      let find_access = await functions.hasAccess(
+        find_org.billing_type.type,
+        "controls"
+      );
+      if (!find_access) {
+        return res.status(400).send("Access Denied For This Feature!!");
+      }
       //billing
       const updates = { ...org_data };
 
