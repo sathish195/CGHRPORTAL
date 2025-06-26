@@ -314,6 +314,7 @@ router.post(
       add_admin: data.add_admin,
       suspend_organisation: data.suspend_organisation,
       approve_organisation: data.approve_organisation,
+      billing: data.billing,
     };
 
     // Update or insert admin controls
@@ -722,7 +723,5 @@ router.post(
 );
 
 //billing feature
-
-
 
 module.exports = router;

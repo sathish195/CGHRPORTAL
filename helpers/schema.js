@@ -773,12 +773,27 @@ function Sadmin_login(data) {
   return schema.validate(data);
 }
 function add_update_admin_controls(data) {
+  const featureSchema = Joi.object({
+    attendance: Joi.boolean().required(),
+    dashboard: Joi.boolean().required(),
+    leave_applications: Joi.boolean().required(),
+    profile: Joi.boolean().required(),
+    employee_list: Joi.boolean().required(),
+    add_employee: Joi.boolean().required(),
+    today_attendance: Joi.boolean().required(),
+    controls: Joi.boolean().required(),
+    projects: Joi.boolean().required(),
+  });
   const schema = Joi.object({
     login: Joi.boolean().required(),
     add_organisation: Joi.boolean().required(),
     add_admin: Joi.boolean().required(),
     suspend_organisation: Joi.boolean().required(),
     approve_organisation: Joi.boolean().required(),
+    billing: Joi.object({
+      free: featureSchema.required(),
+      paid: featureSchema.required(),
+    }).required(),
   });
   return schema.validate(data);
 }

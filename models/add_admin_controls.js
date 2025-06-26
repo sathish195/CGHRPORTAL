@@ -32,6 +32,7 @@ const controls_schema = new mongoose.Schema(
       required: true,
       default: false,
     },
+    billing: { type: Object, default: {} },
   },
   { timestamps: true }
 );
