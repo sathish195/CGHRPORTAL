@@ -643,6 +643,12 @@ router.post(
       organisation_id: req.employee.organisation_id,
       "work_info.employee_status": { $regex: /^active$/i }, // Case-insensitive regex
     });
+    // find_admins
+    const find_controls = await redisFunctions.redisGet(
+      "CGHR_ADMIN_CONTROLS",
+      "ADMIN_CONTROLS",
+      true
+    );
 
     let dashborad = {
       recent_hires: recent_hires,
@@ -653,6 +659,7 @@ router.post(
       today_attendance: today_attendance,
       stats: statss || {},
       total_emp_count: total_emp_count,
+      admin_controls: find_controls,
     };
     // await redis.update_redis("ORGANISATIONS", org_data);
     return res.status(200).send(dashborad);

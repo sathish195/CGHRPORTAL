@@ -14,6 +14,7 @@ const multer = require("multer");
 const XLSX = require("xlsx");
 const { Query } = require("mongoose");
 const { alertDev } = require("../../helpers/telegram");
+const { functions } = require("underscore");
 
 //get employee profile
 
@@ -64,11 +65,17 @@ router.post(
   slowDown,
   Async(async (req, res) => {
     console.log("emp universal route hit");
+
     let org_data = await redis.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
     );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    // let find_access = await 
     let filtered_org_data = { ...org_data };
 
     // Exclude specific fields
@@ -101,6 +108,12 @@ router.post(
       organisation_id: req.employee.organisation_id,
       "work_info.employee_status": { $regex: /^active$/i }, // Case-insensitive regex
     });
+    // find_admins
+    const find_controls = await redisFunctions.redisGet(
+      "CGHR_ADMIN_CONTROLS",
+      "ADMIN_CONTROLS",
+      true
+    );
 
     let dashborad = {
       recent_hires: recent_hires,
@@ -109,6 +122,7 @@ router.post(
       stats: statss || {},
       today_attendance: today_attendance,
       total_emp_count: total_emp_count,
+      admin_controls: find_controls,
     };
     console.log("dashboard data fetched successfully");
     return res.status(200).send(dashborad);

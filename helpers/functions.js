@@ -116,7 +116,7 @@ module.exports = {
     console.log(totalDays);
     return totalDays;
   },
-  add_overall_stats: async (object,date) => {
+  add_overall_stats: async (object, date) => {
     if (object.checkin.length === 1 || object.checkin.length === 0) {
       const query = {
         organisation_id: object.organisation_id,
@@ -157,4 +157,13 @@ module.exports = {
   },
 
   update_status: (leave_status_up) => {},
+  hasAccess: async (userPlan, featureName) => {
+    // find_admin controls
+    const find_controls = await redisFunctions.redisGet(
+      "CGHR_ADMIN_CONTROLS",
+      "ADMIN_CONTROLS",
+      true
+    );
+    return find_controls.billing[userPlan]?.[featureName] === true;
+  },
 };
