@@ -487,7 +487,7 @@ router.post(
     // //restrict access
     let find_access = await functions.hasAccess(
       org_data.billing_type.type,
-      "leave_applications"
+      "emp_leave_applications"
     );
     if (!find_access) {
       return res.status(400).send("Access Denied For This Feature!!");

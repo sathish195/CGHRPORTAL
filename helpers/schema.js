@@ -783,6 +783,9 @@ function add_update_admin_controls(data) {
     today_attendance: Joi.boolean().required(),
     controls: Joi.boolean().required(),
     projects: Joi.boolean().required(),
+    emp_leave_applications: Joi.boolean().required(),
+    // change_password: Joi.boolean().required(),
+    // holidays: Joi.boolean().required(),
   });
   const schema = Joi.object({
     login: Joi.boolean().required(),

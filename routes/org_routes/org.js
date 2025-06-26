@@ -587,6 +587,9 @@ router.post(
     // let org = await mongoFunctions.find_one("ORGANISATIONS", {
     //     organisation_id: req.employee.organisation_id,
     // });
+    // await redisFunctions.update_redis("ORGANISATIONS", org);
+
+    // await redisFunctions.update_redis("")
     //check admin type
     const admin_types = ["1", "2", "3"];
     if (!admin_types.includes(req.employee?.admin_type)) {
