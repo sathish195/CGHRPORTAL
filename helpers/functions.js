@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const { employee_id } = require("./schema");
 const mongoFunctions = require("./mongoFunctions");
+const redisFunctions = require("./redisFunctions");
 
 module.exports = {
   get_random_string: (str, length, pre_append = false) => {

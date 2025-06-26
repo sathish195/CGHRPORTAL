@@ -5,7 +5,6 @@ const validations = require("../../helpers/schema");
 const bcrypt = require("../../helpers/crypto");
 const jwt = require("jsonwebtoken");
 const { Auth } = require("../../middlewares/auth");
-const redis = require("../../helpers/redisFunctions");
 const stats = require("../../helpers/stats");
 const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
@@ -14,7 +13,8 @@ const multer = require("multer");
 const XLSX = require("xlsx");
 const { Query } = require("mongoose");
 const { alertDev } = require("../../helpers/telegram");
-const { functions } = require("underscore");
+const functions = require("../../helpers/functions");
+const redisFunctions = require("../../helpers/redisFunctions");
 
 //get employee profile
 
@@ -25,6 +25,23 @@ router.post(
   Async(async (req, res) => {
     console.log("get profile route hit");
     const employee = req.employee;
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "profile"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     let emp = await mongoFunctions.find_one(
       employee.collection,
       {
@@ -65,8 +82,13 @@ router.post(
   slowDown,
   Async(async (req, res) => {
     console.log("emp universal route hit");
+    //check admin type
+    const admin_types = ["1", "2", "3", "4"];
+    if (!admin_types.includes(req.employee?.admin_type)) {
+      return res.status(403).send("Access Denied!!");
+    }
 
-    let org_data = await redis.redisGet(
+    let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
@@ -75,7 +97,13 @@ router.post(
       return res.status(400).send("Organisation Not Found!!");
     }
     // //restrict access
-    // let find_access = await 
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "dashboard"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     let filtered_org_data = { ...org_data };
 
     // Exclude specific fields
@@ -88,7 +116,7 @@ router.post(
     );
     console.log(birthdays);
 
-    let statss = await redis.redisGetAll(req.employee.employee_id);
+    let statss = await redisFunctions.redisGetAll(req.employee.employee_id);
     const now = new Date();
     const start_day = new Date(now.setHours(0, 0, 0, 0));
     const end_day = new Date(now.setHours(23, 59, 59, 999));
@@ -447,6 +475,23 @@ router.post(
     let data = req.body;
     const { error } = validations.get_employee_leave_applications(data);
     if (error) return res.status(400).send(error.details[0].message);
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "leave_applications"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     let query = {
       employee_id: req.employee.employee_id,
       organisation_id: req.employee.organisation_id,
@@ -533,6 +578,23 @@ router.post(
     let data = req.body;
     var { error } = validations.get_emp_attendance_by_filter(data);
     if (error) return res.status(400).send(error.details[0].message);
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "attendance"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     let condition = {
       organisation_id: user.organisation_id,
       employee_id: user.employee_id,
@@ -734,7 +796,7 @@ router.post(
       console.log(jsonData);
 
       // Check if the user is authorized
-      const org_data = await redis.redisGet(
+      const org_data = await redisFunctions.redisGet(
         "CRM_ORGANISATIONS",
         req.employee.organisation_id,
         true

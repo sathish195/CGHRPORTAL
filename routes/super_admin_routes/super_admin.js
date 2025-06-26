@@ -5,7 +5,7 @@ const validations = require("../../helpers/schema");
 const bcrypt = require("../../helpers/crypto");
 const jwt = require("jsonwebtoken");
 const { Auth } = require("../../middlewares/auth");
-const redis = require("../../helpers/redisFunctions");
+// const redis = require("../../helpers/redisFunctions");
 const stats = require("../../helpers/stats");
 const functions = require("../../helpers/functions");
 const { date, func } = require("joi");
@@ -75,7 +75,7 @@ router.post(
     //validate data
     var { error } = validations.Sadmin_login(data);
     if (error) return res.status(400).send(error.details[0].message);
-    let s_admin = await redis.redisGet("CG_SUPER_ADMIN", data.email, true);
+    let s_admin = await redisFunctions.redisGet("CG_SUPER_ADMIN", data.email, true);
 
     if (!s_admin) {
       return res
@@ -132,7 +132,7 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     // Only Super Admin can perform this
-    let find_s_admin = await redis.redisGet(
+    let find_s_admin = await redisFunctions.redisGet(
       "CG_SUPER_ADMIN",
       req.employee.email,
       true
@@ -297,7 +297,7 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     // Only Super Admin can perform this
-    let find_s_admin = await redis.redisGet(
+    let find_s_admin = await redisFunctions.redisGet(
       "CG_SUPER_ADMIN",
       req.employee.email,
       true
@@ -348,7 +348,7 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     // Only Super Admin can perform this
-    let find_s_admin = await redis.redisGet(
+    let find_s_admin = await redisFunctions.redisGet(
       "CG_SUPER_ADMIN",
       req.employee.email,
       true
@@ -405,7 +405,7 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     // Only Super Admin can perform this
-    let find_s_admin = await redis.redisGet(
+    let find_s_admin = await redisFunctions.redisGet(
       "CG_SUPER_ADMIN",
       req.employee.email,
       true
@@ -447,7 +447,7 @@ router.post(
   Auth,
   Async(async (req, res) => {
     // Only Super Admin can perform this
-    let find_s_admin = await redis.redisGet(
+    let find_s_admin = await redisFunctions.redisGet(
       "CG_SUPER_ADMIN",
       req.employee.email,
       true
@@ -505,7 +505,7 @@ router.post(
     var { error } = validations.emp_reset_password(data);
     if (error) return res.status(400).send(error.details[0].message);
     // Only Super Admin can perform this
-    let find_s_admin = await redis.redisGet(
+    let find_s_admin = await redisFunctions.redisGet(
       "CG_SUPER_ADMIN",
       req.employee.email,
       true
@@ -551,7 +551,7 @@ router.post(
   slowDown,
   Async(async (req, res) => {
     // Try to get Super Admin from Redis
-    let find_super_admin = await redis.redisGet(
+    let find_super_admin = await redisFunctions.redisGet(
       "CG_SUPER_ADMIN",
       req.employee.email,
       true
@@ -598,7 +598,7 @@ router.post(
     var { error } = validations.department_tree(data);
     if (error) return res.status(400).send(error.details[0].message);
     // Only Super Admin can perform this
-    let find_s_admin = await redis.redisGet(
+    let find_s_admin = await redisFunctions.redisGet(
       "CG_SUPER_ADMIN",
       req.employee.email,
       true
@@ -608,7 +608,7 @@ router.post(
       return res.status(403).send("Only Super Admin Can Have Access!!");
     }
     // Retrieve organisation data from Redis
-    let org_data = await redis.redisGet(
+    let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       data.organisation_id,
       true
@@ -690,7 +690,7 @@ router.post(
   slowDown,
   Async(async (req, res) => {
     // Only Super Admin can perform this
-    const find_s_admin = await redis.redisGet(
+    const find_s_admin = await redisFunctions.redisGet(
       "CG_SUPER_ADMIN",
       req.employee.email,
       true

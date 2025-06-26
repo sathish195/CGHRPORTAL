@@ -5,13 +5,14 @@ const validations = require("../../helpers/schema");
 const bcrypt = require("../../helpers/crypto");
 const jwt = require("jsonwebtoken");
 const { Auth } = require("../../middlewares/auth");
-const redis = require("../../helpers/redisFunctions");
+const redisFunctions = require("../../helpers/redisFunctions");
 const { mongo } = require("mongoose");
 const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
 const { includes } = require("underscore");
 const { alertDev } = require("../../helpers/telegram");
+const functions = require("../../helpers/functions");
 
 //get employee list
 
@@ -71,6 +72,22 @@ router.post(
     const { error } = validations.skip(data);
 
     if (error) return res.status(400).send(error.details[0].message);
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "employee_list"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     let query = { organisation_id: req.employee.organisation_id };
     if (emp.admin_type === "1") {
       // query["work_info.admin_type"] = { $ne: "1" };
@@ -434,6 +451,23 @@ router.post(
     let data = req.body;
     var { error } = validations.get_projects(data);
     if (error) return res.status(400).send(error.details[0].message);
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "projects"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
 
     const userRole = req.employee.admin_type;
     console.log(userRole);
@@ -681,6 +715,23 @@ router.post(
     if (error) {
       return res.status(400).send(error.details[0].message);
     }
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "leave_applications"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
 
     const roleName = req.employee.admin_type;
     const status = "Pending";
@@ -843,6 +894,23 @@ router.post(
       return res
         .status(403)
         .send("Only Director Or Manager Can Access Employee Total Attendance");
+    }
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "attendance"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
     }
     let condition = {
       organisation_id: user.organisation_id,

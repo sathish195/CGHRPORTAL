@@ -5,7 +5,7 @@ const validations = require("../../helpers/schema");
 const bcrypt = require("../../helpers/crypto");
 const jwt = require("jsonwebtoken");
 const { Auth } = require("../../middlewares/auth");
-const redis = require("../../helpers/redisFunctions");
+// const redis = require("../../helpers/redisFunctions");
 const functions = require("../../helpers/functions");
 const stats = require("../../helpers/stats");
 const { mongo } = require("mongoose");
@@ -32,6 +32,15 @@ router.post(
     let find_org = await mongoFunctions.find_one("ORGANISATIONS", {
       email: req.employee.email,
     });
+
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "controls"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
 
     let org_data_up;
     let org_data = {
@@ -198,7 +207,7 @@ router.post(
       // }
       await redisFunctions.update_redis("ADMIN_STATS", stats);
     }
-    await redis.update_redis("ORGANISATIONS", org_data_up);
+    await redisFunctions.update_redis("ORGANISATIONS", org_data_up);
 
     return res
       .status(200)
@@ -228,13 +237,21 @@ router.post(
     // });
 
     // Retrieve organisation data from Redis
-    let org_data = await redis.redisGet(
+    let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
     );
     if (org_data && org_data.organisation_id === data.organisation_id) {
       console.log("feteched org data from redis");
+      // //restrict access
+      let find_access = await functions.hasAccess(
+        org_data.billing_type.type,
+        "controls"
+      );
+      if (!find_access) {
+        return res.status(400).send("Access Denied For This Feature!!");
+      }
       // Check if department already exists
       let department_exists = org_data.departments.find(
         (e) =>
@@ -309,7 +326,7 @@ router.post(
       }
 
       if (department_data_up) {
-        await redis.update_redis("ORGANISATIONS", department_data_up);
+        await redisFunctions.update_redis("ORGANISATIONS", department_data_up);
         console.log("updated department details in redis");
         return res.status(200).send({
           success: "Department Details Added..!",
@@ -344,7 +361,7 @@ router.post(
     //     email: req.employee.email,
     // });
     // Retrieve organisation data from Redis
-    let org_data = await redis.redisGet(
+    let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
@@ -353,6 +370,14 @@ router.post(
     if (org_data && org_data.organisation_id === data.organisation_id) {
       // Check if designation already exists
       console.log("designation data fetched from redis");
+      // //restrict access
+      let find_access = await functions.hasAccess(
+        org_data.billing_type.type,
+        "controls"
+      );
+      if (!find_access) {
+        return res.status(400).send("Access Denied For This Feature!!");
+      }
       let designation_exists = org_data.designations.find(
         (e) =>
           e.designation_name.toLowerCase() ===
@@ -435,7 +460,7 @@ router.post(
       }
 
       // Update Redis cache
-      await redis.update_redis("ORGANISATIONS", designation_up);
+      await redisFunctions.update_redis("ORGANISATIONS", designation_up);
       console.log("updated designation details in redis");
 
       return res.status(200).send({
@@ -467,7 +492,7 @@ router.post(
     // });
 
     // Fetch organization data from Redis
-    let org_data = await redis.redisGet(
+    let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
@@ -476,6 +501,14 @@ router.post(
     // Check if organization data exists and the organization ID matches
     if (org_data && org_data.organisation_id === data.organisation_id) {
       // Check if the role already exists
+      // //restrict access
+      let find_access = await functions.hasAccess(
+        org_data.billing_type.type,
+        "controls"
+      );
+      if (!find_access) {
+        return res.status(400).send("Access Denied For This Feature!!");
+      }
       let role_exists = org_data.roles.find(
         (e) => e.role_name.toLowerCase() === data.role_name.toLowerCase()
       );
@@ -535,7 +568,7 @@ router.post(
       }
 
       // Update Redis with the new role data
-      await redis.update_redis("ORGANISATIONS", role_data_up);
+      await redisFunctions.update_redis("ORGANISATIONS", role_data_up);
 
       return res.status(200).send({
         success: "Role Details Added..!",
@@ -555,7 +588,13 @@ router.post(
     // let org = await mongoFunctions.find_one("ORGANISATIONS", {
     //     organisation_id: req.employee.organisation_id,
     // });
-    let org_data = await redis.redisGet(
+    //check admin type
+    const admin_types = ["1", "2", "3"];
+    if (!admin_types.includes(req.employee?.admin_type)) {
+      return res.status(403).send("Access Denied!!");
+    }
+
+    let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
@@ -575,6 +614,14 @@ router.post(
     //     org.organisation_id,
     //     true
     // );
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "dashboard"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     let recent_hires = await stats.recent_hires(req.employee.organisation_id);
     let birthdays = await stats.employees_with_birthday_today(
       req.employee.organisation_id
@@ -637,7 +684,7 @@ router.post(
     let tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1); // Set to tomorrow
 
-    let statss = await redis.redisGetAll(req.employee.employee_id);
+    let statss = await redisFunctions.redisGetAll(req.employee.employee_id);
 
     let total_emp_count = await mongoFunctions.count_documents("EMPLOYEE", {
       organisation_id: req.employee.organisation_id,
@@ -686,13 +733,21 @@ router.post(
         .send("Only Director Or Manager Can Access This Endpoint");
     }
     // Retrieve organisation data from Redis
-    const org_data = await redis.redisGet(
+    const org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
     );
     if (!org_data) {
       return res.status(400).send("Invalid Organisation Id");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "controls"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
     }
 
     console.log("Retrieved org_data:");
@@ -761,7 +816,7 @@ router.post(
         return res.status(404).send("Failed to update leave.");
       }
 
-      await redis.update_redis("ORGANISATIONS", updatedLeave);
+      await redisFunctions.update_redis("ORGANISATIONS", updatedLeave);
       console.log("updated leave in redis");
 
       const remainingLeaves = data.total_leaves - leave.total_leaves;
@@ -851,7 +906,7 @@ router.post(
       );
       console.log("updated new leaves for all employees");
 
-      await redis.update_redis("ORGANISATIONS", updatedOrg);
+      await redisFunctions.update_redis("ORGANISATIONS", updatedOrg);
       console.log("updated new leave in redis");
       return res.status(200).send({
         success: "Leave Added Successfully.",
@@ -1046,6 +1101,14 @@ router.post(
       email: req.employee.email,
     });
     if (!org_id) return res.status(404).send("Organisation not found");
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "controls"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
 
     const token = jwt.sign(
       {
@@ -1205,7 +1268,7 @@ router.post(
     }
 
     // Retrieve organisation data from Redis
-    const org_data = await redis.redisGet(
+    const org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
@@ -1214,6 +1277,14 @@ router.post(
       return res.status(400).send("Invalid Organisation Id");
     }
     console.log("Fetched org data from Redis");
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "controls"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
 
     let holiday_data;
     if (data.holiday_id && data.holiday_id.length > 9) {
@@ -1333,6 +1404,22 @@ router.post(
         .status(403)
         .send("Only Director Or Manager Can Access Holidays List");
     }
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "controls"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     const h_list = await mongoFunctions.find(
       "HOLIDAYS",
       { organisation_id: req.employee.organisation_id },
@@ -1383,6 +1470,23 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     const data = value;
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "today_attendance"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
 
     // Check if a date is provided in the request
     if (data.date) {
@@ -1457,6 +1561,22 @@ router.post(
       return res
         .status(403)
         .send("Only Director Or Manager Can Access This Endpoint");
+    }
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "controls"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
     }
 
     let findId = await mongoFunctions.find_one("HOLIDAYS", {

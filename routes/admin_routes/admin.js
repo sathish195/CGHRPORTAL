@@ -5,7 +5,7 @@ const validations = require("../../helpers/schema");
 const bcrypt = require("../../helpers/crypto");
 const jwt = require("jsonwebtoken");
 const { Auth } = require("../../middlewares/auth");
-const redis = require("../../helpers/redisFunctions");
+const redisFunctions = require("../../helpers/redisFunctions");
 const stats = require("../../helpers/stats");
 const functions = require("../../helpers/functions");
 const { date, func } = require("joi");
@@ -75,12 +75,20 @@ router.post(
     let data = req.body;
     var { error } = validations.add_employee_by_admin(data);
     if (error) return res.status(400).send(error.details[0].message);
-    let org_data = await redis.redisGet(
+    let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
     );
     if (!org_data) return res.status(400).send("Access Denied..!");
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "add_employee"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     const admin_types = ["1", "2"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res.status(403).send("Only Admin Or Manager Can Add New Employee");
@@ -312,7 +320,7 @@ router.post(
         { $inc: { emp_count: 1 } },
         { returnDocument: "after" }
       );
-      await redis.update_redis("ORGANISATIONS", update_emp_count);
+      await redisFunctions.update_redis("ORGANISATIONS", update_emp_count);
     }
 
     // await redis.update_redis("EMPLOYEE", new_emp);
@@ -337,7 +345,7 @@ router.post(
     let data = value;
 
     if (error) return res.status(400).send(error.details[0].message);
-    let org_data = await redis.redisGet(
+    let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
@@ -558,7 +566,7 @@ router.post(
         { $inc: { emp_count: -1 } },
         { returnDocument: "after" }
       );
-      await redis.update_redis("ORGANISATIONS", update_emp_count);
+      await redisFunctions.update_redis("ORGANISATIONS", update_emp_count);
     }
     if (
       (find_emp.work_info.employee_status.toLowerCase() === "disable" ||
@@ -571,7 +579,7 @@ router.post(
         { $inc: { emp_count: 1 } },
         { returnDocument: "after" }
       );
-      await redis.update_redis("ORGANISATIONS", update_emp_count);
+      await redisFunctions.update_redis("ORGANISATIONS", update_emp_count);
     }
 
     // await redis.update_redis("EMPLOYEE", new_emp);
@@ -1163,7 +1171,7 @@ router.post(
             currentStatus: data.status,
           },
         };
-        await redis.remove_task_status(data.employee_id, data.status);
+        await redisFunctions.remove_task_status(data.employee_id, data.status);
       }
 
       // Update task
@@ -1200,12 +1208,12 @@ router.post(
           findId.employee_id === data.employee_id &&
           findId.status !== data.status
         ) {
-          await redis.update_task_status(
+          await redisFunctions.update_task_status(
             data.employee_id,
             data.status,
             findId.status
           );
-          await redis.update_task_status(
+          await redisFunctions.update_task_status(
             findId.created_by.employee_id,
             data.status,
             findId.status
@@ -1214,14 +1222,14 @@ router.post(
           findId.employee_id !== data.employee_id &&
           findId.status !== data.status
         ) {
-          await redis.add_task_status(data.employee_id, data.status);
-          await redis.update_task_status(
+          await redisFunctions.add_task_status(data.employee_id, data.status);
+          await redisFunctions.update_task_status(
             findId.created_by.employee_id,
             data.status,
             findId.status
           );
         } else if (findId.employee_id !== data.employee_id) {
-          await redis.add_task_status(data.employee_id, data.status);
+          await redisFunctions.add_task_status(data.employee_id, data.status);
         }
       }
       return res.status(200).send("Task Updated Successfully");
@@ -1289,11 +1297,11 @@ router.post(
         if (!task_add) {
           return res.status(400).send("Failed To Add New Task..");
         }
-        await redis.add_task_status(
+        await redisFunctions.add_task_status(
           req.employee.employee_id,
           new_task_data.status
         );
-        await redis.add_task_status(
+        await redisFunctions.add_task_status(
           new_task_data.employee_id,
           new_task_data.status
         );
@@ -1939,7 +1947,7 @@ router.post(
         .send("Only Director Or Manager Can Update The Attendance");
     }
 
-    let org_data = await redis.redisGet(
+    let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
@@ -2068,7 +2076,7 @@ router.post(
         .send("Only Director Or Manager Can Update The Attendance");
     }
 
-    let org_data = await redis.redisGet(
+    let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
