@@ -1102,7 +1102,7 @@ router.post(
     if (!org_id) return res.status(404).send("Organisation not found");
     // //restrict access
     let find_access = await functions.hasAccess(
-      org_data.billing_type.type,
+      org_id.billing_type.type,
       "controls"
     );
     if (!find_access) {
