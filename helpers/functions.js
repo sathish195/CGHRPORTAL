@@ -4,6 +4,7 @@ const mongoFunctions = require("./mongoFunctions");
 const redisFunctions = require("./redisFunctions");
 const fs = require("fs");
 const path = require("path");
+const { alertDev } = require("./telegram");
 
 module.exports = {
   get_random_string: (str, length, pre_append = false) => {
