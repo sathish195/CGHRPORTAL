@@ -16,6 +16,9 @@ const slowDown = require("../../middlewares/slow_down");
 const { alertDev } = require("../../helpers/telegram");
 const multer = require("multer");
 const redisFunctions = require("../../helpers/redisFunctions");
+const fs = require("fs");
+const path = require("path");
+
 
 router.post(
   "/add_update_org_details",
@@ -1631,6 +1634,28 @@ router.post(
       return res.status(200).send("Restore Done sucecssfully..!!");
     }
     return res.status(400).send("Restore Failed..!");
+  })
+);
+router.post(
+  "/download_zip",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    const dumpFolder = path.join(process.cwd(), "dump");
+
+    if (!fs.existsSync(dumpFolder)) {
+      return res.status(404).send("No dump folder found");
+    }
+
+    const files = fs
+      .readdirSync(dumpFolder)
+      .filter((file) => file.endsWith(".json"));
+
+    const response = files.map((file) => ({
+      filename: file,
+      downloadUrl: `/download-json/${file}`,
+    }));
+    return res.status(200).send(response);
   })
 );
 
