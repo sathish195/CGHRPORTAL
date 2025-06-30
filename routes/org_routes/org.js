@@ -1636,7 +1636,7 @@ router.post(
     return res.status(400).send("Restore Failed..!");
   })
 );
-router.post(
+router.get(
   "/download_zip",
   // Auth,
   rateLimit(60, 10),

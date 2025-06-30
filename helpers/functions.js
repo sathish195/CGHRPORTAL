@@ -235,7 +235,7 @@ module.exports = {
   },
   downloadZip: async () => {
     // Step 1: Get the list of files
-    let BASE_URL = "https://lucky2-ref.onrender.com";
+    let BASE_URL = "https://cg-portal-node.onrender.com";
     const listResponse = await axios.post(`${BASE_URL}/org/download_zip`);
     const files = listResponse.data;
 
