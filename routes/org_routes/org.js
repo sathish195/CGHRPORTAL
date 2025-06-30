@@ -1608,5 +1608,30 @@ router.post(
     return res.status(200).send("success");
   })
 );
+router.post(
+  "/mongo_backup",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let b = await functions.mongoBackup();
+    if (b) {
+      return res.status(200).send("Backup Done sucecssfully..!!");
+    }
+
+    return res.status(400).send("Backup Failed..!");
+  })
+);
+router.post(
+  "/mongo_restore",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let r = await functions.mongoRestore();
+    if (r) {
+      return res.status(200).send("Restore Done sucecssfully..!!");
+    }
+    return res.status(400).send("Restore Failed..!");
+  })
+);
 
 module.exports = router;

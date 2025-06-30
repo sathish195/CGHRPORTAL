@@ -2,6 +2,8 @@ const crypto = require("crypto");
 const { employee_id } = require("./schema");
 const mongoFunctions = require("./mongoFunctions");
 const redisFunctions = require("./redisFunctions");
+const fs = require("fs");
+const path = require("path");
 
 module.exports = {
   get_random_string: (str, length, pre_append = false) => {
@@ -166,5 +168,67 @@ module.exports = {
       true
     );
     return find_controls.billing[userPlan]?.[featureName] === true;
+  },
+  mongoBackup: async () => {
+    const collectionNames = [
+      "EMPLOYEE",
+      "ORGANISATIONS ",
+      "PROJECTS",
+      "TASKS",
+      "STATS",
+      "LEAVE",
+      "ATTENDANCE",
+      "HOLIDAYS",
+    ];
+
+    console.log("Collections found:", collectionNames);
+
+    for (const name of collectionNames) {
+      await mongoFunctions.download_collection(name);
+    }
+    console.log("completed dumping");
+    return true;
+  },
+  mongoRestore: async () => {
+    const collectionNames = [
+      "EMPLOYEE",
+      "ORGANISATIONS ",
+      "PROJECTS",
+      "TASKS",
+      // "STATS",
+      "LEAVE",
+      "ATTENDANCE",
+      "HOLIDAYS",
+    ];
+
+    console.log("Collections found:", collectionNames);
+
+    for (const collection of collectionNames) {
+      const filePath = path.join(
+        process.cwd(),
+        "dump",
+        `${collection}_dump.json`
+      );
+
+      if (!fs.existsSync(filePath)) {
+        alertDev(`❌ Dump file not found for ${collection}`);
+        continue;
+      }
+
+      const jsonData = fs.readFileSync(filePath, "utf-8");
+      const docs = JSON.parse(jsonData);
+
+      if (!Array.isArray(docs) || docs.length === 0) {
+        alertDev(`⚠️ No documents to restore for collection: ${collection}`);
+        continue;
+      }
+      let d = await mongoFunctions.delete_many(collection);
+      let s = await mongoFunctions.insert_many_records(collection, docs);
+
+      console.log(
+        `✅ Restored ${docs.length} documents to collection: ${collection}`
+      );
+    }
+    return true;
   },
 };
