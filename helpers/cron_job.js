@@ -290,7 +290,6 @@ const updateStatusOfNotCheckins = async () => {
   // Await all updates to complete
   await Promise.all(updates);
 };
-// functions.downloadZip();
 // Scheduling cron jobs
 cron.schedule(
   "30 9 * * 1-5",
