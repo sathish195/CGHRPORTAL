@@ -1387,5 +1387,52 @@ router.post(
     return res.status(200).send("success");
   })
 );
+router.post(
+  "/mongo_backup",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let b = await functions.mongoBackup();
+    if (b) {
+      return res.status(200).send("Backup Done sucecssfully..!!");
+    }
+
+    return res.status(400).send("Backup Failed..!");
+  })
+);
+router.post(
+  "/mongo_restore",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let r = await functions.mongoRestore();
+    if (r) {
+      return res.status(200).send("Restore Done sucecssfully..!!");
+    }
+    return res.status(400).send("Restore Failed..!");
+  })
+);
+router.post(
+  "/download_zip",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    const dumpFolder = path.join(process.cwd(), "dump");
+
+    if (!fs.existsSync(dumpFolder)) {
+      return res.status(404).send("No dump folder found");
+    }
+
+    const files = fs
+      .readdirSync(dumpFolder)
+      .filter((file) => file.endsWith(".json"));
+
+    const response = files.map((file) => ({
+      filename: file,
+      downloadUrl: `/download-json/${file}`,
+    }));
+    return res.status(200).send(response);
+  })
+);
 
 module.exports = router;

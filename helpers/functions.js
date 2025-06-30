@@ -1,6 +1,9 @@
 const crypto = require("crypto");
 const { employee_id } = require("./schema");
 const mongoFunctions = require("./mongoFunctions");
+const fs = require("fs");
+const path = require("path");
+const archiver = require("archiver");
 
 module.exports = {
   get_random_string: (str, length, pre_append = false) => {
@@ -116,7 +119,7 @@ module.exports = {
     console.log(totalDays);
     return totalDays;
   },
-  add_overall_stats: async (object,date) => {
+  add_overall_stats: async (object, date) => {
     if (object.checkin.length === 1 || object.checkin.length === 0) {
       const query = {
         organisation_id: object.organisation_id,
@@ -157,4 +160,106 @@ module.exports = {
   },
 
   update_status: (leave_status_up) => {},
+  mongoBackup: async () => {
+    const collectionNames = [
+      "EMPLOYEE",
+      "ORGANISATIONS ",
+      "PROJECTS",
+      "TASKS",
+      "STATS",
+      "LEAVE",
+      "ATTENDANCE",
+      "HOLIDAYS",
+    ];
+
+    console.log("Collections found:", collectionNames);
+
+    for (const name of collectionNames) {
+      await mongoFunctions.download_collection(name);
+    }
+    console.log("completed dumping");
+    return true;
+  },
+  mongoRestore: async () => {
+    const collectionNames = [
+      "EMPLOYEE",
+      "ORGANISATIONS ",
+      "PROJECTS",
+      "TASKS",
+      "STATS",
+      "LEAVE",
+      "ATTENDANCE",
+      "HOLIDAYS",
+    ];
+
+    console.log("Collections found:", collectionNames);
+
+    for (const collection of collectionNames) {
+      const filePath = path.join(
+        process.cwd(),
+        "dump",
+        `${collection}_dump.json`
+      );
+
+      if (!fs.existsSync(filePath)) {
+        alertDev(`❌ Dump file not found for ${collection}`);
+        continue;
+      }
+
+      const jsonData = fs.readFileSync(filePath, "utf-8");
+      const docs = JSON.parse(jsonData);
+
+      if (!Array.isArray(docs) || docs.length === 0) {
+        alertDev(`⚠️ No documents to restore for collection: ${collection}`);
+        continue;
+      }
+      let d = await mongoFunctions.delete_many(collection);
+      let s = await mongoFunctions.insert_many_records(collection, docs);
+
+      console.log(
+        `✅ Restored ${docs.length} documents to collection: ${collection}`
+      );
+    }
+    return true;
+  },
+  downloadZip: async () => {
+    // Step 1: Get the list of files
+    let BASE_URL = "https://lucky2-ref.onrender.com";
+    const listResponse = await axios.get(`${BASE_URL}/org/download_zip`);
+    const files = listResponse.data;
+
+    if (!files.length) {
+      console.log("No files found.");
+      return;
+    }
+
+    // Step 2: Ensure local /dump folder exists
+    const dumpPath = path.join(__dirname, "dump");
+    if (!fs.existsSync(dumpPath)) {
+      fs.mkdirSync(dumpPath, { recursive: true });
+      console.log("📁 Created local folder: dump");
+    }
+
+    // Step 3: Download each file using the same filename
+    for (const file of files) {
+      const fileUrl = `${BASE_URL}${file.downloadUrl}`;
+      const localPath = path.join(dumpPath, file.filename);
+
+      console.log(`⬇️ Downloading: ${file.filename}`);
+
+      const response = await axios.get(fileUrl, { responseType: "stream" });
+      const writer = fs.createWriteStream(localPath);
+
+      response.data.pipe(writer);
+
+      await new Promise((resolve, reject) => {
+        writer.on("finish", resolve);
+        writer.on("error", reject);
+      });
+
+      console.log(`✅ Saved: ${file.filename}`);
+    }
+
+    console.log("🎉 All files downloaded to ./dump/");
+  },
 };

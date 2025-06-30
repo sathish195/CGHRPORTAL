@@ -7,6 +7,8 @@ const { LEAVE } = require("../models/add_leaves");
 const { ATTENDANCE } = require("../models/add_attendance");
 const { HOLIDAYS } = require("../models/add_holiday");
 // const { FILES } = require("../models/add_file");
+const fs = require("fs");
+const path = require("path");
 
 module.exports = {
   create_new_record: async (collection, data) => {
@@ -106,5 +108,35 @@ module.exports = {
   },
   count_documents: async (collection, condition = {}) => {
     return await eval(collection).countDocuments(condition);
+  },
+  download_collection: async (collection) => {
+    return await eval(collection)
+      .find({})
+      .lean()
+      .then((docs) => {
+        const jsonData = JSON.stringify(docs);
+        var dirname = process.cwd() + "/dump/";
+        if (!fs.existsSync(dirname)) {
+          fs.mkdir(dirname, (res) => console.log("res else", res));
+        }
+        fs.writeFile(
+          process.cwd() + `/dump/${collection}_dump.json`,
+          jsonData,
+          (err) => {
+            if (err) {
+              alertDev(
+                `:x::x::x::x: err in download mongodb collection \n ${err} \n :x::x::x::x:`
+              );
+            }
+            // console.log("Dump saved!");
+            return "Dump_saved";
+          }
+        );
+      })
+      .catch((err) => {
+        alertDev(
+          `:x::x::x::x: err in download mongo query \n ${err} \n :x::x::x::x:`
+        );
+      });
   },
 };
