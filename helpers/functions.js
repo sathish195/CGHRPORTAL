@@ -233,44 +233,4 @@ module.exports = {
     }
     return true;
   },
-  downloadZip: async () => {
-    // Step 1: Get the list of files
-    let BASE_URL = "https://cg-portal-node.onrender.com";
-    const listResponse = await axios.get(`${BASE_URL}/org/download_zip`);
-    const files = listResponse.data;
-
-    if (!files.length) {
-      console.log("No files found.");
-      return;
-    }
-
-    // Step 2: Ensure local /dump folder exists
-    const dumpPath = path.join(__dirname, "dump");
-    if (!fs.existsSync(dumpPath)) {
-      fs.mkdirSync(dumpPath, { recursive: true });
-      console.log("📁 Created local folder: dump");
-    }
-
-    // Step 3: Download each file using the same filename
-    for (const file of files) {
-      const fileUrl = `${BASE_URL}${file.downloadUrl}`;
-      const localPath = path.join(dumpPath, file.filename);
-
-      console.log(`⬇️ Downloading: ${file.filename}`);
-
-      const response = await axios.get(fileUrl, { responseType: "stream" });
-      const writer = fs.createWriteStream(localPath);
-
-      response.data.pipe(writer);
-
-      await new Promise((resolve, reject) => {
-        writer.on("finish", resolve);
-        writer.on("error", reject);
-      });
-
-      console.log(`✅ Saved: ${file.filename}`);
-    }
-
-    console.log("🎉 All files downloaded to ./dump/");
-  },
 };
