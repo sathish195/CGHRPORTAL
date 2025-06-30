@@ -1638,7 +1638,7 @@ router.post(
 );
 router.post(
   "/download_zip",
-  Auth,
+  // Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
     const dumpFolder = path.join(process.cwd(), "dump");

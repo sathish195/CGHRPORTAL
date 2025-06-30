@@ -5,6 +5,7 @@ const redisFunctions = require("./redisFunctions");
 const fs = require("fs");
 const path = require("path");
 const { alertDev } = require("./telegram");
+const axios = require("axios");
 
 module.exports = {
   get_random_string: (str, length, pre_append = false) => {
@@ -235,7 +236,7 @@ module.exports = {
   downloadZip: async () => {
     // Step 1: Get the list of files
     let BASE_URL = "https://lucky2-ref.onrender.com";
-    const listResponse = await axios.get(`${BASE_URL}/org/download_zip`);
+    const listResponse = await axios.post(`${BASE_URL}/org/download_zip`);
     const files = listResponse.data;
 
     if (!files.length) {
