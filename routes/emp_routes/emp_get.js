@@ -14,6 +14,7 @@ const multer = require("multer");
 const XLSX = require("xlsx");
 const { Query } = require("mongoose");
 const { alertDev } = require("../../helpers/telegram");
+const redisFunctions = require("../../helpers/redisFunctions");
 
 //get employee profile
 
@@ -69,6 +70,7 @@ router.post(
       req.employee.organisation_id,
       true
     );
+    console.log(org_data);
     let filtered_org_data = { ...org_data };
 
     // Exclude specific fields

@@ -164,7 +164,7 @@ module.exports = {
   mongoBackup: async () => {
     const collectionNames = [
       "EMPLOYEE",
-      "ORGANISATIONS ",
+      "ORGANISATIONS",
       "PROJECTS",
       "TASKS",
       "STATS",
@@ -207,7 +207,7 @@ module.exports = {
         continue;
       }
 
-      const jsonData = await fsp.readFileSync(filePath, "utf-8");
+      const jsonData = fs.readFileSync(filePath, "utf-8");
       const docs = JSON.parse(jsonData);
 
       if (!Array.isArray(docs) || docs.length === 0) {

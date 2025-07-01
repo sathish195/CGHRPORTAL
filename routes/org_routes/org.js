@@ -1452,5 +1452,19 @@ router.post(
     return res.status(400).send("Restore Failed..!");
   })
 );
+router.post(
+  "/set_universal_data",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let org = await mongoFunctions.find_one("ORGANISATIONS", {
+      organisation_id: req.employee.organisation_id,
+    });
+    await redis.update_redis("ORGANISATIONS", org);
+    return res
+      .status(200)
+      .send("Universal data stored in redis successfully..!");
+  })
+);
 
 module.exports = router;
