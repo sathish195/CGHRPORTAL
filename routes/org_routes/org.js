@@ -15,6 +15,10 @@ const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
 const { alertDev } = require("../../helpers/telegram");
 const multer = require("multer");
+const archiver = require("archiver");
+const fs = require("fs");
+const path = require("path");
+const fsp = require("fs").promises;
 
 router.post(
   "/add_update_org_details",
@@ -1394,12 +1398,43 @@ router.post(
   Async(async (req, res) => {
     let b = await functions.mongoBackup();
     if (b) {
-      return res.status(200).send("Backup Done sucecssfully..!!");
+      // return res.status(200).send("Backup Done sucecssfully..!!");
+      console.log("Backup done..Entering into downloading segment");
     }
+    const dumpFolderPath = path.join(process.cwd(), "dump");
+    const zipFilePath = path.join(process.cwd(), "dump.zip");
 
-    return res.status(400).send("Backup Failed..!");
+    const output = await fs.createWriteStream(zipFilePath);
+    const archive = archiver("zip", { zlib: { level: 9 } });
+
+    archive.pipe(output);
+    archive.directory(dumpFolderPath, false);
+    archive.finalize();
+
+    // Listen for close event on zip file
+    output.on("close", () => {
+      res.download(zipFilePath, "mongo_backup.zip", async (err) => {
+        if (err) {
+          console.error("❌ Error in download:", err);
+          return res.status(500).send("Download failed");
+        }
+
+        try {
+          await fsp.unlink(zipFilePath);
+          console.log("✅ Zip file deleted after download.");
+        } catch (unlinkErr) {
+          console.error("❌ Error deleting zip:", unlinkErr);
+        }
+      });
+    });
+
+    archive.on("error", (err) => {
+      console.error("❌ Archive error:", err);
+      res.status(500).send("Archive error");
+    });
   })
 );
+
 router.post(
   "/mongo_restore",
   Auth,
@@ -1410,28 +1445,6 @@ router.post(
       return res.status(200).send("Restore Done sucecssfully..!!");
     }
     return res.status(400).send("Restore Failed..!");
-  })
-);
-router.post(
-  "/download_zip",
-  Auth,
-  rateLimit(60, 10),
-  Async(async (req, res) => {
-    const dumpFolder = path.join(process.cwd(), "dump");
-
-    if (!fs.existsSync(dumpFolder)) {
-      return res.status(404).send("No dump folder found");
-    }
-
-    const files = fs
-      .readdirSync(dumpFolder)
-      .filter((file) => file.endsWith(".json"));
-
-    const response = files.map((file) => ({
-      filename: file,
-      downloadUrl: `/download-json/${file}`,
-    }));
-    return res.status(200).send(response);
   })
 );
 
