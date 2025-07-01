@@ -1396,26 +1396,33 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    let b = await functions.mongoBackup();
-    if (b) {
-      // return res.status(200).send("Backup Done sucecssfully..!!");
-      console.log("Backup done..Entering into downloading segment");
+    const success = await functions.mongoBackup();
+    if (!success) {
+      return res.status(500).send("❌ Mongo backup failed");
     }
+
+    console.log("✅ Backup done.. Entering zipping phase");
+
     const dumpFolderPath = path.join(process.cwd(), "dump");
     const zipFilePath = path.join(process.cwd(), "dump.zip");
+    try {
+      await new Promise((resolve, reject) => {
+        const output = fs.createWriteStream(zipFilePath);
+        const archive = archiver("zip", { zlib: { level: 9 } });
 
-    const output = await fs.createWriteStream(zipFilePath);
-    const archive = archiver("zip", { zlib: { level: 9 } });
+        output.on("close", resolve);
+        archive.on("error", reject);
 
-    archive.pipe(output);
-    archive.directory(dumpFolderPath, false);
-    archive.finalize();
+        archive.pipe(output);
+        archive.directory(dumpFolderPath, false);
+        archive.finalize();
+      });
 
-    // Listen for close event on zip file
-    output.on("close", () => {
+      console.log("✅ Zip created. Starting download...");
+
       res.download(zipFilePath, "mongo_backup.zip", async (err) => {
         if (err) {
-          console.error("❌ Error in download:", err);
+          console.error("❌ Download error:", err);
           return res.status(500).send("Download failed");
         }
 
@@ -1426,12 +1433,10 @@ router.post(
           console.error("❌ Error deleting zip:", unlinkErr);
         }
       });
-    });
-
-    archive.on("error", (err) => {
-      console.error("❌ Archive error:", err);
-      res.status(500).send("Archive error");
-    });
+    } catch (zipErr) {
+      console.error("❌ Archiving error:", zipErr);
+      res.status(500).send("Archiving error");
+    }
   })
 );
 

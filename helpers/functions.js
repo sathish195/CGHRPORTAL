@@ -4,6 +4,7 @@ const mongoFunctions = require("./mongoFunctions");
 const fs = require("fs");
 const path = require("path");
 const { alertDev } = require("./telegram");
+const fsp = require("fs").promises;
 
 module.exports = {
   get_random_string: (str, length, pre_append = false) => {
@@ -206,7 +207,7 @@ module.exports = {
         continue;
       }
 
-      const jsonData = fs.readFileSync(filePath, "utf-8");
+      const jsonData = await fsp.readFileSync(filePath, "utf-8");
       const docs = JSON.parse(jsonData);
 
       if (!Array.isArray(docs) || docs.length === 0) {
