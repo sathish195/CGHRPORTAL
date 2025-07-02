@@ -5,7 +5,7 @@ const redisFunctions = require("./redisFunctions");
 const fs = require("fs");
 const path = require("path");
 const { alertDev } = require("./telegram");
-const axios = require("axios");
+const fsp = require("fs").promises;
 
 module.exports = {
   get_random_string: (str, length, pre_append = false) => {
@@ -174,7 +174,7 @@ module.exports = {
   mongoBackup: async () => {
     const collectionNames = [
       "EMPLOYEE",
-      "ORGANISATIONS ",
+      "ORGANISATIONS",
       "PROJECTS",
       "TASKS",
       "STATS",
@@ -194,10 +194,10 @@ module.exports = {
   mongoRestore: async () => {
     const collectionNames = [
       "EMPLOYEE",
-      "ORGANISATIONS ",
+      "ORGANISATIONS",
       "PROJECTS",
       "TASKS",
-      // "STATS",
+      "STATS",
       "LEAVE",
       "ATTENDANCE",
       "HOLIDAYS",

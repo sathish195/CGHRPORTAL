@@ -16,9 +16,10 @@ const slowDown = require("../../middlewares/slow_down");
 const { alertDev } = require("../../helpers/telegram");
 const multer = require("multer");
 const redisFunctions = require("../../helpers/redisFunctions");
+const archiver = require("archiver");
 const fs = require("fs");
 const path = require("path");
-const archiver = require("archiver");
+const fsp = require("fs").promises;
 
 router.post(
   "/add_update_org_details",
@@ -1616,39 +1617,47 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    let b = await functions.mongoBackup();
-    if (b) {
-      // return res.status(200).send("Backup Done sucecssfully..!!");
-      console.log("Backup done..Entering into downloading segment");
+    const success = await functions.mongoBackup();
+    if (!success) {
+      return res.status(500).send("❌ Mongo backup failed");
     }
+
+    console.log("✅ Backup done.. Entering zipping phase");
+
     const dumpFolderPath = path.join(process.cwd(), "dump");
     const zipFilePath = path.join(process.cwd(), "dump.zip");
+    try {
+      await new Promise((resolve, reject) => {
+        const output = fs.createWriteStream(zipFilePath);
+        const archive = archiver("zip", { zlib: { level: 9 } });
 
-    // Create a zip stream
-    const output = fs.createWriteStream(zipFilePath);
-    const archive = archiver("zip", { zlib: { level: 9 } });
+        output.on("close", resolve);
+        archive.on("error", reject);
 
-    // Pipe archive data to the file
-    archive.pipe(output);
+        archive.pipe(output);
+        archive.directory(dumpFolderPath, false);
+        archive.finalize();
+      });
 
-    archive.directory(dumpFolderPath, false); // Add dump folder contents
-    await archive.finalize(); // Finish zipping
+      console.log("✅ Zip created. Starting download...");
 
-    output.on("close", () => {
-      res.download(zipFilePath, "mongo_backup.zip", (err) => {
+      res.download(zipFilePath, "mongo_backup.zip", async (err) => {
         if (err) {
-          console.error("Error in download:", err);
-          res.status(500).send("Download failed");
-        } else {
-          fs.unlinkSync(zipFilePath); // Optional: cleanup zip after download
+          console.error("❌ Download error:", err);
+          return res.status(500).send("Download failed");
+        }
+
+        try {
+          await fsp.unlink(zipFilePath);
+          console.log("✅ Zip file deleted after download.");
+        } catch (unlinkErr) {
+          console.error("❌ Error deleting zip:", unlinkErr);
         }
       });
-    });
-
-    archive.on("error", (err) => {
-      console.error("Archive error:", err);
-      res.status(500).send("Archive error");
-    });
+    } catch (zipErr) {
+      console.error("❌ Archiving error:", zipErr);
+      res.status(500).send("Archiving error");
+    }
   })
 );
 
@@ -1662,6 +1671,66 @@ router.post(
       return res.status(200).send("Restore Done sucecssfully..!!");
     }
     return res.status(400).send("Restore Failed..!");
+  })
+);
+router.post(
+  "/set_universal_data",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let org = await mongoFunctions.find_one("ORGANISATIONS", {
+      organisation_id: req.employee.organisation_id,
+    });
+    await redis.update_redis("ORGANISATIONS", org);
+    return res
+      .status(200)
+      .send("Universal data stored in redis successfully..!");
+  })
+);
+//mongo backup test
+const { exec } = require("child_process");
+//Using zip command and there are 2 other ways...Node-7z and tar-gz
+router.post(
+  "/mongo_backup_test",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    const success = await functions.mongoBackup();
+    if (!success) {
+      return res.status(500).send(":x: Mongo backup failed");
+    }
+
+    console.log(":white_check_mark: Backup done.. Entering zipping phase");
+
+    const dumpFolderPath = path.join(process.cwd(), "dump");
+    const zipFilePath = path.join(process.cwd(), "mongo_backup.zip");
+    const zipPassword = process.env.ZIP_PASSWORD;
+
+    // Use zip CLI to create password-protected archive
+    const zipCommand = `cd "${process.cwd()}" && zip -r -P "${zipPassword}" "${zipFilePath}" dump`;
+
+    exec(zipCommand, async (err, stdout, stderr) => {
+      if (err) {
+        console.error(":x: Error creating zip:", stderr || err.message);
+        return res.status(500).send("Archiving error");
+      }
+
+      console.log(":white_check_mark: Zip created. Starting download...");
+
+      res.download(zipFilePath, "mongo_backup.zip", async (err) => {
+        if (err) {
+          console.error(":x: Download error:", err);
+          return res.status(500).send("Download failed");
+        }
+
+        try {
+          await fsp.unlink(zipFilePath);
+          console.log(":white_check_mark: Zip file deleted after download.");
+        } catch (unlinkErr) {
+          console.error(":x: Error deleting zip:", unlinkErr);
+        }
+      });
+    });
   })
 );
 
