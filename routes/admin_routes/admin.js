@@ -12,6 +12,7 @@ const { date, func } = require("joi");
 const { RFC_2822 } = require("moment");
 const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
+const moment = require("moment-timezone");
 
 //forgot password  route to reset employee's forgot password
 router.post(
@@ -2112,5 +2113,49 @@ router.post(
       return res.status(400).send("Failed To Delete Checkout");
     }
     return res.status(200).send("Checkout Removed Successfully..!");
+  })
+);
+//add event
+router.post(
+  "/add_event",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    const rawInput = req.body;
+
+    // Validate input
+    const { error, value: data } = validations.add_update_events(rawInput);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // Control access
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Only Director Or Manager Can Add The Event");
+    }
+
+    // Create event object
+    const events_object = {
+      organisation_id: req.employee.organisation_id,
+      event_id: await functions.get_random_string("EVENT", 10, true),
+      title: data.title,
+      description: data.description,
+      date: moment(data.date).toDate(),
+      added_by: {
+        name: `${req.employee.first_name} ${req.employee.last_name}`,
+        employee_id: req.employee.employee_id,
+        email: req.employee.email,
+      },
+    };
+
+    // Insert into DB
+    const event = await mongoFunctions.create_new_record(
+      "EVENTS",
+      events_object
+    );
+
+    return res.status(200).send({
+      message: "Event Added Successfully",
+      event,
+    });
   })
 );

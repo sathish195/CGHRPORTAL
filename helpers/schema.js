@@ -303,6 +303,13 @@ function employee_id(data) {
   });
   return schema.validate(data);
 }
+//common validation
+function event_id(data) {
+  const schema = Joi.object({
+    event_id: Joi.string().min(5).max(20).required(),
+  });
+  return schema.validate(data);
+}
 function add_image(data) {
   const schema = Joi.object({
     image: Joi.string().allow(null, "").optional(),
@@ -814,6 +821,18 @@ function department_tree(data) {
   });
   return schema.validate(data);
 }
+function add_update_events(data) {
+  const schema = Joi.object({
+    title: Joi.string().trim().min(3).max(70).required(),
+    description: Joi.string().trim().min(10).max(500).required(),
+    date: Joi.date().iso().required().messages({
+      "date.base": "Date must be a valid ISO 8601 date",
+      "date.format": "Date must be in ISO 8601 format",
+    }),
+  });
+
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -863,4 +882,6 @@ module.exports = {
   add_update_admin_controls,
   skipLimit,
   department_tree,
+  add_update_events,
+  event_id,
 };

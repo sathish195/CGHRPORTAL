@@ -1028,5 +1028,73 @@ router.post(
     return res.status(200).send([count]);
   })
 );
+//get events
+router.post(
+  "/events",
+  Auth,
+  Async(async (req, res) => {
+    const data = req.body;
+
+    // Validate input
+    var { error } = validations.skipLimit(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    //control access
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Only Director Or Manager Can Add The Event");
+    }
+
+    // find_events
+    const find_events = await mongoFunctions.lazy_loading(
+      "EVENTS",
+      { organisation_id: req.employee.organisation_id },
+      // Sort by latest
+      {},
+      { createdAt: -1 },
+      data.limit,
+      data.skip
+    );
+
+    return res.status(200).send({
+      events: find_events,
+    });
+  })
+);
+//find event by id
+
+router.post(
+  "/event_by_id",
+  Auth,
+  Async(async (req, res) => {
+    let data = req.body;
+    var { error } = validations.event_id(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director Or Manager Can Access Employee");
+    }
+
+    let event = await mongoFunctions.find_one(
+      "EVENTS",
+      {
+        organisation_id: req.employee.organisation_id,
+        event_id: data.event_id,
+      },
+      {
+        _id: 0,
+        __v: 0,
+      }
+    );
+    if (!event) {
+      return res.status(400).send("No Event Found");
+    }
+
+    return res.status(200).send({ event: event });
+  })
+);
 
 module.exports = router;

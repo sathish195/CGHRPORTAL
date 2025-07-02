@@ -8,7 +8,7 @@ const { alertDev } = require("./telegram");
 const fsp = require("fs").promises;
 
 module.exports = {
-  get_random_string: (str, length, pre_append = false) => {
+  get_random_string: async (str, length, pre_append = false) => {
     if (str === "0")
       return crypto
         .randomBytes(Number(length / 2))
