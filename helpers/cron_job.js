@@ -1,17 +1,26 @@
 const cron = require("node-cron");
 const mongoFunctions = require("./mongoFunctions");
 const { alertDev } = require("./telegram");
+//
 const functions = require("./functions");
 const { checkPreferences } = require("joi");
 const { calculate_working_minutes } = require("./stats");
-
+const moment = require("moment-timezone");
 const getCurrentDayRange = () => {
-  const now = new Date();
+  const now = moment().tz("Asia/Kolkata");
   return {
-    start: new Date(now.setHours(0, 0, 0, 0)),
-    end: new Date(now.setHours(23, 59, 59, 999)),
+    start: now.startOf("day").toDate(),
+    end: now.endOf("day").toDate(),
   };
 };
+
+// const getCurrentDayRange = () => {
+//   const now = new Date();
+//   return {
+//     start: new Date(now.setHours(0, 0, 0, 0)),
+//     end: new Date(now.setHours(23, 59, 59, 999)),
+//   };
+// };
 
 const createAttendanceRecords = async (employees, status = "") => {
   const activeEmployees = employees.filter(
@@ -73,7 +82,7 @@ const createHolidayRecords = async (
 const updateAttendanceStatus = async () => {
   const { start, end } = getCurrentDayRange();
   const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
-    createdAt: { $gt: start, $lte: end },
+    createdAt: { $gte: start, $lte: end },
   });
   const employees = await mongoFunctions.find("EMPLOYEE");
   const activeEmployees = employees.filter(
@@ -102,7 +111,7 @@ const updateAttendanceStatus = async () => {
 const updateStatusInWeekends = async () => {
   const { start, end } = getCurrentDayRange();
   const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
-    createdAt: { $gt: start, $lte: end },
+    createdAt: { $gte: start, $lte: end },
   });
   const employees = await mongoFunctions.find("EMPLOYEE");
   const activeEmployees = employees.filter(
@@ -133,7 +142,7 @@ const updateStatusOfNotCheckouts = async () => {
 
     // Fetch attendance records for the current day
     const attendanceRecords = await mongoFunctions.find("ATTENDANCE", {
-      createdAt: { $gt: start, $lte: end },
+      createdAt: { $gte: start, $lte: end },
     });
 
     // Fetch the list of employees
@@ -196,7 +205,7 @@ const updateStatusOfNotCheckouts = async () => {
 const updateStatusBasedOnHolidays = async () => {
   const { start, end } = getCurrentDayRange();
   const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
-    createdAt: { $gt: start, $lte: end },
+    createdAt: { $gte: start, $lte: end },
   });
   const employees = await mongoFunctions.find("EMPLOYEE");
   const holidays = await mongoFunctions.find("HOLIDAYS");
@@ -243,7 +252,7 @@ const updateStatusBasedOnHolidays = async () => {
 const updateStatusOfNotCheckins = async () => {
   const { start, end } = getCurrentDayRange();
   const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
-    createdAt: { $gt: start, $lte: end },
+    createdAt: { $gte: start, $lte: end },
   });
 
   // Fetch the list of employees
@@ -289,7 +298,6 @@ const updateStatusOfNotCheckins = async () => {
   // Await all updates to complete
   await Promise.all(updates);
 };
-
 // Scheduling cron jobs
 cron.schedule(
   "30 9 * * 1-5",
