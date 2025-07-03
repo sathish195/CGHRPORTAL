@@ -113,6 +113,10 @@ module.exports = {
   count_documents: async (collection, condition = {}) => {
     return await eval(collection).countDocuments(condition);
   },
+  distinct: async (collection, field, condition = {}) => {
+    return await eval(collection).distinct(field, condition);
+  },
+
   download_collection: async (collection) => {
     return await eval(collection)
       .find({})

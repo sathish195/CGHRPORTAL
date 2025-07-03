@@ -838,6 +838,11 @@ function get_events(data) {
   const schema = Joi.object({
     skip: Joi.number().required(),
     limit: Joi.number().required(),
+    date: Joi.date().iso().required().allow("", null).messages({
+      "date.base": "Date must be a valid ISO 8601 date",
+      "date.format": "Date must be in ISO 8601 format",
+    }),
+    type: Joi.string().required().allow("", null),
   });
   return schema.validate(data);
 }
@@ -892,4 +897,5 @@ module.exports = {
   department_tree,
   add_update_events,
   event_id,
+  get_events,
 };

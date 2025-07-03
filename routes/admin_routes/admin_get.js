@@ -1035,34 +1035,63 @@ router.post(
   Async(async (req, res) => {
     const data = req.body;
 
-    // Validate input
-    var { error } = validations.skipLimit(data);
+    // Validate limit & skip
+    const { error } = validations.get_events(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    //control access
+    // Access control
     const admin_types = ["1", "2"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res.status(403).send("Only Director Or Manager Can Add The Event");
     }
 
-    // find_events
+    // Base filter
+    const filters = {
+      organisation_id: req.employee.organisation_id,
+    };
+
+    // ✅ Add date filter only if date is not null or empty string
+    if (data.date && data.date !== "") {
+      const startOfDay = new Date(data.date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(data.date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      filters.date = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
+
+    // ✅ Add type filter only if type is not null or empty string
+    if (data.type && data.type !== "") {
+      filters.type = data.type.toLowerCase();
+    }
+
+    // Fetch filtered events
     const find_events = await mongoFunctions.lazy_loading(
       "EVENTS",
-      { organisation_id: req.employee.organisation_id },
-      // Sort by latest
+      filters,
       {},
       { createdAt: -1 },
       data.limit,
       data.skip
     );
-    const uniqueTypes = [...new Set(find_events.map((event) => event.type))];
 
+    // Extract unique event types
+    const event_types = await mongoFunctions.distinct("EVENTS", "type", {
+      organisation_id: req.employee.organisation_id,
+    });
+
+    // Return result
     return res.status(200).send({
       events: find_events,
-      event_types: uniqueTypes,
+      event_types: event_types,
     });
   })
 );
+
 //find event by id
 
 router.post(
