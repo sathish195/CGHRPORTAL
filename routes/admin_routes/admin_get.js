@@ -1083,11 +1083,15 @@ router.post(
     const event_types = await mongoFunctions.distinct("EVENTS", "type", {
       organisation_id: req.employee.organisation_id,
     });
+    const count = await mongoFunctions.count_documents("EVENTS", {
+      organisation_id: req.employee.organisation_id,
+    });
 
     // Return result
     return res.status(200).send({
       events: find_events,
       event_types: event_types,
+      count: count,
     });
   })
 );
