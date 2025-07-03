@@ -8,6 +8,7 @@ const events_schema = new mongoose.Schema(
     description: { type: String, required: true },
     date: { type: Date, required: true },
     added_by: { type: Object, default: {} },
+    type: { type: String, required: true },
   },
   { timestamps: true }
 );

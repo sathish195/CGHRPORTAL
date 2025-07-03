@@ -2145,6 +2145,7 @@ router.post(
         employee_id: req.employee.employee_id,
         email: req.employee.email,
       },
+      type: data.type,
     };
 
     // Insert into DB

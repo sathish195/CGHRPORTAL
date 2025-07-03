@@ -829,8 +829,16 @@ function add_update_events(data) {
       "date.base": "Date must be a valid ISO 8601 date",
       "date.format": "Date must be in ISO 8601 format",
     }),
+    type: Joi.string().trim().min(2).max(20).required(),
   });
 
+  return schema.validate(data);
+}
+function get_events(data) {
+  const schema = Joi.object({
+    skip: Joi.number().required(),
+    limit: Joi.number().required(),
+  });
   return schema.validate(data);
 }
 

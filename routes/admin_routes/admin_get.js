@@ -1055,9 +1055,11 @@ router.post(
       data.limit,
       data.skip
     );
+    const uniqueTypes = [...new Set(find_events.map((event) => event.type))];
 
     return res.status(200).send({
       events: find_events,
+      event_types: uniqueTypes,
     });
   })
 );
