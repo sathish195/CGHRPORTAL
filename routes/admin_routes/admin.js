@@ -2136,7 +2136,7 @@ router.post(
     // Create event object
     const events_object = {
       organisation_id: req.employee.organisation_id,
-      event_id: await functions.get_random_string("EVENT", 10, true),
+      event_id: functions.get_random_string("EVENT", 10, true),
       title: data.title,
       description: data.description,
       date: moment(data.date).toDate(),
@@ -2156,7 +2156,139 @@ router.post(
 
     return res.status(200).send({
       message: "Event Added Successfully",
-      event,
+      event: event,
     });
+  })
+);
+//add leads
+
+//add event
+// Add or update lead
+router.post(
+  "/add_update_lead",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    const rawInput = req.body;
+
+    // Validate input
+    const { error, value: data } = validations.add_leads(rawInput);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // Access control
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director Or Manager Can Add or Update Leads");
+    }
+
+    // Construct lead data
+    const lead_object = {
+      organisation_id: req.employee.organisation_id,
+      lead_name: data.lead_name.toLowerCase(),
+      email: data.email.toLowerCase(),
+      company: data.company.toLowerCase(),
+      status: data.status.toLowerCase(),
+      assigned_to: data.assigned_to,
+      next_follow_up: moment(data.next_follow_up).toDate(),
+      added_by: {
+        name: `${req.employee.first_name} ${req.employee.last_name}`,
+        employee_id: req.employee.employee_id,
+        email: req.employee.email,
+      },
+    };
+
+    let lead;
+
+    if (data.lead_id && data.lead_id.length > 2) {
+      // 🔍 Fetch existing lead
+      const existing_lead = await mongoFunctions.find_one("LEADS", {
+        lead_id: data.lead_id,
+        organisation_id: req.employee.organisation_id,
+      });
+
+      if (!existing_lead) {
+        return res.status(404).send("Lead not found for update");
+      }
+
+      // Extract current and new assigned employee IDs
+      const old_emp_ids = existing_lead.assigned_to.map((e) => e.employee_id);
+      const new_emp_ids = data.assigned_to.map((e) => e.employee_id);
+
+      const isSameSet =
+        old_emp_ids.length === new_emp_ids.length &&
+        old_emp_ids.every((employee_id) => new_emp_ids.includes(employee_id));
+
+      if (!isSameSet) {
+        // 1. Find duplicate IDs between new and old
+        let duplicate_ids = new_emp_ids.filter((employee_id) =>
+          old_emp_ids.includes(employee_id)
+        );
+
+        // 2. Deduplicate the list (ensure unique employee_id)
+        duplicate_ids = [...new Set(duplicate_ids)];
+
+        // 3. Format with name (Name (ID))
+        const duplicate_with_names = duplicate_ids.map((id) => {
+          const emp = data.assigned_to.find((e) => e.employee_id === id);
+          return `${emp?.employee_name || "Unknown"} (${id})`;
+        });
+
+        // 4. Throw error if duplicates found
+        if (duplicate_with_names.length > 0) {
+          return res
+            .status(400)
+            .send(
+              `Employee(s) already assigned: ${duplicate_with_names.join(", ")}`
+            );
+        }
+
+        // ✅ Continue with update if no conflict
+        lead = await mongoFunctions.find_one_and_update(
+          "LEADS",
+          {
+            lead_id: data.lead_id,
+            organisation_id: req.employee.organisation_id,
+          },
+          { $set: lead_object }
+        );
+
+        if (!lead.matchedCount) {
+          return res.status(404).send("Lead not found during update");
+        }
+
+        return res.status(200).send({
+          message: "Lead Updated Successfully",
+          lead: lead,
+        });
+      }
+
+      //proceed with update
+      lead = await mongoFunctions.find_one_and_update(
+        "LEADS",
+        {
+          lead_id: data.lead_id,
+          organisation_id: req.employee.organisation_id,
+        },
+        { $set: lead_object }
+      );
+
+      return res.status(200).send({
+        message: "Lead Updated Successfully",
+        lead: lead,
+      });
+    } else {
+      // ➕ Create new lead
+      const new_lead_id = functions.get_random_string("LEAD", 10, true);
+      lead_object.lead_id = new_lead_id;
+
+      lead = await mongoFunctions.create_new_record("LEADS", lead_object);
+
+      return res.status(200).send({
+        message: "Lead Added Successfully",
+        lead: lead,
+      });
+    }
   })
 );

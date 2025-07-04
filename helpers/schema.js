@@ -846,6 +846,33 @@ function get_events(data) {
   });
   return schema.validate(data);
 }
+function add_leads(data) {
+  const schema = Joi.object({
+    lead_id: Joi.string().trim().optional().allow("", null),
+    lead_name: Joi.string().trim().min(2).max(30).required(),
+    email: Joi.string()
+      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+      .trim()
+      .min(10)
+      .max(55)
+      .email()
+      .messages({
+        "string.pattern.base": "Email Should be valid mail",
+      })
+      .required(),
+    company: Joi.string().trim().min(2).max(50).required(),
+    status: Joi.string()
+      .trim()
+      .valid("new", "in_progress", "under_review", "completed")
+      .required(),
+    assigned_to: Joi.array().required(),
+    next_follow_up: Joi.date().iso().required().allow("", null).messages({
+      "date.base": "Date must be a valid ISO 8601 date",
+      "date.format": "Date must be in ISO 8601 format",
+    }),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -898,4 +925,5 @@ module.exports = {
   add_update_events,
   event_id,
   get_events,
+  add_leads,
 };

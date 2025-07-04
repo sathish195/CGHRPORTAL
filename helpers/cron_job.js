@@ -7,7 +7,7 @@ const { checkPreferences } = require("joi");
 const { calculate_working_minutes } = require("./stats");
 const moment = require("moment-timezone");
 const getCurrentDayRange = () => {
-  const now = moment().tz("Asia/Kolkata"); 
+  const now = moment().tz("Asia/Kolkata");
   return {
     start: now.startOf("day").toDate(),
     end: now.endOf("day").toDate(),

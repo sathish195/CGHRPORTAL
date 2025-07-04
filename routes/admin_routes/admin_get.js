@@ -1131,5 +1131,42 @@ router.post(
     return res.status(200).send({ event: event });
   })
 );
+//get_leads
+router.post(
+  "/leads",
+  Auth,
+  Async(async (req, res) => {
+    const data = req.body;
+
+    // Validate limit & skip
+    const { error } = validations.skipLimit(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // Access control
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Only Director Or Manager Can View Leads");
+    }
+
+    // Base filter: only by organisation
+    const filters = {
+      organisation_id: req.employee.organisation_id,
+    };
+
+    // Fetch paginated leads
+    const leads = await mongoFunctions.lazy_loading(
+      "LEADS",
+      filters,
+      {},
+      { createdAt: -1 },
+      data.limit,
+      data.skip
+    );
+
+    return res.status(200).send({
+      leads: leads,
+    });
+  })
+);
 
 module.exports = router;
