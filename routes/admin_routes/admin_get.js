@@ -1139,7 +1139,7 @@ router.post(
     const data = req.body;
 
     // Validate limit & skip
-    const { error } = validations.skipLimit(data);
+    const { error } = validations.get_leads(data);
     if (error) return res.status(400).send(error.details[0].message);
 
     // Access control
@@ -1152,6 +1152,10 @@ router.post(
     const filters = {
       organisation_id: req.employee.organisation_id,
     };
+    // ✅ Add status filter only if type is not null or empty string
+    if (data.status && data.status !== "") {
+      filters.status = data.status.toLowerCase();
+    }
 
     // Fetch paginated leads
     const leads = await mongoFunctions.lazy_loading(

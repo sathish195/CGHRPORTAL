@@ -863,13 +863,45 @@ function add_leads(data) {
     company: Joi.string().trim().min(2).max(50).required(),
     status: Joi.string()
       .trim()
-      .valid("new", "contacted", "interested", "qualified","in_progress","booked","not_interested","no_response","on_hold")
+      .valid(
+        "new",
+        "contacted",
+        "interested",
+        "qualified",
+        "in_progress",
+        "booked",
+        "not_interested",
+        "no_response",
+        "on_hold"
+      )
       .required(),
     assigned_to: Joi.array().required(),
     next_follow_up: Joi.date().iso().required().allow("", null).messages({
       "date.base": "Date must be a valid ISO 8601 date",
       "date.format": "Date must be in ISO 8601 format",
     }),
+  });
+  return schema.validate(data);
+}
+function get_leads(data) {
+  const schema = Joi.object({
+    skip: Joi.number().required(),
+    limit: Joi.number().required(),
+    status: Joi.string()
+      .trim()
+      .valid(
+        "new",
+        "contacted",
+        "interested",
+        "qualified",
+        "in_progress",
+        "booked",
+        "not_interested",
+        "no_response",
+        "on_hold"
+      )
+      .optional()
+      .allow("", null),
   });
   return schema.validate(data);
 }
@@ -926,4 +958,5 @@ module.exports = {
   event_id,
   get_events,
   add_leads,
+  get_leads,
 };
