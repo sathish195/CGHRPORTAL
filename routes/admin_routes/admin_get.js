@@ -1166,9 +1166,13 @@ router.post(
       data.limit,
       data.skip
     );
+    const count = await mongoFunctions.count_documents("LEADS", {
+      organisation_id: req.employee.organisation_id,
+    });
 
     return res.status(200).send({
       leads: leads,
+      count: count,
     });
   })
 );
