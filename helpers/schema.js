@@ -863,7 +863,7 @@ function add_leads(data) {
     company: Joi.string().trim().min(2).max(50).required(),
     status: Joi.string()
       .trim()
-      .valid("new", "in_progress", "under_review", "completed")
+      .valid("new", "contacted", "interested", "qualified","in_progress","booked","not_interested","no_response","on_hold")
       .required(),
     assigned_to: Joi.array().required(),
     next_follow_up: Joi.date().iso().required().allow("", null).messages({
