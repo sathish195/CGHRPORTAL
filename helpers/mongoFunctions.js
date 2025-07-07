@@ -12,6 +12,7 @@ const { ADMIN_STATS } = require("../models/stats");
 const { EVENTS } = require("../models/add_events");
 const { LEADS } = require("../models/leads");
 const { TEMPLATES } = require("../models/templates");
+const { EMAILS } = require("../models/emails");
 const fs = require("fs");
 const path = require("path");
 const { alertDev } = require("./telegram");

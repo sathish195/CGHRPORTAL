@@ -913,11 +913,56 @@ function add_update_delete_templates(data) {
   const schema = Joi.object({
     type: Joi.string().trim().min(3).max(50).required(),
     headline: Joi.string().trim().min(3).max(100).required(),
-    subject: Joi.string().trim().min(3).max(50).required(),
+    subject: Joi.string().trim().min(3).max(500).required(),
     route_action: Joi.number()
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
       .required(),
     template_id: Joi.string().optional().allow("", null),
+  });
+  return schema.validate(data);
+}
+function send_email_data(data) {
+  const fileSchema = Joi.object({
+    filename: Joi.string().required(),
+    content: Joi.string()
+      .pattern(/^data:.*;base64,[a-zA-Z0-9+/=]+$/)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "File content must be a valid base64-encoded string with data URI.",
+      }),
+    contentType: Joi.string().optional(),
+  });
+  const schema = Joi.object({
+    to: Joi.string()
+      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+      .trim()
+      .min(10)
+      .max(55)
+      .email()
+      .messages({
+        "string.pattern.base": " To Email Should be valid mail",
+      })
+      .required(),
+    cc: Joi.string()
+      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+      .trim()
+      .min(10)
+      .max(55)
+      .email()
+      .messages({
+        "string.pattern.base": " CC Email Should be valid mail",
+      })
+      .required(),
+    subject: Joi.string().trim().required(),
+    link_to_record: Joi.string().trim().required(),
+    message: Joi.string().required(),
+    files: Joi.alternatives()
+      .try(
+        fileSchema, // single file object
+        Joi.array().items(fileSchema) // array of file objects
+      )
+      .optional(),
   });
   return schema.validate(data);
 }
@@ -976,4 +1021,5 @@ module.exports = {
   add_leads,
   get_leads,
   add_update_delete_templates,
+  send_email_data,
 };

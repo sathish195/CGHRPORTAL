@@ -13,6 +13,7 @@ const { RFC_2822 } = require("moment");
 const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const moment = require("moment-timezone");
+const Nodemailer = require("nodemailer");
 
 //forgot password  route to reset employee's forgot password
 router.post(
@@ -2403,5 +2404,107 @@ router.post(
     return res
       .status(400)
       .send("Invalid action type. Must be 1 (add), 2 (update), or 3 (delete)");
+  })
+);
+//send email by admin
+
+router.post(
+  "/compose_email",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    const rawInput = req.body;
+
+    // 1. Validate input
+    const { error, value: data } = validations.send_email_data(rawInput);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // 2. Access control
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Only Director or Manager can compose email");
+    }
+
+    // 3. Convert base64 files to Nodemailer attachments
+    const attachments = (data.files || [])
+      .filter((file) => file.content && file.content.includes("base64,"))
+      .map((file) => {
+        const base64Data = file.content.split("base64,")[1];
+        return {
+          filename: file.filename,
+          content: Buffer.from(base64Data, "base64"),
+          contentType: file.contentType || "application/octet-stream",
+        };
+      });
+
+    // 4. Configure transporter
+    const transporter = Nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "bhavanapriyanagella123@gmail.com",
+        pass: "xpwj ahrw mzyp gzpw", // Make sure to use app password, NOT Gmail login
+      },
+    });
+
+    // 5. Prepare mail content
+    const mailOptions = {
+      from: "bhavanapriyanagella123@gmail.com",
+      to: data.to,
+      cc: data.cc || undefined,
+      subject: data.subject,
+      html: `<p>${data.message}</p>`,
+      ...(attachments.length > 0 && { attachments }),
+    };
+
+    try {
+      // 6. Send the email
+      await transporter.sendMail(mailOptions);
+
+      // 7. Save success to DB
+      const email_data = {
+        email_id: functions.get_random_string("EMAIL", 10, true),
+        organisation_id: req.employee.organisation_id,
+        to: data.to,
+        from: "bhavanapriyanagella123@gmail.com",
+        cc: data.cc,
+        subject: data.subject,
+        link_to_record: data.link_to_record,
+        message: data.message,
+        files: data.files || [],
+        sent_by: {
+          employee_id: req.employee.employee_id,
+          name: `${req.employee.first_name} ${req.employee.last_name}`.trim(),
+          email: req.employee.email,
+        },
+        status: "SUCCESS",
+      };
+
+      await mongoFunctions.create_new_record("EMAILS", email_data);
+      return res.status(200).send("Email Sent Successfully!");
+    } catch (err) {
+      console.error("EMAIL SEND ERROR:", err.message);
+
+      // 8. Save failure to DB
+      const email_data = {
+        email_id: functions.get_random_string("EMAIL", 10, true),
+        organisation_id: req.employee.organisation_id,
+        to: data.to,
+        from: "bhavanapriyanagella123@gmail.com",
+        link_to_record: data.link_to_record,
+        cc: data.cc,
+        subject: data.subject,
+        message: data.message,
+        files: data.files || [],
+        sent_by: {
+          employee_id: req.employee.employee_id,
+          name: `${req.employee.first_name} ${req.employee.last_name}`.trim(),
+          email: req.employee.email,
+        },
+        status: "FAILED",
+      };
+
+      await mongoFunctions.create_new_record("EMAILS", email_data);
+      return res.status(500).send(`Failed to send email: ${err.message}`);
+    }
   })
 );
