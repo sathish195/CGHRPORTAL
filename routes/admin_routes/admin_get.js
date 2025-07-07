@@ -1185,6 +1185,7 @@ router.post(
 
     return res.status(200).send({
       leads: leads,
+      leads_count: leads.count,
       count: count,
     });
   })

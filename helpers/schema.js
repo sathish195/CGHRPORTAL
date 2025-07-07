@@ -909,6 +909,23 @@ function get_leads(data) {
   });
   return schema.validate(data);
 }
+function add_update_delete_templates(data) {
+  const schema = Joi.object({
+    type: Joi.string().trim().min(3).max(50).required(),
+    headline: Joi.string().trim().min(3).max(100).required(),
+    subject: Joi.string().trim().min(3).max(50).required(),
+    route_action: Joi.number()
+      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
+      .required()
+      .messages({
+        "any.required": "Type is required",
+        "number.base": "Type must be a number",
+        "any.only": "Type must be one of [1, 2, 3]",
+      }),
+    template_id: Joi.string().optional().allow("", null),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -963,4 +980,5 @@ module.exports = {
   get_events,
   add_leads,
   get_leads,
+  add_update_delete_templates
 };

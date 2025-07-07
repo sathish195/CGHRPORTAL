@@ -2263,21 +2263,6 @@ router.post(
           lead: lead,
         });
       }
-
-      //proceed with update
-      lead = await mongoFunctions.find_one_and_update(
-        "LEADS",
-        {
-          lead_id: data.lead_id,
-          organisation_id: req.employee.organisation_id,
-        },
-        { $set: lead_object }
-      );
-
-      return res.status(200).send({
-        message: "Lead Updated Successfully",
-        lead: lead,
-      });
     } else {
       // ➕ Create new lead
       const new_lead_id = functions.get_random_string("LEAD", 10, true);
@@ -2290,5 +2275,119 @@ router.post(
         lead: lead,
       });
     }
+  })
+);
+//---------------------------------------------Email functionality-------------------------------------------------------
+// Add, Update, Delete Template Route
+router.post(
+  "/template_action",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    const rawInput = req.body;
+
+    // Validate input
+    const { error, value: data } =
+      validations.add_update_delete_templates(rawInput);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // Access control
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director or Manager can add, update, or delete templates");
+    }
+
+    const type = data.type.toString(); // Ensure it's string for consistent comparison
+
+    // Prepare template object
+    const template_object = {
+      organisation_id: req.employee.organisation_id,
+      type: data.type.toLowerCase(),
+      headline: data.headline.toLowerCase(),
+      subject: data.subject.toLowerCase(),
+      added_by: {
+        name: `${req.employee.first_name} ${req.employee.last_name}`,
+        employee_id: req.employee.employee_id,
+        email: req.employee.email,
+      },
+    };
+
+    // 🔁 Update
+    if (type === "2") {
+      if (!data.template_id || data.template_id.length < 3) {
+        return res.status(400).send("Template ID is required for update");
+      }
+
+      const existing_template = await mongoFunctions.find_one("TEMPLATES", {
+        template_id: data.template_id,
+        organisation_id: req.employee.organisation_id,
+      });
+
+      if (!existing_template) {
+        return res.status(404).send("Template not found for update");
+      }
+
+      const result = await mongoFunctions.find_one_and_update(
+        "TEMPLATES",
+        {
+          template_id: data.template_id,
+          organisation_id: req.employee.organisation_id,
+        },
+        { $set: template_object }
+      );
+
+      if (!result.matchedCount) {
+        return res.status(404).send("Template not found during update");
+      }
+
+      return res.status(200).send({
+        message: "Template Updated Successfully",
+        template: result,
+      });
+    }
+
+    // 🗑️ Delete
+    if (type === "3") {
+      if (!data.template_id || data.template_id.length < 3) {
+        return res.status(400).send("Template ID is required for deletion");
+      }
+
+      const delete_result = await mongoFunctions.delete_one("TEMPLATES", {
+        template_id: data.template_id,
+        organisation_id: req.employee.organisation_id,
+      });
+
+      if (delete_result.deletedCount === 0) {
+        return res.status(404).send("Template not found for deletion");
+      }
+
+      return res.status(200).send({
+        message: "Template Deleted Successfully",
+        template_id: data.template_id,
+      });
+    }
+
+    // ➕ Create
+    if (type === "1") {
+      const new_template_id = functions.get_random_string("TEM", 10, true);
+      template_object.template_id = new_template_id;
+
+      const template = await mongoFunctions.create_new_record(
+        "TEMPLATES",
+        template_object
+      );
+
+      return res.status(200).send({
+        message: "Template Added Successfully",
+        template: template,
+      });
+    }
+
+    // 🚫 Invalid type
+    return res
+      .status(400)
+      .send("Invalid action type. Must be 1 (add), 2 (update), or 3 (delete)");
   })
 );
