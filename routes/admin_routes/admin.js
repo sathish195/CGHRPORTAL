@@ -2285,7 +2285,6 @@ router.post(
   rateLimit(60, 10),
   Async(async (req, res) => {
     const rawInput = req.body;
-
     // Validate input
     const { error, value: data } =
       validations.add_update_delete_templates(rawInput);
@@ -2299,7 +2298,7 @@ router.post(
         .send("Only Director or Manager can add, update, or delete templates");
     }
 
-    const type = data.type.toString(); // Ensure it's string for consistent comparison
+    const type = data.route_action.toString(); // Ensure it's string for consistent comparison
 
     // Prepare template object
     const template_object = {
@@ -2320,15 +2319,6 @@ router.post(
         return res.status(400).send("Template ID is required for update");
       }
 
-      const existing_template = await mongoFunctions.find_one("TEMPLATES", {
-        template_id: data.template_id,
-        organisation_id: req.employee.organisation_id,
-      });
-
-      if (!existing_template) {
-        return res.status(404).send("Template not found for update");
-      }
-
       const result = await mongoFunctions.find_one_and_update(
         "TEMPLATES",
         {
@@ -2338,7 +2328,7 @@ router.post(
         { $set: template_object }
       );
 
-      if (!result.matchedCount) {
+      if (!result) {
         return res.status(404).send("Template not found during update");
       }
 
@@ -2354,10 +2344,13 @@ router.post(
         return res.status(400).send("Template ID is required for deletion");
       }
 
-      const delete_result = await mongoFunctions.delete_one("TEMPLATES", {
-        template_id: data.template_id,
-        organisation_id: req.employee.organisation_id,
-      });
+      const delete_result = await mongoFunctions.find_one_and_delete(
+        "TEMPLATES",
+        {
+          template_id: data.template_id,
+          organisation_id: req.employee.organisation_id,
+        }
+      );
 
       if (delete_result.deletedCount === 0) {
         return res.status(404).send("Template not found for deletion");

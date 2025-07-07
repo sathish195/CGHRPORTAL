@@ -916,12 +916,7 @@ function add_update_delete_templates(data) {
     subject: Joi.string().trim().min(3).max(50).required(),
     route_action: Joi.number()
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
-      .required()
-      .messages({
-        "any.required": "Type is required",
-        "number.base": "Type must be a number",
-        "any.only": "Type must be one of [1, 2, 3]",
-      }),
+      .required(),
     template_id: Joi.string().optional().allow("", null),
   });
   return schema.validate(data);
@@ -980,5 +975,5 @@ module.exports = {
   get_events,
   add_leads,
   get_leads,
-  add_update_delete_templates
+  add_update_delete_templates,
 };
