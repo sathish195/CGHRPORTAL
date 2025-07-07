@@ -2298,7 +2298,7 @@ router.post(
         .send("Only Director or Manager can add, update, or delete templates");
     }
 
-    const type = data.route_action.toString(); // Ensure it's string for consistent comparison
+    const type = data.route_action.toString();
 
     // Prepare template object
     const template_object = {
@@ -2317,6 +2317,17 @@ router.post(
     if (type === "2") {
       if (!data.template_id || data.template_id.length < 3) {
         return res.status(400).send("Template ID is required for update");
+      }
+      // Check if the headline already exists on another template
+      const existingHeadline = await mongoFunctions.find_one("TEMPLATES", {
+        organisation_id: req.employee.organisation_id,
+        headline: data.headline.toLowerCase(),
+        template_id: { $ne: data.template_id },
+      });
+      if (existingHeadline) {
+        return res
+          .status(400)
+          .send("Another template with this headline already exists.");
       }
 
       const result = await mongoFunctions.find_one_and_update(
@@ -2364,6 +2375,16 @@ router.post(
 
     // ➕ Create
     if (type === "1") {
+      // Check for headline uniqueness
+      const headlineExists = await mongoFunctions.find_one("TEMPLATES", {
+        organisation_id: req.employee.organisation_id,
+        headline: data.headline.toLowerCase(),
+      });
+      if (headlineExists) {
+        return res
+          .status(400)
+          .send("A template with this headline already exists.");
+      }
       const new_template_id = functions.get_random_string("TEM", 10, true);
       template_object.template_id = new_template_id;
 

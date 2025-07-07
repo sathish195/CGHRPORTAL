@@ -1204,4 +1204,49 @@ router.post(
   })
 );
 
+//get templates
+
+router.post(
+  "/templates",
+  Auth,
+  Async(async (req, res) => {
+    const data = req.body;
+
+    // Validate limit & skip
+    const { error } = validations.skipLimit(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // Access control
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Only Director Or Manager Can View Leads");
+    }
+
+    // Base filter: only by organisation
+    const filters = {
+      organisation_id: req.employee.organisation_id,
+    };
+    
+    // Fetch paginated leads
+    const templates = await mongoFunctions.lazy_loading(
+      "TEMPLATES",
+      filters,
+      {},
+      { createdAt: -1 },
+      data.limit,
+      data.skip
+    );
+    
+    const count = await mongoFunctions.count_documents("TEMPLATES", {
+      organisation_id: req.employee.organisation_id,
+    });
+
+    return res.status(200).send({
+      templates: templates,
+      count: count,
+    });
+  })
+);
+
+
 module.exports = router;
