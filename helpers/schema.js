@@ -887,6 +887,10 @@ function get_leads(data) {
   const schema = Joi.object({
     skip: Joi.number().required(),
     limit: Joi.number().required(),
+    date: Joi.date().iso().optional().allow("", null).messages({
+      "date.base": "Date must be a valid ISO 8601 date",
+      "date.format": "Date must be in ISO 8601 format",
+    }),
     status: Joi.string()
       .trim()
       .valid(

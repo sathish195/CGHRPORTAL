@@ -1156,6 +1156,19 @@ router.post(
     if (data.status && data.status !== "") {
       filters.status = data.status.toLowerCase();
     }
+    // ✅ Add date filter only if date is not null or empty string
+    if (data.date && data.date !== "") {
+      const startOfDay = new Date(data.date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(data.date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      filters.next_follow_up = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
 
     // Fetch paginated leads
     const leads = await mongoFunctions.lazy_loading(
