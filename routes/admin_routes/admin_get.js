@@ -1179,13 +1179,19 @@ router.post(
       data.limit,
       data.skip
     );
+    const leads_count = await mongoFunctions.lazy_loading(
+      "LEADS",
+      filters,
+      {},
+      { createdAt: -1 }
+    );
     const count = await mongoFunctions.count_documents("LEADS", {
       organisation_id: req.employee.organisation_id,
     });
 
     return res.status(200).send({
       leads: leads,
-      leads_count: leads.count,
+      leads_count: leads_count,
       count: count,
     });
   })
