@@ -2364,7 +2364,7 @@ router.post(
         }
       );
 
-      if (delete_result.deletedCount === 0) {
+      if (!delete_result) {
         return res.status(404).send("Template not found for deletion");
       }
 

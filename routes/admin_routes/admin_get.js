@@ -13,6 +13,8 @@ const slowDown = require("../../middlewares/slow_down");
 const { includes } = require("underscore");
 const { alertDev } = require("../../helpers/telegram");
 const functions = require("../../helpers/functions");
+const Imap = require("imap");
+const { simpleParser } = require("mailparser");
 
 //get employee list
 
@@ -1287,6 +1289,87 @@ router.post(
       emails: emails,
       count: count,
     });
+  })
+);
+//route to get inbox emails
+router.post(
+  "/inbox_emails",
+  Auth,
+  Async(async (req, res) => {
+    const imapConfig = {
+      user: "bhavanapriyanagella123@gmail.com",
+      password: "your-app-password", 
+      host: "imap.gmail.com",
+      port: 993,
+      tls: true,
+    };
+
+    const imap = new Imap(imapConfig);
+    const emails = [];
+
+    imap.once("ready", async () => {
+      try {
+        const box = await openInboxAsync(imap);
+
+        // Fetch the last 10 messages
+        const seq = `${Math.max(1, box.messages.total - 9)}:*`;
+        const fetch = imap.seq.fetch(seq, { bodies: "", struct: true });
+
+        fetch.on("message", (msg, seqno) => {
+          let buffer = "";
+
+          msg.on("body", (stream) => {
+            stream.on("data", (chunk) => {
+              buffer += chunk.toString("utf8");
+            });
+          });
+
+          msg.once("end", async () => {
+            try {
+              const parsed = await simpleParser(buffer);
+              emails.push({
+                from: parsed.from?.text,
+                to: parsed.to?.text,
+                subject: parsed.subject,
+                date: parsed.date,
+                text: parsed.text,
+                html: parsed.html,
+              });
+            } catch (err) {
+              console.error(`Failed to parse message #${seqno}:`, err.message);
+            }
+          });
+        });
+
+        fetch.once("error", (err) => {
+          console.error("Fetch error:", err);
+          return res.status(500).send("Failed to fetch emails: " + err.message);
+        });
+
+        fetch.once("end", () => {
+          imap.end(); // Close the IMAP connection
+        });
+      } catch (err) {
+        console.error("IMAP Error:", err);
+        imap.end();
+        return res.status(500).send("Failed to open inbox: " + err.message);
+      }
+    });
+
+    imap.once("error", (err) => {
+      console.error("IMAP Connection Error:", err);
+      return res.status(500).send("IMAP connection error: " + err.message);
+    });
+
+    imap.once("end", () => {
+      // Once connection closes, respond with emails
+      return res.status(200).json({
+        message: "Inbox fetched successfully!",
+        emails,
+      });
+    });
+
+    imap.connect();
   })
 );
 
