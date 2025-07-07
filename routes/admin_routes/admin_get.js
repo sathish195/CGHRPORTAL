@@ -1226,7 +1226,7 @@ router.post(
     const filters = {
       organisation_id: req.employee.organisation_id,
     };
-    
+
     // Fetch paginated leads
     const templates = await mongoFunctions.lazy_loading(
       "TEMPLATES",
@@ -1236,7 +1236,7 @@ router.post(
       data.limit,
       data.skip
     );
-    
+
     const count = await mongoFunctions.count_documents("TEMPLATES", {
       organisation_id: req.employee.organisation_id,
     });
@@ -1247,6 +1247,47 @@ router.post(
     });
   })
 );
+//route to get sent emails
+router.post(
+  "/sent_emails",
+  Auth,
+  Async(async (req, res) => {
+    const data = req.body;
 
+    // Validate limit & skip
+    const { error } = validations.skipLimit(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // Access control
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Only Director Or Manager Can View Leads");
+    }
+
+    // Base filter: only by organisation
+    const filters = {
+      organisation_id: req.employee.organisation_id,
+    };
+
+    // Fetch paginated emails
+    const emails = await mongoFunctions.lazy_loading(
+      "EMAILS",
+      filters,
+      {},
+      { createdAt: -1 },
+      data.limit,
+      data.skip
+    );
+
+    const count = await mongoFunctions.count_documents("EMAILS", {
+      organisation_id: req.employee.organisation_id,
+    });
+
+    return res.status(200).send({
+      emails: emails,
+      count: count,
+    });
+  })
+);
 
 module.exports = router;
