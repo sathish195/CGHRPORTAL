@@ -913,7 +913,7 @@ function add_update_delete_templates(data) {
   const schema = Joi.object({
     type: Joi.string().trim().min(3).max(50).required(),
     headline: Joi.string().trim().min(3).max(100).required(),
-    subject: Joi.string().trim().min(3).max(500).required(),
+    subject: Joi.string().trim().min(3).max(1500).required(),
     route_action: Joi.number()
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
       .required(),
