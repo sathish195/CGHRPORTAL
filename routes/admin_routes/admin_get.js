@@ -1291,28 +1291,68 @@ router.post(
     });
   })
 );
+
+//helper function
+// Convert imap.openBox to a promise for async/await
+function openInboxAsync(imap) {
+  return new Promise((resolve, reject) => {
+    imap.openBox("INBOX", true, (err, box) => {
+      if (err) reject(err);
+      else resolve(box);
+    });
+  });
+}
 //route to get inbox emails
 router.post(
   "/inbox_emails",
   Auth,
   Async(async (req, res) => {
+    const data = req.body;
+
+    // Validate skip & limit
+    const { error } = validations.skipLimit(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const skip = Number(data.skip || 0);
+    const limit = Number(data.limit || 10);
+
+    // Access control
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Only Director Or Manager Can View Leads");
+    }
+
     const imapConfig = {
       user: "bhavanapriyanagella123@gmail.com",
-      password: "your-app-password", 
+      password: "xpwj ahrw mzyp gzpw",
       host: "imap.gmail.com",
       port: 993,
       tls: true,
+      tlsOptions: { rejectUnauthorized: false },
     };
 
     const imap = new Imap(imapConfig);
     const emails = [];
+    let total = 0;
 
     imap.once("ready", async () => {
       try {
         const box = await openInboxAsync(imap);
+        total = box.messages.total;
 
-        // Fetch the last 10 messages
-        const seq = `${Math.max(1, box.messages.total - 9)}:*`;
+        if (total === 0) {
+          imap.end();
+          return res.status(200).json({
+            message: "No emails found",
+            total,
+            emails: [],
+          });
+        }
+
+        const end = total - skip;
+        const start = Math.max(1, end - limit + 1);
+        const seq = `${start}:${end}`;
+
         const fetch = imap.seq.fetch(seq, { bodies: "", struct: true });
 
         fetch.on("message", (msg, seqno) => {
@@ -1347,7 +1387,7 @@ router.post(
         });
 
         fetch.once("end", () => {
-          imap.end(); // Close the IMAP connection
+          imap.end();
         });
       } catch (err) {
         console.error("IMAP Error:", err);
@@ -1362,9 +1402,9 @@ router.post(
     });
 
     imap.once("end", () => {
-      // Once connection closes, respond with emails
       return res.status(200).json({
         message: "Inbox fetched successfully!",
+        total,
         emails,
       });
     });
