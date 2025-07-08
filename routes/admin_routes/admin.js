@@ -2450,7 +2450,7 @@ router.post(
     const mailOptions = {
       from: "bhavanapriyanagella123@gmail.com",
       to: data.to,
-      cc: data.cc || undefined,
+      cc: data?.cc ?? undefined,
       subject: data.subject,
       html: `<p>${data.message}</p>`,
       ...(attachments.length > 0 && { attachments }),

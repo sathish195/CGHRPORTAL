@@ -6,7 +6,7 @@ const email_schema = new mongoose.Schema(
     from: { type: String, required: true },
     organisation_id: { type: String, required: true },
     to: { type: String, required: true },
-    cc: { type: String, required: true },
+    cc: { type: String },
     subject: { type: String, required: true },
     link_to_record: { type: String, required: true },
     message: { type: String, required: true },

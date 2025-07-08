@@ -953,7 +953,7 @@ function send_email_data(data) {
       .messages({
         "string.pattern.base": " CC Email Should be valid mail",
       })
-      .required(),
+      .optional(),
     subject: Joi.string().trim().required(),
     link_to_record: Joi.string().trim().required(),
     message: Joi.string().required(),
