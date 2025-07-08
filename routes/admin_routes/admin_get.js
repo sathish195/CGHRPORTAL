@@ -15,6 +15,7 @@ const { alertDev } = require("../../helpers/telegram");
 const functions = require("../../helpers/functions");
 const Imap = require("imap");
 const { simpleParser } = require("mailparser");
+const { promisify } = require("util");
 
 //get employee list
 
@@ -1380,7 +1381,10 @@ router.post(
                   html: parsed.html,
                 });
               } catch (err) {
-                console.error(`Failed to parse message #${seqno}:`, err.message);
+                console.error(
+                  `Failed to parse message #${seqno}:`,
+                  err.message
+                );
               }
               resolve(); // resolve even on error
             });
