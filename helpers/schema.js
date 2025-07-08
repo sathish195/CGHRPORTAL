@@ -945,15 +945,12 @@ function send_email_data(data) {
       })
       .required(),
     cc: Joi.string()
-      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
-      .trim()
+      .email({ tlds: { allow: false } })
       .min(10)
       .max(55)
-      .email()
-      .messages({
-        "string.pattern.base": " CC Email Should be valid mail",
-      })
-      .optional(),
+      .trim()
+      .optional()
+      .allow("", null),
     subject: Joi.string().trim().required(),
     link_to_record: Joi.string().trim().required(),
     message: Joi.string().required(),
