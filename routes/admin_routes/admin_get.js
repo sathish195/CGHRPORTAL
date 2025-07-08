@@ -1292,8 +1292,7 @@ router.post(
   })
 );
 
-//helper function
-// Convert imap.openBox to a promise for async/await
+// Helper function to open inbox with Promise
 function openInboxAsync(imap) {
   return new Promise((resolve, reject) => {
     imap.openBox("INBOX", true, (err, box) => {
@@ -1302,7 +1301,8 @@ function openInboxAsync(imap) {
     });
   });
 }
-//route to get inbox emails
+
+// Route to fetch inbox emails
 router.post(
   "/inbox_emails",
   Auth,
@@ -1319,12 +1319,13 @@ router.post(
     // Access control
     const admin_types = ["1", "2"];
     if (!admin_types.includes(req.employee.admin_type)) {
-      return res.status(403).send("Only Director Or Manager Can View Leads");
+      return res.status(403).send("Only Director Or Manager Can View Emails");
     }
 
+    // Gmail IMAP credentials
     const imapConfig = {
       user: "bhavanapriyanagella123@gmail.com",
-      password: "xpwj ahrw mzyp gzpw",
+      password: "gwvj tlve rtfj bxsm",
       host: "imap.gmail.com",
       port: 993,
       tls: true,
@@ -1355,30 +1356,37 @@ router.post(
 
         const fetch = imap.seq.fetch(seq, { bodies: "", struct: true });
 
-        fetch.on("message", (msg, seqno) => {
-          let buffer = "";
+        const messagePromises = [];
 
-          msg.on("body", (stream) => {
-            stream.on("data", (chunk) => {
-              buffer += chunk.toString("utf8");
+        fetch.on("message", (msg, seqno) => {
+          const messagePromise = new Promise((resolve) => {
+            let buffer = "";
+
+            msg.on("body", (stream) => {
+              stream.on("data", (chunk) => {
+                buffer += chunk.toString("utf8");
+              });
+            });
+
+            msg.once("end", async () => {
+              try {
+                const parsed = await simpleParser(buffer);
+                emails.push({
+                  from: parsed.from?.text,
+                  to: parsed.to?.text,
+                  subject: parsed.subject,
+                  date: parsed.date,
+                  text: parsed.text,
+                  html: parsed.html,
+                });
+              } catch (err) {
+                console.error(`Failed to parse message #${seqno}:`, err.message);
+              }
+              resolve(); // resolve even on error
             });
           });
 
-          msg.once("end", async () => {
-            try {
-              const parsed = await simpleParser(buffer);
-              emails.push({
-                from: parsed.from?.text,
-                to: parsed.to?.text,
-                subject: parsed.subject,
-                date: parsed.date,
-                text: parsed.text,
-                html: parsed.html,
-              });
-            } catch (err) {
-              console.error(`Failed to parse message #${seqno}:`, err.message);
-            }
-          });
+          messagePromises.push(messagePromise);
         });
 
         fetch.once("error", (err) => {
@@ -1386,8 +1394,9 @@ router.post(
           return res.status(500).send("Failed to fetch emails: " + err.message);
         });
 
-        fetch.once("end", () => {
-          imap.end();
+        fetch.once("end", async () => {
+          await Promise.all(messagePromises); // Wait for all parsing to finish
+          imap.end(); // Close connection safely
         });
       } catch (err) {
         console.error("IMAP Error:", err);
@@ -1402,6 +1411,7 @@ router.post(
     });
 
     imap.once("end", () => {
+      // Final response after full connection ends and emails are ready
       return res.status(200).json({
         message: "Inbox fetched successfully!",
         total,
