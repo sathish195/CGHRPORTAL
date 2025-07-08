@@ -2305,8 +2305,8 @@ router.post(
     const template_object = {
       organisation_id: req.employee.organisation_id,
       type: data.type.toLowerCase(),
-      headline: data.headline.toLowerCase(),
-      subject: data.subject.toLowerCase(),
+      headline: data.headline,
+      subject: data.subject,
       added_by: {
         name: `${req.employee.first_name} ${req.employee.last_name}`,
         employee_id: req.employee.employee_id,
@@ -2322,7 +2322,7 @@ router.post(
       // Check if the headline already exists on another template
       const existingHeadline = await mongoFunctions.find_one("TEMPLATES", {
         organisation_id: req.employee.organisation_id,
-        headline: data.headline.toLowerCase(),
+        headline: { $regex: `^${data.headline}$`, $options: "i" },
         template_id: { $ne: data.template_id },
       });
       if (existingHeadline) {
@@ -2379,7 +2379,7 @@ router.post(
       // Check for headline uniqueness
       const headlineExists = await mongoFunctions.find_one("TEMPLATES", {
         organisation_id: req.employee.organisation_id,
-        headline: data.headline.toLowerCase(),
+        headline: { $regex: `^${data.headline}$`, $options: "i" },
       });
       if (headlineExists) {
         return res
