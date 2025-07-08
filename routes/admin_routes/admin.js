@@ -2441,14 +2441,14 @@ router.post(
     const transporter = Nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "bhavanapriyanagella123@gmail.com",
-        pass: "xpwj ahrw mzyp gzpw", // Make sure to use app password, NOT Gmail login
+        user: "crmadmi01@gmail.com",
+        pass: "mmvv ygbi fals sfit", // Make sure to use app password, NOT Gmail login
       },
     });
 
     // 5. Prepare mail content
     const mailOptions = {
-      from: "bhavanapriyanagella123@gmail.com",
+      from: "crmadmi01@gmail.com",
       to: data.to,
       cc: data?.cc ?? undefined,
       subject: data.subject,
@@ -2465,7 +2465,7 @@ router.post(
         email_id: functions.get_random_string("EMAIL", 10, true),
         organisation_id: req.employee.organisation_id,
         to: data.to,
-        from: "bhavanapriyanagella123@gmail.com",
+        from: "crmadmi01@gmail.com",
         cc: data.cc,
         subject: data.subject,
         link_to_record: data.link_to_record,
@@ -2489,7 +2489,7 @@ router.post(
         email_id: functions.get_random_string("EMAIL", 10, true),
         organisation_id: req.employee.organisation_id,
         to: data.to,
-        from: "bhavanapriyanagella123@gmail.com",
+        from: "crmadmi01@gmail.com",
         link_to_record: data.link_to_record,
         cc: data.cc,
         subject: data.subject,

@@ -1324,8 +1324,8 @@ router.post(
 
     // Gmail IMAP credentials
     const imapConfig = {
-      user: "bhavanapriyanagella123@gmail.com",
-      password: "gwvj tlve rtfj bxsm",
+      user: "crmadmi01@gmail.com",
+      password: "mmvv ygbi fals sfit",
       host: "imap.gmail.com",
       port: 993,
       tls: true,
