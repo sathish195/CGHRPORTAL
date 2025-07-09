@@ -14,6 +14,7 @@ const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const moment = require("moment-timezone");
 const Nodemailer = require("nodemailer");
+const slowDown = require("../../middlewares/slow_down");
 
 //forgot password  route to reset employee's forgot password
 router.post(
