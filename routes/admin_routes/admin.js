@@ -2193,6 +2193,8 @@ router.post(
       status: data.status.toLowerCase(),
       assigned_to: data.assigned_to,
       next_follow_up: moment(data.next_follow_up).toDate(),
+      comments: data.comments || "",
+      files: data.files || [],
       added_by: {
         name: `${req.employee.first_name} ${req.employee.last_name}`,
         employee_id: req.employee.employee_id,
@@ -2506,5 +2508,47 @@ router.post(
       await mongoFunctions.create_new_record("EMAILS", email_data);
       return res.status(500).send(`Failed to send email: ${err.message}`);
     }
+  })
+);
+//leads search
+
+router.post(
+  "/lead_search",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    const rawInput = req.body;
+
+    // 1. Validate input
+    const { error, value: data } = validations.send_email_data(rawInput);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // 2. Access control
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Only Director or Manager can compose email");
+    }
+
+    // 1. Fetch all leads 
+    const leads = await mongoFunctions.find_documents(
+      "LEADS",
+      {},
+      {},
+      { createdAt: -1 }
+    );
+
+    // 2. Fuse.js config (search only in name or company)
+    const options = {
+      keys: ["name", "company"], // only these fields
+      threshold: 0.3, // lower = stricter match
+    };
+
+    const fuse = new Fuse(leads, options);
+    const results = fuse.search(searchText);
+
+    // 3. Extract actual matching leads
+    const matchedLeads = results.map((result) => result.item);
+
+    return res.status(200).json({ leads: matchedLeads });
   })
 );

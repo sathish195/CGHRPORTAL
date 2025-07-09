@@ -11,6 +11,8 @@ const leads_schema = new mongoose.Schema(
     status: { type: String, required: true },
     assigned_to: { type: Array, default: [] },
     next_follow_up: { type: Date, required: true },
+    comments: { type: String },
+    files: { type: Array, default: [] },
     added_by: { type: Object, default: {} },
   },
   { timestamps: true }

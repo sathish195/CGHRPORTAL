@@ -847,6 +847,17 @@ function get_events(data) {
   return schema.validate(data);
 }
 function add_leads(data) {
+  const fileSchema = Joi.object({
+    filename: Joi.string().required(),
+    content: Joi.string()
+      .pattern(/^data:.*;base64,[a-zA-Z0-9+/=]+$/)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "File content must be a valid base64-encoded string with data URI.",
+      }),
+    contentType: Joi.string().optional(),
+  });
   const schema = Joi.object({
     lead_id: Joi.string().trim().optional().allow("", null),
     lead_name: Joi.string().trim().min(2).max(30).required(),
@@ -861,6 +872,7 @@ function add_leads(data) {
       })
       .required(),
     company: Joi.string().trim().min(2).max(50).required(),
+    comments: Joi.string().optional().allow("", null),
     status: Joi.string()
       .trim()
       .valid(
@@ -880,6 +892,12 @@ function add_leads(data) {
       "date.base": "Date must be a valid ISO 8601 date",
       "date.format": "Date must be in ISO 8601 format",
     }),
+    files: Joi.alternatives()
+      .try(
+        fileSchema, // single file object
+        Joi.array().items(fileSchema) // array of file objects
+      )
+      .optional(),
   });
   return schema.validate(data);
 }

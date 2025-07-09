@@ -10,7 +10,7 @@ const email_schema = new mongoose.Schema(
     subject: { type: String, required: true },
     link_to_record: { type: String, required: true },
     message: { type: String, required: true },
-    files: { type: Object, default: {} },
+    files: { type: Array, default: [] },
     sent_by: { type: Object, default: {} },
     status: { type: String, required: true },
   },
