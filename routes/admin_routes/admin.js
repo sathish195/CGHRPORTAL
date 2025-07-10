@@ -15,6 +15,7 @@ const rateLimit = require("../../helpers/custom_rateLimiter");
 const moment = require("moment-timezone");
 const Nodemailer = require("nodemailer");
 const slowDown = require("../../middlewares/slow_down");
+const Fuse = require("fuse.js");
 
 //forgot password  route to reset employee's forgot password
 router.post(
@@ -2164,8 +2165,7 @@ router.post(
 );
 //add leads
 
-//add event
-// Add or update lead
+// Add / Update / Delete Lead
 router.post(
   "/add_update_lead",
   Auth,
@@ -2205,70 +2205,9 @@ router.post(
 
     let lead;
 
-    if (data.lead_id && data.lead_id.length > 2) {
-      // 🔍 Fetch existing lead
-      const existing_lead = await mongoFunctions.find_one("LEADS", {
-        lead_id: data.lead_id,
-        organisation_id: req.employee.organisation_id,
-      });
-
-      if (!existing_lead) {
-        return res.status(404).send("Lead not found for update");
-      }
-
-      // Extract current and new assigned employee IDs
-      const old_emp_ids = existing_lead.assigned_to.map((e) => e.employee_id);
-      const new_emp_ids = data.assigned_to.map((e) => e.employee_id);
-
-      const isSameSet =
-        old_emp_ids.length === new_emp_ids.length &&
-        old_emp_ids.every((employee_id) => new_emp_ids.includes(employee_id));
-
-      if (!isSameSet) {
-        // 1. Find duplicate IDs between new and old
-        let duplicate_ids = new_emp_ids.filter((employee_id) =>
-          old_emp_ids.includes(employee_id)
-        );
-
-        // 2. Deduplicate the list (ensure unique employee_id)
-        duplicate_ids = [...new Set(duplicate_ids)];
-
-        // 3. Format with name (Name (ID))
-        const duplicate_with_names = duplicate_ids.map((id) => {
-          const emp = data.assigned_to.find((e) => e.employee_id === id);
-          return `${emp?.employee_name || "Unknown"} (${id})`;
-        });
-
-        // 4. Throw error if duplicates found
-        if (duplicate_with_names.length > 0) {
-          return res
-            .status(400)
-            .send(
-              `Employee(s) already assigned: ${duplicate_with_names.join(", ")}`
-            );
-        }
-
-        // ✅ Continue with update if no conflict
-        lead = await mongoFunctions.find_one_and_update(
-          "LEADS",
-          {
-            lead_id: data.lead_id,
-            organisation_id: req.employee.organisation_id,
-          },
-          { $set: lead_object }
-        );
-
-        if (!lead.matchedCount) {
-          return res.status(404).send("Lead not found during update");
-        }
-
-        return res.status(200).send({
-          message: "Lead Updated Successfully",
-          lead: lead,
-        });
-      }
-    } else {
-      // ➕ Create new lead
+    // Handle actions based on route_action
+    if (data.route_action === 1) {
+      // ➕ ADD
       const new_lead_id = functions.get_random_string("LEAD", 10, true);
       lead_object.lead_id = new_lead_id;
 
@@ -2278,9 +2217,89 @@ router.post(
         message: "Lead Added Successfully",
         lead: lead,
       });
+    } else if (data.route_action === 2) {
+      // 🔄 UPDATE
+      if (!data.lead_id || data.lead_id.length <= 2) {
+        return res.status(400).send("Lead ID required for update");
+      }
+
+      const existing_lead = await mongoFunctions.find_one("LEADS", {
+        lead_id: data.lead_id,
+        organisation_id: req.employee.organisation_id,
+      });
+
+      if (!existing_lead) {
+        return res.status(404).send("Lead not found for update");
+      }
+
+      const old_emp_ids = existing_lead.assigned_to.map((e) => e.employee_id);
+      const new_emp_ids = data.assigned_to.map((e) => e.employee_id);
+
+      const isSameSet =
+        old_emp_ids.length === new_emp_ids.length &&
+        old_emp_ids.every((employee_id) => new_emp_ids.includes(employee_id));
+
+      if (!isSameSet) {
+        let duplicate_ids = new_emp_ids.filter((employee_id) =>
+          old_emp_ids.includes(employee_id)
+        );
+        duplicate_ids = [...new Set(duplicate_ids)];
+
+        const duplicate_with_names = duplicate_ids.map((id) => {
+          const emp = data.assigned_to.find((e) => e.employee_id === id);
+          return `${emp?.employee_name || "Unknown"} (${id})`;
+        });
+
+        if (duplicate_with_names.length > 0) {
+          return res
+            .status(400)
+            .send(
+              `Employee(s) already assigned: ${duplicate_with_names.join(", ")}`
+            );
+        }
+      }
+
+      lead = await mongoFunctions.find_one_and_update(
+        "LEADS",
+        {
+          lead_id: data.lead_id,
+          organisation_id: req.employee.organisation_id,
+        },
+        { $set: lead_object }
+      );
+
+      if (!lead.matchedCount) {
+        return res.status(404).send("Lead not found during update");
+      }
+
+      return res.status(200).send({
+        message: "Lead Updated Successfully",
+        lead: lead,
+      });
+    } else if (data.route_action === 3) {
+      // ❌ DELETE
+      if (!data.lead_id || data.lead_id.length <= 2) {
+        return res.status(400).send("Lead ID required for deletion");
+      }
+
+      const result = await mongoFunctions.find_one_and_delete("LEADS", {
+        lead_id: data.lead_id,
+        organisation_id: req.employee.organisation_id,
+      });
+
+      if (!result) {
+        return res.status(404).send("Lead not found for deletion");
+      }
+
+      return res.status(200).send({
+        message: "Lead Deleted Successfully",
+      });
+    } else {
+      return res.status(400).send("Invalid route_action provided");
     }
   })
 );
+
 //---------------------------------------------Email functionality-------------------------------------------------------
 // Add, Update, Delete Template Route
 router.post(
@@ -2512,16 +2531,15 @@ router.post(
   })
 );
 //leads search
-
 router.post(
   "/lead_search",
   Auth,
-  slowDown,
+  rateLimit(60, 10),
   Async(async (req, res) => {
     const rawInput = req.body;
 
     // 1. Validate input
-    const { error, value: data } = validations.send_email_data(rawInput);
+    const { error, value: data } = validations.lead_search(rawInput);
     if (error) return res.status(400).send(error.details[0].message);
 
     // 2. Access control
@@ -2530,26 +2548,29 @@ router.post(
       return res.status(403).send("Only Director or Manager can compose email");
     }
 
-    // 1. Fetch all leads 
-    const leads = await mongoFunctions.find_documents(
+    // 3. Build regex-based filter
+    let filter = {};
+    const leadName = data.lead_name?.trim();
+    const company = data.company?.trim();
+
+    if (leadName) {
+      filter.lead_name = { $regex: leadName, $options: "i" }; // case-insensitive partial match
+    } else if (company) {
+      filter.company = { $regex: company, $options: "i" };
+    } else {
+      return res
+        .status(400)
+        .send("Please provide lead_name or company to search.");
+    }
+
+    // 4. Perform MongoDB query with sort and limit
+    const leads = await mongoFunctions.find(
       "LEADS",
-      {},
-      {},
-      { createdAt: -1 }
+      filter,
+      { createdAt: -1 }, // sort
+      {}
     );
 
-    // 2. Fuse.js config (search only in name or company)
-    const options = {
-      keys: ["name", "company"], // only these fields
-      threshold: 0.3, // lower = stricter match
-    };
-
-    const fuse = new Fuse(leads, options);
-    const results = fuse.search(searchText);
-
-    // 3. Extract actual matching leads
-    const matchedLeads = results.map((result) => result.item);
-
-    return res.status(200).json({ leads: matchedLeads });
+    return res.status(200).send({ leads });
   })
 );

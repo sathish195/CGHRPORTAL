@@ -1146,15 +1146,21 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     // Access control
-    const admin_types = ["1", "2"];
+    const admin_types = ["1", "2", "3", "4"];
+
     if (!admin_types.includes(req.employee.admin_type)) {
-      return res.status(403).send("Only Director Or Manager Can View Leads");
+      return res.status(403).send("Access Denied");
     }
 
     // Base filter: only by organisation
     const filters = {
       organisation_id: req.employee.organisation_id,
     };
+    // Filter for employee-specific access
+    if (["3", "4"].includes(req.employee.admin_type)) {
+      filters["assigned_to.employee_id"] = req.employee.employee_id;
+    }
+
     // ✅ Add status filter only if type is not null or empty string
     if (data.status && data.status !== "") {
       filters.status = data.status.toLowerCase();
@@ -1193,7 +1199,7 @@ router.post(
         {},
         { createdAt: -1 }
       );
-      leads_count = c.length;
+      leads_count = c;
     }
     const count = await mongoFunctions.count_documents("LEADS", {
       organisation_id: req.employee.organisation_id,

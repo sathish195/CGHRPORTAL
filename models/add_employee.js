@@ -40,6 +40,8 @@ const EMPLOYEE_Schema = new mongoose.Schema(
       pan: { type: String, default: "" },
       aadhaar: { type: String, default: "" },
       passport_number: { type: String, default: "" },
+      emirates: { type: String, default: "" },
+      files: { type: Array, default: [] },
     },
     contact_details: {
       mobile_number: { type: String },

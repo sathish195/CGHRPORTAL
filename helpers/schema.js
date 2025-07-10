@@ -165,6 +165,17 @@ const validateDates = (value, helpers) => {
   return value;
 };
 function add_employee_by_admin(data) {
+  const fileSchema = Joi.object({
+    filename: Joi.string().required(),
+    content: Joi.string()
+      .pattern(/^data:.*;base64,[a-zA-Z0-9+/=]+$/)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "File content must be a valid base64-encoded string with data URI.",
+      }),
+    contentType: Joi.string().optional(),
+  });
   const work_experience_obj = Joi.object({
     company_name: Joi.string().trim().min(3).max(30).required(),
     job_title: Joi.string().trim().min(2).max(25).required(),
@@ -256,7 +267,19 @@ function add_employee_by_admin(data) {
       .trim()
       .required(),
     about_me: Joi.string().trim().allow(null, "").optional().trim(),
-    identity_info: Joi.object().min(2).required(),
+    identity_info: Joi.object({
+      uan: Joi.string().trim().optional().allow(null, ""),
+      pan: Joi.string().trim().optional().allow(null, ""),
+      aadhaar: Joi.string().trim().optional().allow(null, ""),
+      passport_number: Joi.string().trim().optional().allow(null, ""),
+      emirates: Joi.string().trim().optional().allow(null, ""),
+      files: Joi.alternatives()
+        .try(
+          fileSchema, // single file object
+          Joi.array().items(fileSchema) // array of file objects
+        )
+        .optional(),
+    }).required(),
     mobile_number: Joi.string().trim().allow(null, "").optional(),
     // mobile_number: Joi.string().min(10).max(10).required(),
     personal_email_address: Joi.string()
@@ -858,6 +881,10 @@ function add_leads(data) {
       }),
     contentType: Joi.string().optional(),
   });
+  const assignedTo = Joi.object({
+    employee_id: Joi.string().required(),
+    employee_name: Joi.string().required(),
+  });
   const schema = Joi.object({
     lead_id: Joi.string().trim().optional().allow("", null),
     lead_name: Joi.string().trim().min(2).max(30).required(),
@@ -873,6 +900,9 @@ function add_leads(data) {
       .required(),
     company: Joi.string().trim().min(2).max(50).required(),
     comments: Joi.string().optional().allow("", null),
+    route_action: Joi.number()
+      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
+      .required(),
     status: Joi.string()
       .trim()
       .valid(
@@ -887,7 +917,7 @@ function add_leads(data) {
         "on_hold"
       )
       .required(),
-    assigned_to: Joi.array().required(),
+    assigned_to: Joi.array().items(assignedTo).required(),
     next_follow_up: Joi.date().iso().required().allow("", null).messages({
       "date.base": "Date must be a valid ISO 8601 date",
       "date.format": "Date must be in ISO 8601 format",
@@ -981,6 +1011,26 @@ function send_email_data(data) {
   });
   return schema.validate(data);
 }
+function lead_search(data) {
+  const schema = Joi.object({
+    lead_name: Joi.string().required().allow("", null),
+    company: Joi.string().required().allow("", null),
+  });
+  return schema.validate(data);
+}
+function add_update_postings(data) {
+  const schema = Joi.object({
+    posting_id: Joi.string().optional().allow("", null),
+    title: Joi.string().required(),
+    description: Joi.string().required(),
+    images: Joi.array().items(
+      Joi.object({
+        url: Joi.string().custom(base64Validator).required(),
+      })
+    ),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -1037,4 +1087,6 @@ module.exports = {
   get_leads,
   add_update_delete_templates,
   send_email_data,
+  lead_search,
+  add_update_postings,
 };
