@@ -1433,4 +1433,62 @@ router.post(
   })
 );
 
+//get postings
+router.post(
+  "/postings",
+  Async(async (req, res) => {
+    const data = req.body;
+
+    // Validate limit & skip
+    const { error } = validations.get_postings(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // Access control
+    const admin_types = [1, 2];
+    if (!admin_types.includes(data.key)) {
+      return res.status(403).send("Access Denied");
+    }
+
+    // Base filter
+    const filters = {
+      organisation_id: data.organisation_id,
+      key: data.key,
+    };
+
+    // ✅ Add date filter only if date is not null or empty string
+    if (data.date && data.date !== "") {
+      const startOfDay = new Date(data.date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(data.date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      filters.date = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
+
+    // Fetch filtered postings
+    const find_postings = await mongoFunctions.lazy_loading(
+      "POSTINGS",
+      filters,
+      {},
+      { createdAt: -1 },
+      data.limit,
+      data.skip
+    );
+
+    const count = await mongoFunctions.count_documents("POSTINGS", {
+      organisation_id: data.organisation_id,
+    });
+
+    // Return result
+    return res.status(200).send({
+      postings: find_postings,
+      count: count,
+    });
+  })
+);
+
 module.exports = router;

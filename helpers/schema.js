@@ -1038,6 +1038,17 @@ function add_update_postings(data) {
   });
   return schema.validate(data);
 }
+function get_postings(data) {
+  const schema = Joi.object({
+    skip: Joi.number().required(),
+    limit: Joi.number().required(),
+    organisation_id: Joi.string().required(),
+    key: Joi.number()
+      // .valid(1, 2) // 1 - add, 2 - update, 3 - delete
+      .required(),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -1096,4 +1107,5 @@ module.exports = {
   send_email_data,
   lead_search,
   add_update_postings,
+  get_postings,
 };
