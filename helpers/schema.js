@@ -1032,7 +1032,10 @@ function add_update_postings(data) {
     description: Joi.string().required(),
     images: Joi.array().items(
       Joi.object({
-        url: Joi.string().custom(base64ImageSizeValidator).required(),
+        url: Joi.string().custom(base64ImageSizeValidator).required().messages({
+          "string.pattern.base":
+            "File content must be a valid base64-encoded string with data URI.",
+        }),
       })
     ),
   });
