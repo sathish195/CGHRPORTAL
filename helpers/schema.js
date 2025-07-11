@@ -268,12 +268,67 @@ function add_employee_by_admin(data) {
       .required(),
     about_me: Joi.string().trim().allow(null, "").optional().trim(),
     identity_info: Joi.object({
-      uan: Joi.string().trim().optional().allow(null, ""),
-      pan: Joi.string().trim().optional().allow(null, ""),
-      aadhaar: Joi.string().trim().optional().allow(null, ""),
-      passport_number: Joi.string().trim().optional().allow(null, ""),
-      emirates: Joi.string().trim().optional().allow(null, ""),
-      files: Joi.alternatives()
+      uan: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, "")
+        .pattern(/^\d{8,16}$/)
+        .message("UAN must be a numeric string between 8 and 16 digits"),
+
+      pan: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, "")
+        .pattern(/^[A-Z0-9]{8,15}$/i)
+        .message("PAN ID must be alphanumeric and 8–15 characters long"),
+
+      aadhaar: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, "")
+        .pattern(/^\d{8,16}$/)
+        .message(
+          "Aadhaar Number must be a numeric string between 8 and 16 digits"
+        ),
+
+      passport_number: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, "")
+        .pattern(/^[A-Z0-9]{5,15}$/i)
+        .message(
+          "Passport number must be alphanumeric and 5–15 characters long"
+        ),
+      emirates_id: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, "")
+        .pattern(/^784-\d{4}-\d{7}-\d{1}$/)
+        .message(
+          "Invalid Emirates ID format. Expected format: 784-XXXX-XXXXXXX-X"
+        ),
+
+      labour_card_id: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, "")
+        .pattern(/^\d{6,10}$/)
+        .message(
+          "Labour Card ID must be a numeric string between 6 and 10 digits"
+        ),
+      passport_attachment: Joi.alternatives()
+        .try(
+          fileSchema, // single file object
+          Joi.array().items(fileSchema) // array of file objects
+        )
+        .optional(),
+      emirates_attachment: Joi.alternatives()
+        .try(
+          fileSchema, // single file object
+          Joi.array().items(fileSchema) // array of file objects
+        )
+        .optional(),
+      labour_card_attachment: Joi.alternatives()
         .try(
           fileSchema, // single file object
           Joi.array().items(fileSchema) // array of file objects
