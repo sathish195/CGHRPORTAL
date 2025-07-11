@@ -246,7 +246,13 @@ router.post(
         },
       ],
 
-      dependent_details: [],
+      dependent_details: [
+        {
+          name: "",
+          relation: "",
+          dependent_mobile_number: "",
+        },
+      ],
       leaves: [],
       images: {},
       files: {},
