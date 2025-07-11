@@ -235,7 +235,15 @@ router.post(
         permanent_address: null,
       },
 
-      work_experience: [],
+      work_experience: [
+        {
+          company_name: "",
+          job_title: "",
+          from_date: null,
+          to_date: null,
+          job_description: "",
+        },
+      ],
 
       educational_details: [
         {

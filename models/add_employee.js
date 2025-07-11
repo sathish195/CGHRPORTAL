@@ -53,15 +53,18 @@ const EMPLOYEE_Schema = new mongoose.Schema(
       present_address: { type: String },
       permanent_address: { type: String },
     },
-    work_experience: [
-      {
-        company_name: "",
-        job_title: "",
-        from_date: null,
-        to_date: null,
-        job_description: "",
-      },
-    ],
+    work_experience: {
+      type: [
+        {
+          company_name: { type: String, default: "" },
+          job_title: { type: String, default: "" },
+          from_date: { type: Date, default: null },
+          to_date: { type: Date, default: null },
+          job_description: { type: String, default: "" },
+          // experience: { type: String }
+        },
+      ],
+    },
 
     educational_details: {
       type: [
