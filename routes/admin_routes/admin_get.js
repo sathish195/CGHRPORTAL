@@ -1043,7 +1043,7 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     // Access control
-    const admin_types = ["1", "2"];
+    const admin_types = ["1", "2", "3", "4"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res.status(403).send("Only Director Or Manager Can Add The Event");
     }
@@ -1201,9 +1201,19 @@ router.post(
       );
       leads_count = c;
     }
-    const count = await mongoFunctions.count_documents("LEADS", {
+    const isAdminTypeRestricted = [3, 4].includes(
+      Number(req.employee.admin_type)
+    );
+
+    const countFilter = {
       organisation_id: req.employee.organisation_id,
-    });
+    };
+
+    if (isAdminTypeRestricted) {
+      countFilter["assigned_to.employee_id"] = req.employee.employee_id;
+    }
+
+    const count = await mongoFunctions.count_documents("LEADS", countFilter);
 
     return res.status(200).send({
       leads: leads,
