@@ -75,7 +75,11 @@ router.post(
     //validate data
     var { error } = validations.Sadmin_login(data);
     if (error) return res.status(400).send(error.details[0].message);
-    let s_admin = await redisFunctions.redisGet("CG_SUPER_ADMIN", data.email, true);
+    let s_admin = await redisFunctions.redisGet(
+      "CG_SUPER_ADMIN",
+      data.email,
+      true
+    );
 
     if (!s_admin) {
       return res
@@ -209,7 +213,7 @@ router.post(
       },
 
       personal_details: {
-        date_of_birth: today,
+        date_of_birth: null,
         expertise: "not_added",
         gender: "not_added",
         marital_status: "not_added",
