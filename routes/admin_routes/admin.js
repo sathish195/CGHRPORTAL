@@ -2178,7 +2178,7 @@ router.post(
     // if (error) return res.status(400).send(error.details[0].message);
     if (error) {
       const messages = error.details.map((e) => e.message);
-      return res.status(400).send({ errors: messages });
+      return res.status(400).send(messages);
     }
 
     // Access control
