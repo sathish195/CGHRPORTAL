@@ -2172,30 +2172,24 @@ router.post(
   rateLimit(60, 10),
   Async(async (req, res) => {
     const rawInput = req.body;
+    const admin_type = req.employee.admin_type;
 
-    // Validate input
-    const { error, value: data } = validations.add_leads(rawInput);
-    if (error) return res.status(400).send(error.details[0].message);
-    // if (error) {
-    //   const messages = error.details.map((e) => e.message);
-    //   return res.status(400).send(messages);
-    // }
-
-    // Access control
-    const admin_types = ["1", "2"];
-    if (!admin_types.includes(req.employee.admin_type)) {
-      return res
-        .status(403)
-        .send("Only Director Or Manager Can Add or Update Leads");
+    // ❗ Allow only admin types 1, 2, 3, or 4
+    if (!["1", "2", "3", "4"].includes(admin_type)) {
+      return res.status(403).send("Unauthorized: Invalid admin type");
     }
 
-    // Construct lead data
+    // ✅ Validate input
+    const { error, value: data } = validations.add_leads(rawInput);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // ✅ Construct lead object
     const lead_object = {
       organisation_id: req.employee.organisation_id,
-      lead_name: data.lead_name.toLowerCase(),
-      email: data.email.toLowerCase(),
-      company: data.company.toLowerCase(),
-      status: data.status.toLowerCase(),
+      lead_name: data.lead_name?.toLowerCase(),
+      email: data.email?.toLowerCase(),
+      company: data.company?.toLowerCase(),
+      status: data.status?.toLowerCase(),
       assigned_to: data.assigned_to,
       next_follow_up: moment(data.next_follow_up).toDate(),
       comments: data.comments || "",
@@ -2209,20 +2203,21 @@ router.post(
 
     let lead;
 
-    // Handle actions based on route_action
+    // ➕ ADD
     if (data.route_action === 1) {
-      // ➕ ADD
+      if (!["1", "2"].includes(admin_type)) {
+        return res.status(403).send("Only Director or Manager can add leads");
+      }
+
       const new_lead_id = functions.get_random_string("LEAD", 10, true);
       lead_object.lead_id = new_lead_id;
 
       lead = await mongoFunctions.create_new_record("LEADS", lead_object);
+      return res.status(200).send({ message: "Lead Added Successfully", lead });
+    }
 
-      return res.status(200).send({
-        message: "Lead Added Successfully",
-        lead: lead,
-      });
-    } else if (data.route_action === 2) {
-      // 🔄 UPDATE
+    // 🔄 UPDATE
+    else if (data.route_action === 2) {
       if (!data.lead_id || data.lead_id.length <= 2) {
         return res.status(400).send("Lead ID required for update");
       }
@@ -2236,16 +2231,34 @@ router.post(
         return res.status(404).send("Lead not found for update");
       }
 
+      if (["3", "4"].includes(admin_type)) {
+        // ✅ Allow only status update for admin_type 3 or 4
+        lead = await mongoFunctions.find_one_and_update(
+          "LEADS",
+          {
+            lead_id: data.lead_id,
+            organisation_id: req.employee.organisation_id,
+          },
+          { $set: { status: data.status?.toLowerCase() } }
+        );
+
+        return res.status(200).send({
+          message: "Lead Status Updated Successfully",
+          lead: lead,
+        });
+      }
+
+      // ✅ Full update for admin_type 1 or 2
       const old_emp_ids = existing_lead.assigned_to.map((e) => e.employee_id);
       const new_emp_ids = data.assigned_to.map((e) => e.employee_id);
 
       const isSameSet =
         old_emp_ids.length === new_emp_ids.length &&
-        old_emp_ids.every((employee_id) => new_emp_ids.includes(employee_id));
+        old_emp_ids.every((id) => new_emp_ids.includes(id));
 
       if (!isSameSet) {
-        let duplicate_ids = new_emp_ids.filter((employee_id) =>
-          old_emp_ids.includes(employee_id)
+        let duplicate_ids = new_emp_ids.filter((id) =>
+          old_emp_ids.includes(id)
         );
         duplicate_ids = [...new Set(duplicate_ids)];
 
@@ -2272,16 +2285,20 @@ router.post(
         { $set: lead_object }
       );
 
-      if (!lead) {
-        return res.status(404).send("Lead not found during update");
-      }
-
       return res.status(200).send({
         message: "Lead Updated Successfully",
         lead: lead,
       });
-    } else if (data.route_action === 3) {
-      // ❌ DELETE
+    }
+
+    // ❌ DELETE
+    else if (data.route_action === 3) {
+      if (!["1", "2"].includes(admin_type)) {
+        return res
+          .status(403)
+          .send("Only Director or Manager can delete leads");
+      }
+
       if (!data.lead_id || data.lead_id.length <= 2) {
         return res.status(400).send("Lead ID required for deletion");
       }
@@ -2295,10 +2312,11 @@ router.post(
         return res.status(404).send("Lead not found for deletion");
       }
 
-      return res.status(200).send({
-        message: "Lead Deleted Successfully",
-      });
-    } else {
+      return res.status(200).send({ message: "Lead Deleted Successfully" });
+    }
+
+    // 🚫 Invalid route_action
+    else {
       return res.status(400).send("Invalid route_action provided");
     }
   })
