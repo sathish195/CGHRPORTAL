@@ -1117,8 +1117,7 @@ function add_update_postings(data) {
     images: Joi.array().items(
       Joi.object({
         url: Joi.string().custom(base64ImageSizeValidator).required().messages({
-          "string.pattern.base":
-            "Size should be 256 KB only.",
+          "string.pattern.base": "Size should be 256 KB only.",
         }),
       })
     ),

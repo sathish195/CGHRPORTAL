@@ -2175,7 +2175,11 @@ router.post(
 
     // Validate input
     const { error, value: data } = validations.add_leads(rawInput);
-    if (error) return res.status(400).send(error.details[0].message);
+    // if (error) return res.status(400).send(error.details[0].message);
+    if (error) {
+      const messages = error.details.map((e) => e.message);
+      return res.status(400).send({ errors: messages });
+    }
 
     // Access control
     const admin_types = ["1", "2"];
