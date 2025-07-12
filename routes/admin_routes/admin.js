@@ -2244,6 +2244,7 @@ router.post(
               status: data.status?.toLowerCase(),
               comments: data.comments || "",
               files: data.files || [],
+              next_follow_up: moment(data.next_follow_up).toDate(),
             },
           }
         );
