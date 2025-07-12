@@ -2239,7 +2239,13 @@ router.post(
             lead_id: data.lead_id,
             organisation_id: req.employee.organisation_id,
           },
-          { $set: { status: data.status?.toLowerCase() } }
+          {
+            $set: {
+              status: data.status?.toLowerCase(),
+              comments: data.comments || "",
+              files: data.files || [],
+            },
+          }
         );
 
         return res.status(200).send({
