@@ -75,12 +75,37 @@ const base64ImageSizeValidator = (value, helpers) => {
   if (sizeInBytes <= limitBytes) return value;
   else return helpers.error("any.invalid");
 };
+const base64FileSizeValidator = (value, helpers) => {
+  const matches = value.match(/^data:(.+);base64,(.+)$/);
+  if (!matches) {
+    return helpers.error("string.pattern.base", {
+      message: "Invalid base64 format. Must include data URI prefix.",
+    });
+  }
+
+  const mimeType = matches[1];
+  const base64Data = matches[2];
+
+  const buffer = Buffer.from(base64Data, "base64");
+  console.log("Decoded size in KB:", buffer.length / 1024);
+  const sizeInBytes = buffer.length;
+  const limitBytes = 250 * 1024; // 250 KB
+
+  if (sizeInBytes > limitBytes) {
+    return helpers.error("any.invalid", {
+      message: "File size must not exceed 250 KB",
+    });
+  }
+
+  return value;
+};
+
 function add_update_org(data) {
   const schema = Joi.object({
     organisation_name: Joi.string().min(5).max(50).required().trim(),
     organisation_type: Joi.string().min(2).max(15).required(),
     logo: Joi.string()
-      // .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
+      .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
       .required()
       .messages({
         "any.invalid": "Size should be 250kb only",
@@ -169,10 +194,12 @@ function add_employee_by_admin(data) {
     filename: Joi.string().required(),
     content: Joi.string()
       .pattern(/^data:.*;base64,[a-zA-Z0-9+/=]+$/)
+      .custom(base64FileSizeValidator)
       .required()
       .messages({
         "string.pattern.base":
-          "File content must be a valid base64-encoded string with data URI.",
+          "Content must be a valid base64-encoded string with data URI.",
+        "any.invalid": "File size must not exceed 250 KB",
       }),
     contentType: Joi.string().optional(),
   });
@@ -929,10 +956,12 @@ function add_leads(data) {
     filename: Joi.string().required(),
     content: Joi.string()
       .pattern(/^data:.*;base64,[a-zA-Z0-9+/=]+$/)
+      .custom(base64FileSizeValidator)
       .required()
       .messages({
         "string.pattern.base":
-          "File content must be a valid base64-encoded string with data URI.",
+          "Content must be a valid base64-encoded string with data URI.",
+        "any.invalid": "File size must not exceed 250 KB",
       }),
     contentType: Joi.string().optional(),
   });
