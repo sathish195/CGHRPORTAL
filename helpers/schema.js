@@ -71,7 +71,7 @@ function emp_reset_password(data) {
 const base64ImageSizeValidator = (value, helpers) => {
   const buffer = Buffer.from(value, "base64");
   const sizeInBytes = buffer.length;
-  const limitBytes = 250 * 1024;
+  const limitBytes = 256 * 1024;
   if (sizeInBytes <= limitBytes) return value;
   else return helpers.error("any.invalid");
 };
@@ -89,7 +89,7 @@ const base64FileSizeValidator = (value, helpers) => {
   const buffer = Buffer.from(base64Data, "base64");
   console.log("Decoded size in KB:", buffer.length / 1024);
   const sizeInBytes = buffer.length;
-  const limitBytes = 250 * 1024; // 250 KB
+  const limitBytes = 256 * 1024; // 250 KB
 
   if (sizeInBytes > limitBytes) {
     return helpers.error("any.invalid", {
@@ -108,7 +108,7 @@ function add_update_org(data) {
       .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
       .required()
       .messages({
-        "any.invalid": "Size should be 250kb only",
+        "any.invalid": "Size should be 256kb only",
       }),
     org_mail_id: Joi.string()
       .email()
@@ -199,7 +199,7 @@ function add_employee_by_admin(data) {
       .messages({
         "string.pattern.base":
           "Content must be a valid base64-encoded string with data URI.",
-        "any.invalid": "File size must not exceed 250 KB",
+        "any.invalid": "File size must not exceed 256 KB",
       }),
     contentType: Joi.string().optional(),
   });
@@ -868,7 +868,7 @@ function add_super_admin(data) {
       .required()
       .allow("")
       .messages({
-        "any.invalid": "Size should be 250kb only",
+        "any.invalid": "Size should be 256kb only",
       }),
   });
   return schema.validate(data);
@@ -961,7 +961,7 @@ function add_leads(data) {
       .messages({
         "string.pattern.base":
           "Content must be a valid base64-encoded string with data URI.",
-        "any.invalid": "File size must not exceed 250 KB",
+        "any.invalid": "File size must not exceed 256 KB",
       }),
     contentType: Joi.string().optional(),
   });
@@ -1118,7 +1118,7 @@ function add_update_postings(data) {
       Joi.object({
         url: Joi.string().custom(base64ImageSizeValidator).required().messages({
           "string.pattern.base":
-            "File content must be a valid base64-encoded string with data URI.",
+            "Size should be 256 KB only.",
         }),
       })
     ),
