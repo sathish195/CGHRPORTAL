@@ -1081,6 +1081,11 @@ router.post(
       data.limit,
       data.skip
     );
+    // ✅ Count of filtered events
+    const events_count = await mongoFunctions.count_documents(
+      "EVENTS",
+      filters
+    );
 
     // Extract unique event types
     const event_types = await mongoFunctions.distinct("EVENTS", "type", {
@@ -1094,6 +1099,7 @@ router.post(
     return res.status(200).send({
       events: find_events,
       event_types: event_types,
+      events_count: events_count,
       count: count,
     });
   })

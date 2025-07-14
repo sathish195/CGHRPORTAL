@@ -1109,9 +1109,7 @@ function add_update_postings(data) {
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
       .required(),
     organisation_id: Joi.string().optional().allow("", null),
-    key: Joi.number()
-      // .valid(1, 2) // 1 - add, 2 - update, 3 - delete
-      .required(),
+    key: Joi.string().required(),
     posting_id: Joi.string().optional().allow("", null),
     title: Joi.string().required(),
     description: Joi.string().required(),

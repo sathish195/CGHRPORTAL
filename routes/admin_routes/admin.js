@@ -2617,7 +2617,7 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     //Access control from payload
-    const keys = [1, 2];
+    const keys = ["scanglobal", "crm"];
     if (!keys.includes(data.key)) {
       return res.status(403).send("Access denied");
     }
@@ -2702,3 +2702,4 @@ router.post(
     }
   })
 );
+
