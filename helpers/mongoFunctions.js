@@ -14,6 +14,8 @@ const { LEADS } = require("../models/leads");
 const { POSTINGS } = require("../models/postings");
 const { TEMPLATES } = require("../models/templates");
 const { EMAILS } = require("../models/emails");
+const { NOTIFICATIONS } = require("../models/notifications");
+
 const fs = require("fs");
 const path = require("path");
 const { alertDev } = require("./telegram");

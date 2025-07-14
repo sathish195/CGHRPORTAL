@@ -981,6 +981,15 @@ function add_leads(data) {
   });
   const schema = Joi.object({
     lead_id: Joi.string().trim().optional().allow("", null),
+    organisation_id: Joi.string().optional().allow("", null),
+    key: Joi.string().required(),
+    admin_type: Joi.string().optional().allow("", null),
+    source: Joi.string().optional().allow("", null),
+    added_by: Joi.object({
+      name: Joi.string().optional(),
+      employee_id: Joi.string().optional(),
+      email: Joi.string().email().optional(),
+    }).optional(),
     lead_name: Joi.string().trim().min(2).max(30).required(),
     email: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
@@ -992,7 +1001,7 @@ function add_leads(data) {
         "string.pattern.base": "Email Should be valid mail",
       })
       .required(),
-    company: Joi.string().trim().min(2).max(50).required(),
+    company: Joi.string().optional().allow("", null),
     comments: Joi.string().optional().allow("", null),
     route_action: Joi.number()
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
@@ -1011,7 +1020,7 @@ function add_leads(data) {
         "on_hold"
       )
       .required(),
-    assigned_to: Joi.array().items(assignedTo).required(),
+    assigned_to: Joi.array().items(assignedTo).optional().default([]),
     next_follow_up: Joi.date().iso().required().allow("", null).messages({
       "date.base": "Date must be a valid ISO 8601 date",
       "date.format": "Date must be in ISO 8601 format",

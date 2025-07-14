@@ -1485,7 +1485,7 @@ router.post(
   })
 );
 
-//get postings
+//get postings(no auth route)
 router.post(
   "/postings",
   Async(async (req, res) => {

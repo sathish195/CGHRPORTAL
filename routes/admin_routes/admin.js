@@ -2233,39 +2233,57 @@ router.post(
     }
   })
 );
-// Add / Update / Delete Lead
+// Add / Update / Delete Lead (no auth route)
 router.post(
   "/add_update_lead",
-  Auth,
+  // Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    const rawInput = req.body;
-    const admin_type = req.employee.admin_type;
+    const rawInput = encrypt_decrypt.decryptobj(req.body.enc);
+    console.log(rawInput);
 
-    // ❗ Allow only admin types 1, 2, 3, or 4
+    // Validate input
+    const { error, value: data } = validations.add_update_postings(rawInput);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // Access control from payload
+    const validKeys = ["scanglobal", "crm"];
+    if (!validKeys.includes(data.key)) {
+      return res.status(403).send("Access denied: Invalid key");
+    }
+
+    if (
+      data.key === "crm" &&
+      (!data.organisation_id ||
+        data.organisation_id.length <= 2 ||
+        !validKeys.includes(data.organisation_id))
+    ) {
+      return res.status(403).send("Access denied: Invalid organisation_id");
+    }
+
+    const { admin_type } = data;
+
+    // Check allowed admin types
     if (!["1", "2", "3", "4"].includes(admin_type)) {
       return res.status(403).send("Unauthorized: Invalid admin type");
     }
 
-    // ✅ Validate input
-    const { error, value: data } = validations.add_leads(rawInput);
-    if (error) return res.status(400).send(error.details[0].message);
-
-    // ✅ Construct lead object
+    // Construct lead object
     const lead_object = {
-      organisation_id: req.employee.organisation_id,
+      organisation_id: data.organisation_id,
       lead_name: data.lead_name?.toLowerCase(),
+      source: data.org_type,
       email: data.email?.toLowerCase(),
       company: data.company?.toLowerCase(),
       status: data.status?.toLowerCase(),
-      assigned_to: data.assigned_to,
+      assigned_to: data.assigned_to || [],
       next_follow_up: moment(data.next_follow_up).toDate(),
       comments: data.comments || "",
       files: data.files || [],
       added_by: {
-        name: `${req.employee.first_name} ${req.employee.last_name}`,
-        employee_id: req.employee.employee_id,
-        email: req.employee.email,
+        name: data.name,
+        employee_id: data.employee_id,
+        email: data.email,
       },
     };
 
@@ -2280,19 +2298,20 @@ router.post(
       const new_lead_id = functions.get_random_string("LEAD", 10, true);
       lead_object.lead_id = new_lead_id;
 
-      lead = await mongoFunctions.create_new_record("LEADS", lead_object);
-      return res.status(200).send({ message: "Lead Added Successfully", lead });
+      await mongoFunctions.create_new_record("LEADS", lead_object);
+
+      return res.status(200).send({ message: "Lead Added Successfully" });
     }
 
     // 🔄 UPDATE
-    else if (data.route_action === 2) {
+    if (data.route_action === 2) {
       if (!data.lead_id || data.lead_id.length <= 2) {
         return res.status(400).send("Lead ID required for update");
       }
 
       const existing_lead = await mongoFunctions.find_one("LEADS", {
         lead_id: data.lead_id,
-        organisation_id: req.employee.organisation_id,
+        organisation_id: data.organisation_id,
       });
 
       if (!existing_lead) {
@@ -2300,12 +2319,12 @@ router.post(
       }
 
       if (["3", "4"].includes(admin_type)) {
-        // ✅ Allow only status update for admin_type 3 or 4
-        lead = await mongoFunctions.find_one_and_update(
+        // Only partial update allowed
+        await mongoFunctions.find_one_and_update(
           "LEADS",
           {
             lead_id: data.lead_id,
-            organisation_id: req.employee.organisation_id,
+            organisation_id: data.organisation_id,
           },
           {
             $set: {
@@ -2317,13 +2336,12 @@ router.post(
           }
         );
 
-        return res.status(200).send({
-          message: "Lead Status Updated Successfully",
-          lead: lead,
-        });
+        return res
+          .status(200)
+          .send({ message: "Lead Status Updated Successfully" });
       }
 
-      // ✅ Full update for admin_type 1 or 2
+      // Full update allowed for admin_type 1 and 2
       const old_emp_ids = existing_lead.assigned_to.map((e) => e.employee_id);
       const new_emp_ids = data.assigned_to.map((e) => e.employee_id);
 
@@ -2351,23 +2369,20 @@ router.post(
         }
       }
 
-      lead = await mongoFunctions.find_one_and_update(
+      await mongoFunctions.find_one_and_update(
         "LEADS",
         {
           lead_id: data.lead_id,
-          organisation_id: req.employee.organisation_id,
+          organisation_id: data.organisation_id,
         },
         { $set: lead_object }
       );
 
-      return res.status(200).send({
-        message: "Lead Updated Successfully",
-        lead: lead,
-      });
+      return res.status(200).send({ message: "Lead Updated Successfully" });
     }
 
     // ❌ DELETE
-    else if (data.route_action === 3) {
+    if (data.route_action === 3) {
       if (!["1", "2"].includes(admin_type)) {
         return res
           .status(403)
@@ -2380,7 +2395,7 @@ router.post(
 
       const result = await mongoFunctions.find_one_and_delete("LEADS", {
         lead_id: data.lead_id,
-        organisation_id: req.employee.organisation_id,
+        organisation_id: data.organisation_id,
       });
 
       if (!result) {
@@ -2391,9 +2406,7 @@ router.post(
     }
 
     // 🚫 Invalid route_action
-    else {
-      return res.status(400).send("Invalid route_action provided");
-    }
+    return res.status(400).send("Invalid route_action provided");
   })
 );
 
@@ -2671,13 +2684,13 @@ router.post(
     return res.status(200).send({ leads });
   })
 );
-//postings route
+//postings route(no auth route)
 
 router.post(
   "/add_update_postings",
   rateLimit(60, 10),
   Async(async (req, res) => {
-    const rawInput = req.body;
+    let rawInput = encrypt_decrypt.decryptobj(req.body.enc);
     console.log(rawInput);
 
     // Validate input
@@ -2719,7 +2732,7 @@ router.post(
 
       return res.status(200).send({
         message: "Posting Added Successfully",
-        posting: postings,
+        // posting: postings,
       });
     } else if (data.route_action === 2) {
       // 🔄 UPDATE
@@ -2730,6 +2743,7 @@ router.post(
       const existing_posting = await mongoFunctions.find_one("POSTINGS", {
         posting_id: data.posting_id,
         organisation_id: data.organisation_id,
+        key: data.key,
       });
 
       if (!existing_posting) {
@@ -2741,13 +2755,14 @@ router.post(
         {
           posting_id: data.posting_id,
           organisation_id: data.organisation_id,
+          key: data.key,
         },
         { $set: postings_object }
       );
 
       return res.status(200).send({
         message: "Posting Updated Successfully",
-        posting: postings,
+        // posting: postings,
       });
     } else if (data.route_action === 3) {
       // ❌ DELETE
@@ -2758,6 +2773,7 @@ router.post(
       const result = await mongoFunctions.find_one_and_delete("POSTINGS", {
         posting_id: data.posting_id,
         organisation_id: data.organisation_id,
+        key: data.key,
       });
 
       if (!result) {
