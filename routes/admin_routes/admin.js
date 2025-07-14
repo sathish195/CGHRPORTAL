@@ -2119,52 +2119,120 @@ router.post(
   })
 );
 //add event
+
 router.post(
   "/add_event",
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
     const rawInput = req.body;
+    const admin_type = req.employee.admin_type;
 
-    // Validate input
+    // ✅ Validate input
     const { error, value: data } = validations.add_update_events(rawInput);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // Control access
-    const admin_types = ["1", "2"];
-    if (!admin_types.includes(req.employee.admin_type)) {
-      return res.status(403).send("Only Director Or Manager Can Add The Event");
-    }
-
-    // Create event object
-    const events_object = {
+    // ✅ Build base event object
+    const event_object = {
       organisation_id: req.employee.organisation_id,
-      event_id: functions.get_random_string("EVENT", 10, true),
       title: data.title,
       description: data.description,
       date: moment(data.date).toDate(),
+      type: data.type?.toLowerCase(),
+      assigned_to: data.assigned_to,
       added_by: {
         name: `${req.employee.first_name} ${req.employee.last_name}`,
         employee_id: req.employee.employee_id,
         email: req.employee.email,
       },
-      type: data.type.toLowerCase(),
     };
 
-    // Insert into DB
-    const event = await mongoFunctions.create_new_record(
-      "EVENTS",
-      events_object
-    );
+    let event;
 
-    return res.status(200).send({
-      message: "Event Added Successfully",
-      event: event,
-    });
+    // ➕ ADD
+    if (data.route_action === 1) {
+      if (!["1", "2", "3"].includes(admin_type)) {
+        return res
+          .status(403)
+          .send("Only Director, Manager, or Supervisor can add events");
+      }
+
+      event_object.event_id = functions.get_random_string("EVENT", 10, true);
+
+      event = await mongoFunctions.create_new_record("EVENTS", event_object);
+
+      return res.status(200).send({
+        message: "Event Added Successfully",
+        event,
+      });
+    }
+
+    // 🔄 UPDATE
+    else if (data.route_action === 2) {
+      if (!data.event_id || data.event_id.length <= 2) {
+        return res.status(400).send("Event ID required for update");
+      }
+
+      const existing_event = await mongoFunctions.find_one("EVENTS", {
+        event_id: data.event_id,
+        organisation_id: req.employee.organisation_id,
+      });
+
+      if (!existing_event) {
+        return res.status(404).send("Event not found for update");
+      }
+
+      // ✅ Allow full update for types 1, 2, and 3
+      if (["1", "2", "3"].includes(admin_type)) {
+        event = await mongoFunctions.find_one_and_update(
+          "EVENTS",
+          {
+            event_id: data.event_id,
+            organisation_id: req.employee.organisation_id,
+          },
+          { $set: event_object }
+        );
+
+        return res.status(200).send({
+          message: "Event Updated Successfully",
+          event,
+        });
+      }
+
+      // ❌ All others are denied
+      return res.status(403).send("Unauthorized: Cannot update event");
+    }
+
+    // ❌ DELETE
+    else if (data.route_action === 3) {
+      if (!["1", "2", "3"].includes(admin_type)) {
+        return res
+          .status(403)
+          .send("Only Director, Manager, or Supervisor can delete events");
+      }
+
+      if (!data.event_id || data.event_id.length <= 2) {
+        return res.status(400).send("Event ID required for deletion");
+      }
+
+      const result = await mongoFunctions.find_one_and_delete("EVENTS", {
+        event_id: data.event_id,
+        organisation_id: req.employee.organisation_id,
+      });
+
+      if (!result) {
+        return res.status(404).send("Event not found for deletion");
+      }
+
+      return res.status(200).send({ message: "Event Deleted Successfully" });
+    }
+
+    // 🚫 Invalid action
+    else {
+      return res.status(400).send("Invalid route_action provided");
+    }
   })
 );
-//add leads
-
 // Add / Update / Delete Lead
 router.post(
   "/add_update_lead",
@@ -2702,4 +2770,3 @@ router.post(
     }
   })
 );
-

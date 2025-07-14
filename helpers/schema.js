@@ -928,14 +928,22 @@ function department_tree(data) {
   return schema.validate(data);
 }
 function add_update_events(data) {
+  const assignedTo = Joi.object({
+    employee_id: Joi.string().required(),
+    employee_name: Joi.string().required(),
+  });
   const schema = Joi.object({
     title: Joi.string().trim().min(3).max(70).required(),
     description: Joi.string().trim().min(10).max(500).required(),
+    route_action: Joi.number()
+      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
+      .required(),
     date: Joi.date().iso().required().messages({
       "date.base": "Date must be a valid ISO 8601 date",
       "date.format": "Date must be in ISO 8601 format",
     }),
     type: Joi.string().trim().min(2).max(20).required(),
+    assigned_to: Joi.array().items(assignedTo).required(),
   });
 
   return schema.validate(data);
@@ -949,6 +957,7 @@ function get_events(data) {
       "date.format": "Date must be in ISO 8601 format",
     }),
     type: Joi.string().required().allow("", null),
+    deadline: Joi.boolean().required(),
   });
   return schema.validate(data);
 }

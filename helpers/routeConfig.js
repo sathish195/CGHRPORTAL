@@ -7,6 +7,7 @@ const admin = require("../routes/admin_routes/admin");
 const error = require("../middlewares/error");
 const queue = require("express-queue");
 const super_admin = require("../routes/super_admin_routes/super_admin");
+const events = require("../routes/org_routes/events");
 
 module.exports = (app) => {
   // Middleware setup
@@ -61,6 +62,14 @@ module.exports = (app) => {
   app.use(
     "/super_admin",
     super_admin,
+    queue({
+      activeLimit: 1,
+      queuedLimit: -1,
+    })
+  );
+  app.use(
+    "/events",
+    events,
     queue({
       activeLimit: 1,
       queuedLimit: -1,

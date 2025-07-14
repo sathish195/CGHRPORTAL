@@ -16,6 +16,7 @@ const functions = require("../../helpers/functions");
 const Imap = require("imap");
 const { simpleParser } = require("mailparser");
 const { promisify } = require("util");
+const moment = require("moment");
 
 //get employee list
 
@@ -1032,75 +1033,110 @@ router.post(
   })
 );
 //get events
+
 router.post(
   "/events",
   Auth,
   Async(async (req, res) => {
     const data = req.body;
+    const admin_type = req.employee.admin_type;
+    const employee_id = req.employee.employee_id;
 
-    // Validate limit & skip
+    // ✅ Validate input
     const { error } = validations.get_events(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // Access control
-    const admin_types = ["1", "2", "3", "4"];
-    if (!admin_types.includes(req.employee.admin_type)) {
-      return res.status(403).send("Only Director Or Manager Can Add The Event");
+    const allowed_types = ["1", "2", "3", "4"];
+    if (!allowed_types.includes(admin_type)) {
+      return res.status(403).send("Access Denied");
     }
 
-    // Base filter
-    const filters = {
+    const baseOrgFilter = {
       organisation_id: req.employee.organisation_id,
     };
 
-    // ✅ Add date filter only if date is not null or empty string
-    if (data.date && data.date !== "") {
-      const startOfDay = new Date(data.date);
-      startOfDay.setHours(0, 0, 0, 0);
+    // ✅ Main event filter
+    const filters = { ...baseOrgFilter };
 
-      const endOfDay = new Date(data.date);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      filters.date = {
-        $gte: startOfDay,
-        $lte: endOfDay,
-      };
+    // 🔐 Access controls
+    if (admin_type === "3") {
+      filters.$or = [
+        { "assigned_to.employee_id": employee_id },
+        { "added_by.employee_id": employee_id },
+      ];
+    } else if (admin_type === "4") {
+      filters["assigned_to.employee_id"] = employee_id;
     }
 
-    // ✅ Add type filter only if type is not null or empty string
+    // 🔍 Date filter
+    if (data.date && data.date !== "") {
+      const startOfDay = moment(data.date).startOf("day").toDate();
+      const endOfDay = moment(data.date).endOf("day").toDate();
+      filters.date = { $gte: startOfDay, $lte: endOfDay };
+    }
+
+    // 🔍 Type filter
     if (data.type && data.type !== "") {
       filters.type = data.type.toLowerCase();
     }
 
-    // Fetch filtered events
-    const find_events = await mongoFunctions.lazy_loading(
-      "EVENTS",
-      filters,
-      {},
-      { createdAt: -1 },
-      data.limit,
-      data.skip
-    );
-    // ✅ Count of filtered events
-    const events_count = await mongoFunctions.count_documents(
-      "EVENTS",
-      filters
-    );
+    // ✅ Deadlines filter (next 7 days)
+    const deadlineFilter = {
+      ...baseOrgFilter,
+      date: {
+        $gte: moment().startOf("day").toDate(),
+        $lte: moment().add(7, "days").endOf("day").toDate(),
+      },
+    };
 
-    // Extract unique event types
-    const event_types = await mongoFunctions.distinct("EVENTS", "type", {
-      organisation_id: req.employee.organisation_id,
-    });
-    const count = await mongoFunctions.count_documents("EVENTS", {
-      organisation_id: req.employee.organisation_id,
-    });
+    if (admin_type === "3") {
+      deadlineFilter.$or = [
+        { "assigned_to.employee_id": employee_id },
+        { "added_by.employee_id": employee_id },
+      ];
+    } else if (admin_type === "4") {
+      deadlineFilter["assigned_to.employee_id"] = employee_id;
+    }
 
-    // Return result
+    // ✅ Count filter (org-wide total for user access)
+    const org_count_filter = { ...baseOrgFilter };
+    if (admin_type === "3") {
+      org_count_filter.$or = [
+        { "assigned_to.employee_id": employee_id },
+        { "added_by.employee_id": employee_id },
+      ];
+    } else if (admin_type === "4") {
+      org_count_filter["assigned_to.employee_id"] = employee_id;
+    }
+
+    // ✅ Parallel DB Calls
+    const [events, events_count, deadlines, event_types, total_count] =
+      await Promise.all([
+        mongoFunctions.lazy_loading(
+          "EVENTS",
+          filters,
+          {},
+          { date: -1 },
+          data.limit,
+          data.skip
+        ),
+        mongoFunctions.count_documents("EVENTS", filters),
+        mongoFunctions.find(
+          "EVENTS",
+          deadlineFilter,
+          { date: -1 },
+          { _id: 0, __v: 0 }
+        ),
+        mongoFunctions.distinct("EVENTS", "type", org_count_filter),
+        mongoFunctions.count_documents("EVENTS", org_count_filter),
+      ]);
+
     return res.status(200).send({
-      events: find_events,
-      event_types: event_types,
-      events_count: events_count,
-      count: count,
+      events,
+      deadlines,
+      event_types,
+      events_count,
+      count: total_count,
     });
   })
 );
