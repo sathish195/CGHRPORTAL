@@ -981,7 +981,7 @@ function add_leads(data) {
   });
   const schema = Joi.object({
     lead_id: Joi.string().trim().optional().allow("", null),
-    organisation_id: Joi.string().optional().allow("", null),
+    organisation_id: Joi.string().required(),
     key: Joi.string().required(),
     admin_type: Joi.string().required(),
     source: Joi.string().optional().allow("", null),
