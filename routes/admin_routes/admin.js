@@ -2843,8 +2843,8 @@ router.post(
     // Construct postings data
     const postings_object = {
       organisation_id: data.organisation_id,
-      title: (data.title || "").toLowerCase(),
-      description: (data.description || "").toLowerCase(),
+      title: data.title || "",
+      description: data.description || "",
       key: data.key || null,
       images: data.images || [],
     };
