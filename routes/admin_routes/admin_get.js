@@ -1540,6 +1540,7 @@ router.post(
 
     const count = await mongoFunctions.count_documents("POSTINGS", {
       organisation_id: data.organisation_id,
+      key: data.key,
     });
 
     // Return result
