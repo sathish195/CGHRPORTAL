@@ -2309,7 +2309,7 @@ router.post(
       organisation_id: data.organisation_id,
       lead_name: data.lead_name?.toLowerCase(),
       key: data.key,
-      source: data.org_type || "self",
+      source: data.source || "self",
       email: data.email?.toLowerCase(),
       company: data.company?.toLowerCase(),
       status: data.status?.toLowerCase(),
