@@ -2365,13 +2365,18 @@ router.post(
       lead_object.lead_id = new_lead_id;
 
       await mongoFunctions.create_new_record("LEADS", lead_object);
-      //add notification
+      // Add notification
       let lead_add = {
         organisation_id: data.organisation_id,
-        message: `New lead named ${lead_object.lead_name} was added by ${lead_object.added_by.name} (${lead_object.added_by.employee_id})..!!`,
+        message: `New lead named ${lead_object.lead_name} was added by ${
+          lead_object.added_by?.name || ""
+        } (${lead_object.added_by?.employee_id || ""})..!!`,
         for_roles: [],
-        for_employees: lead_object.assigned_to,
-        added_by: lead_object.added_by,
+        for_employees: lead_object.assigned_to || [],
+        added_by:
+          lead_object.added_by && Object.keys(lead_object.added_by).length > 0
+            ? lead_object.added_by
+            : {},
       };
 
       await notify.add_notification(lead_add);
