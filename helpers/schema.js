@@ -1146,7 +1146,7 @@ function get_postings(data) {
     skip: Joi.number().required(),
     limit: Joi.number().required(),
     organisation_id: Joi.string().required(),
-    key: Joi.number()
+    key: Joi.string()
       // .valid(1, 2) // 1 - add, 2 - update, 3 - delete
       .required(),
   });

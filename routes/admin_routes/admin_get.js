@@ -1495,16 +1495,16 @@ router.post(
 router.post(
   "/postings",
   Async(async (req, res) => {
-    const data = req.body;
+    const data = encrypt_decrypt.decryptobj(req.body.enc);
 
     // Validate limit & skip
     const { error } = validations.get_postings(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // Access control
-    const admin_types = [1, 2];
-    if (!admin_types.includes(data.key)) {
-      return res.status(403).send("Access Denied");
+    ///Access control from payload
+    const keys = ["scanglobal", "crm"];
+    if (!keys.includes(data.key)) {
+      return res.status(403).send("Access denied");
     }
 
     // Base filter
@@ -1531,7 +1531,7 @@ router.post(
     const find_postings = await mongoFunctions.lazy_loading(
       "POSTINGS",
       filters,
-      {},
+      { key: 0, _id: 0, __v: 0 },
       { createdAt: -1 },
       data.limit,
       data.skip
