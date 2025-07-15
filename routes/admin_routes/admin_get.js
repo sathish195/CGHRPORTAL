@@ -17,6 +17,7 @@ const Imap = require("imap");
 const { simpleParser } = require("mailparser");
 const { promisify } = require("util");
 const moment = require("moment");
+const encrypt_decrypt = require("../../helpers/encrypt_decrypt");
 
 //get employee list
 
