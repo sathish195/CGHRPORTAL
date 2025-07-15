@@ -983,7 +983,7 @@ function add_leads(data) {
     lead_id: Joi.string().trim().optional().allow("", null),
     organisation_id: Joi.string().optional().allow("", null),
     key: Joi.string().required(),
-    admin_type: Joi.string().optional().allow("", null),
+    admin_type: Joi.string().required(),
     source: Joi.string().optional().allow("", null),
     added_by: Joi.object({
       name: Joi.string().optional(),

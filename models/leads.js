@@ -9,7 +9,7 @@ const leads_schema = new mongoose.Schema(
     key: { type: String, required: true },
     source: { type: String, default: "" },
     email: { type: String, required: true },
-    company: { type: String, required: true },
+    company: { type: String },
     status: { type: String, required: true },
     assigned_to: { type: Array, default: [] },
     next_follow_up: { type: Date, required: true },
