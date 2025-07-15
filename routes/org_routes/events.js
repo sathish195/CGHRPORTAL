@@ -36,7 +36,7 @@ router.post(
     const { error } = validations.skipLimit(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // ✅ Allow only specific admin types
+    // ✅ Access control
     const allowed_types = ["1", "2", "3", "4"];
     if (!allowed_types.includes(admin_type)) {
       return res.status(403).send("Access Denied!");
@@ -47,18 +47,27 @@ router.post(
       organisation_id: req.employee.organisation_id,
     };
 
-    // ✅ Role-based filter logic
+    // ✅ Role-based logic
     if (admin_type === "1" || admin_type === "2") {
-      // Full access, no extra filter
+      // Full access, no further filter needed
     } else if (admin_type === "3") {
-      // Access to notifications added by them OR addressed to them
+      // Access if:
+      // - added_by is them
+      // - OR for_employees contains them
+      // - OR for_roles contains their admin_type
       filter.$or = [
         { "added_by.employee_id": employee_id },
         { "for_employees.employee_id": employee_id },
+        { for_roles: admin_type },
       ];
     } else if (admin_type === "4") {
-      // Access only to notifications addressed to them
-      filter["for_employees.employee_id"] = employee_id;
+      // Access if:
+      // - for_employees contains them
+      // - OR for_roles contains their admin_type
+      filter.$or = [
+        { "for_employees.employee_id": employee_id },
+        { for_roles: admin_type },
+      ];
     }
 
     // ✅ Fetch notifications with pagination

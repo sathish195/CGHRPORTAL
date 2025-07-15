@@ -328,6 +328,20 @@ router.post(
       );
       await redisFunctions.update_redis("ORGANISATIONS", update_emp_count);
     }
+    // Add notification
+    let emp_add = {
+      organisation_id: data.organisation_id,
+      message: `New Employee ${new_emp_data.basic_info.first_name} ${new_emp_data.basic_info.last_name} was added by ${req.employee.first_name} ${req.employee.last_name} (${req.employee.employee_id})..!!`,
+      for_roles: ["1", "2", "3", "4"],
+      for_employees: [],
+      added_by: {
+        name: `${req.employee.first_name} ${req.employee.last_name}`,
+        employee_id: req.employee.employee_id,
+        email: req.employee.email,
+      },
+    };
+
+    await notify.add_notification(emp_add);
 
     // await redis.update_redis("EMPLOYEE", new_emp);
     // console.log("added emp in redis");
@@ -587,6 +601,25 @@ router.post(
       );
       await redisFunctions.update_redis("ORGANISATIONS", update_emp_count);
     }
+    // Add notification
+    let emp_update = {
+      organisation_id: data.organisation_id,
+      message: `${new_emp_data.basic_info.first_name} ${new_emp_data.basic_info.last_name}'s profile was updated by ${req.employee.first_name} ${req.employee.last_name} (${req.employee.employee_id})..!!`,
+      for_roles: [],
+      for_employees: [
+        {
+          employee_id: new_emp_data.employee_id,
+          employee_name: `${new_emp_data.basic_info.first_name} ${new_emp_data.basic_info.last_name}`,
+        },
+      ],
+      added_by: {
+        name: `${req.employee.first_name} ${req.employee.last_name}`,
+        employee_id: req.employee.employee_id,
+        email: req.employee.email,
+      },
+    };
+
+    await notify.add_notification(emp_update);
 
     // await redis.update_redis("EMPLOYEE", new_emp);
     // console.log("updated emp in redis");
@@ -2166,7 +2199,7 @@ router.post(
       let event_add = {
         organisation_id: req.employee.organisation_id,
         message: `New event named ${event_object.title} with type ${event_object.type} was added by ${event_object.added_by.name} (${event_object.added_by.employee_id})..!!`,
-        for_roles: ["1", "2", "3", "4"],
+        for_roles: [],
         for_employees: event_object.assigned_to,
         added_by: event_object.added_by,
       };
@@ -2222,7 +2255,7 @@ router.post(
         let event_update = {
           organisation_id: req.employee.organisation_id,
           message: `Event named ${event_object.title} with type ${event_object.type} was updated by ${event.updated_by.name} (${event.updated_by.employee_id})..!!`,
-          for_roles: ["1", "2", "3", "4"],
+          for_roles: [],
           for_employees: event_object.assigned_to,
           updated_by: event.updated_by,
         };
@@ -2263,7 +2296,7 @@ router.post(
       let event_delete = {
         organisation_id: req.employee.organisation_id,
         message: `Event  named ${event_object.title} with type ${event_object.type} was deleted by ${req.employee.first_name} ${req.employee.last_name} (${req.employee.employee_id})..!!`,
-        for_roles: ["1", "2", "3", "4"],
+        for_roles: [],
         for_employees: data.assigned_to,
         updated_by: data.added_by,
       };
@@ -2336,7 +2369,7 @@ router.post(
       let lead_add = {
         organisation_id: data.organisation_id,
         message: `New lead named ${lead_object.lead_name} was added by ${lead_object.added_by.name} (${lead_object.added_by.employee_id})..!!`,
-        for_roles: ["1", "2", "3", "4"],
+        for_roles: [],
         for_employees: lead_object.assigned_to,
         added_by: lead_object.added_by,
       };
@@ -2387,7 +2420,7 @@ router.post(
         let lead_update_emp = {
           organisation_id: data.organisation_id,
           message: `Lead named ${lead_object.lead_name} was updated by ${lead_object.added_by.name} (${lead_object.added_by.employee_id})..!!`,
-          for_roles: ["1", "2", "3", "4"],
+          for_roles: [],
           for_employees: lead_object.assigned_to,
           updated_by: lead_object.added_by,
         };
@@ -2454,7 +2487,7 @@ router.post(
       let lead_update_admin = {
         organisation_id: data.organisation_id,
         message: `Lead named ${lead_object.lead_name} was updated by ${lead_object.added_by.name} (${lead_object.added_by.employee_id})..!!`,
-        for_roles: ["1", "2", "3", "4"],
+        for_roles: [],
         for_employees: lead_object.assigned_to,
         updated_by: lead_object.added_by,
       };
@@ -2488,7 +2521,7 @@ router.post(
       let lead_delete = {
         organisation_id: data.organisation_id,
         message: `Lead named ${lead_object.lead_name} was deleted by ${lead_object.added_by.name} (${lead_object.added_by.employee_id})..!!`,
-        for_roles: ["1", "2", "3", "4"],
+        for_roles: [],
         for_employees: lead_object.assigned_to,
         updated_by: lead_object.added_by,
       };
