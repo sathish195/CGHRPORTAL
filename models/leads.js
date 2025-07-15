@@ -16,6 +16,7 @@ const leads_schema = new mongoose.Schema(
     comments: { type: String },
     files: { type: Array, default: [] },
     added_by: { type: Object, default: {} },
+    updated_by: { type: Object, deafult: {} },
   },
   { timestamps: true }
 );

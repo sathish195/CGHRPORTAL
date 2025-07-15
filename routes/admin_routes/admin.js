@@ -2224,7 +2224,7 @@ router.post(
           message: `Event named ${event_object.title} with type ${event_object.type} was updated by ${event.updated_by.name} (${event.updated_by.employee_id})..!!`,
           for_roles: ["1", "2", "3", "4"],
           for_employees: event_object.assigned_to,
-          added_by: event_object.added_by,
+          updated_by: event.updated_by,
         };
 
         await notify.add_notification(event_update);
@@ -2265,7 +2265,7 @@ router.post(
         message: `Event  named ${event_object.title} with type ${event_object.type} was deleted by ${req.employee.first_name} ${req.employee.last_name} (${req.employee.employee_id})..!!`,
         for_roles: ["1", "2", "3", "4"],
         for_employees: data.assigned_to,
-        added_by: event_object.added_by,
+        updated_by: data.added_by,
       };
 
       await notify.add_notification(event_delete);
@@ -2317,11 +2317,7 @@ router.post(
       next_follow_up: moment(data.next_follow_up).toDate(),
       comments: data.comments || "",
       files: data.files || [],
-      added_by: {
-        name: data.name,
-        employee_id: data.employee_id,
-        email: data.email,
-      },
+      added_by: data.added_by,
     };
 
     let lead;
@@ -2336,6 +2332,16 @@ router.post(
       lead_object.lead_id = new_lead_id;
 
       await mongoFunctions.create_new_record("LEADS", lead_object);
+      //add notification
+      let lead_add = {
+        organisation_id: data.organisation_id,
+        message: `New lead named ${lead_object.lead_name} was added by ${lead_object.added_by.name} (${lead_object.added_by.employee_id})..!!`,
+        for_roles: ["1", "2", "3", "4"],
+        for_employees: lead_object.assigned_to,
+        added_by: lead_object.added_by,
+      };
+
+      await notify.add_notification(lead_add);
 
       return res.status(200).send({ message: "Lead Added Successfully" });
     }
@@ -2369,9 +2375,24 @@ router.post(
               comments: data.comments || "",
               files: data.files || [],
               next_follow_up: moment(data.next_follow_up).toDate(),
+              updated_by: {
+                name: data.name,
+                employee_id: data.employee_id,
+                email: data.email,
+              },
             },
           }
         );
+        //add notification
+        let lead_update_emp = {
+          organisation_id: data.organisation_id,
+          message: `Lead named ${lead_object.lead_name} was updated by ${lead_object.added_by.name} (${lead_object.added_by.employee_id})..!!`,
+          for_roles: ["1", "2", "3", "4"],
+          for_employees: lead_object.assigned_to,
+          updated_by: lead_object.added_by,
+        };
+
+        await notify.add_notification(lead_update_emp);
 
         return res
           .status(200)
@@ -2406,14 +2427,39 @@ router.post(
         }
       }
 
-      await mongoFunctions.find_one_and_update(
+      const update_admin = await mongoFunctions.find_one_and_update(
         "LEADS",
         {
           lead_id: data.lead_id,
           organisation_id: data.organisation_id,
         },
-        { $set: lead_object }
+        {
+          $set: {
+            organisation_id: data.organisation_id,
+            lead_name: data.lead_name?.toLowerCase(),
+            key: data.key,
+            source: data.source || "self",
+            email: data.email?.toLowerCase(),
+            company: data.company?.toLowerCase(),
+            status: data.status?.toLowerCase(),
+            assigned_to: data.assigned_to || [],
+            next_follow_up: moment(data.next_follow_up).toDate(),
+            comments: data.comments || "",
+            files: data.files || [],
+            updated_by: data.added_by,
+          },
+        }
       );
+      //add notification
+      let lead_update_admin = {
+        organisation_id: data.organisation_id,
+        message: `Lead named ${lead_object.lead_name} was updated by ${lead_object.added_by.name} (${lead_object.added_by.employee_id})..!!`,
+        for_roles: ["1", "2", "3", "4"],
+        for_employees: lead_object.assigned_to,
+        updated_by: lead_object.added_by,
+      };
+
+      await notify.add_notification(lead_update_admin);
 
       return res.status(200).send({ message: "Lead Updated Successfully" });
     }
@@ -2438,6 +2484,16 @@ router.post(
       if (!result) {
         return res.status(404).send("Lead not found for deletion");
       }
+      //add notification
+      let lead_delete = {
+        organisation_id: data.organisation_id,
+        message: `Lead named ${lead_object.lead_name} was deleted by ${lead_object.added_by.name} (${lead_object.added_by.employee_id})..!!`,
+        for_roles: ["1", "2", "3", "4"],
+        for_employees: lead_object.assigned_to,
+        updated_by: lead_object.added_by,
+      };
+
+      await notify.add_notification(lead_delete);
 
       return res.status(200).send({ message: "Lead Deleted Successfully" });
     }
