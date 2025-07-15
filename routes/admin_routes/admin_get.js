@@ -1176,38 +1176,42 @@ router.post(
     return res.status(200).send({ event: event });
   })
 );
-//get_leads
+// get_leads
 router.post(
   "/leads",
   Auth,
   Async(async (req, res) => {
     const data = req.body;
 
-    // Validate limit & skip
+    // ✅ Validate limit & skip
     const { error } = validations.get_leads(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // Access control
+    // ✅ Access control
     const admin_types = ["1", "2", "3", "4"];
+    const admin_type = req.employee.admin_type;
+    const employee_id = req.employee.employee_id;
 
-    if (!admin_types.includes(req.employee.admin_type)) {
+    if (!admin_types.includes(admin_type)) {
       return res.status(403).send("Access Denied");
     }
 
-    // Base filter: only by organisation
+    // ✅ Base filters: by organisation
     const filters = {
       organisation_id: req.employee.organisation_id,
     };
-    // Filter for employee-specific access
-    if (["3", "4"].includes(req.employee.admin_type)) {
-      filters["assigned_to.employee_id"] = req.employee.employee_id;
+
+    // ✅ Restrict access for admin types 3 & 4
+    if (["3", "4"].includes(admin_type)) {
+      filters["assigned_to.employee_id"] = employee_id;
     }
 
-    // ✅ Add status filter only if type is not null or empty string
+    // ✅ Optional status filter
     if (data.status && data.status !== "") {
       filters.status = data.status.toLowerCase();
     }
-    // ✅ Add date filter only if date is not null or empty string
+
+    // ✅ Optional date filter
     if (data.date && data.date !== "") {
       const startOfDay = new Date(data.date);
       startOfDay.setHours(0, 0, 0, 0);
@@ -1221,7 +1225,7 @@ router.post(
       };
     }
 
-    // Fetch paginated leads
+    // ✅ Pagination fetch
     const leads = await mongoFunctions.lazy_loading(
       "LEADS",
       filters,
@@ -1230,39 +1234,40 @@ router.post(
       data.limit,
       data.skip
     );
-    let leads_count = 0;
-    if (
-      (data.date && data.date !== "") ||
-      (data.status && data.status !== "")
-    ) {
-      const c = await mongoFunctions.count_documents(
-        "LEADS",
-        filters,
-        {},
-        { createdAt: -1 }
-      );
-      leads_count = c;
-    }
-    const isAdminTypeRestricted = [3, 4].includes(
-      Number(req.employee.admin_type)
-    );
 
+    // ✅ Determine whether filters were applied
+    const hasFilters =
+      (data.date && data.date !== "") || (data.status && data.status !== "");
+
+    // ✅ leads_count: filtered if filters applied, otherwise total count
+    let leads_count;
+    if (hasFilters) {
+      leads_count = await mongoFunctions.count_documents("LEADS", filters);
+    } else {
+      // No filters, so count all for this user's access level
+      const countFilter = {
+        organisation_id: req.employee.organisation_id,
+      };
+      if (["3", "4"].includes(admin_type)) {
+        countFilter["assigned_to.employee_id"] = employee_id;
+      }
+      leads_count = await mongoFunctions.count_documents("LEADS", countFilter);
+    }
+
+    // ✅ Total count (unfiltered, for stats)
     const countFilter = {
       organisation_id: req.employee.organisation_id,
     };
-
-    if (isAdminTypeRestricted) {
-      countFilter["assigned_to.employee_id"] = req.employee.employee_id;
+    if (["3", "4"].includes(admin_type)) {
+      countFilter["assigned_to.employee_id"] = employee_id;
     }
-
     const count = await mongoFunctions.count_documents("LEADS", countFilter);
 
     return res.status(200).send({
-      leads: leads,
-      leads_count: leads_count === 0 ? count : leads_count,
-      count: count,
+      leads,
+      leads_count,
+      count,
     });
-    
   })
 );
 
