@@ -2252,16 +2252,6 @@ router.post(
     if (!validKeys.includes(data.key)) {
       return res.status(403).send("Access denied: Invalid key");
     }
-
-    if (
-      data.key === "crm" &&
-      (!data.organisation_id ||
-        data.organisation_id.length <= 2 ||
-        !validKeys.includes(data.organisation_id))
-    ) {
-      return res.status(403).send("Access denied: Invalid organisation_id");
-    }
-
     const { admin_type } = data;
 
     // Check allowed admin types
