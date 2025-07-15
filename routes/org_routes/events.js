@@ -22,7 +22,6 @@ const path = require("path");
 const fsp = require("fs").promises;
 const moment = require("moment");
 
-// Events deadlines within the next 7 days
 router.post(
   "/notifications",
   Auth,
@@ -37,27 +36,37 @@ router.post(
     const { error } = validations.skipLimit(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // ✅ Access control
+    // ✅ Allow only specific admin types
     const allowed_types = ["1", "2", "3", "4"];
     if (!allowed_types.includes(admin_type)) {
       return res.status(403).send("Access Denied!");
     }
 
-    // ✅ Build filter
+    // ✅ Base filter
     const filter = {
       organisation_id: req.employee.organisation_id,
-      $or: [
-        { for_roles: admin_type },
-        { "for_employees.employee_id": employee_id },
-      ],
     };
+
+    // ✅ Role-based filter logic
+    if (admin_type === "1" || admin_type === "2") {
+      // Full access, no extra filter
+    } else if (admin_type === "3") {
+      // Access to notifications added by them OR addressed to them
+      filter.$or = [
+        { "added_by.employee_id": employee_id },
+        { "for_employees.employee_id": employee_id },
+      ];
+    } else if (admin_type === "4") {
+      // Access only to notifications addressed to them
+      filter["for_employees.employee_id"] = employee_id;
+    }
 
     // ✅ Fetch notifications with pagination
     const [notifications, total] = await Promise.all([
       mongoFunctions.lazy_loading(
         "NOTIFICATIONS",
         filter,
-        {},
+        { _id: 0, message: 1 },
         { created_at: -1 },
         data.limit,
         data.skip
@@ -71,7 +80,5 @@ router.post(
     });
   })
 );
-
-//remainders or notifications
 
 module.exports = router;

@@ -10,6 +10,7 @@ const events_schema = new mongoose.Schema(
     added_by: { type: Object, default: {} },
     type: { type: String, required: true },
     assigned_to: { type: Array, default: [] },
+    updated_by: { type: Object, deafult: {} },
   },
   { timestamps: true }
 );

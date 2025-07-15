@@ -17,6 +17,7 @@ const Nodemailer = require("nodemailer");
 const slowDown = require("../../middlewares/slow_down");
 const Fuse = require("fuse.js");
 const encrypt_decrypt = require("../../helpers/encrypt_decrypt");
+const notify = require("../../helpers/notifications");
 
 //forgot password  route to reset employee's forgot password
 router.post(
@@ -2161,6 +2162,16 @@ router.post(
       event_object.event_id = functions.get_random_string("EVENT", 10, true);
 
       event = await mongoFunctions.create_new_record("EVENTS", event_object);
+      //add notification
+      let event_add = {
+        organisation_id: req.employee.organisation_id,
+        message: `New event named ${event_object.title} with type ${event_object.type} was added by ${event_object.added_by.name} (${event_object.added_by.employee_id})..!!`,
+        for_roles: ["1", "2", "3", "4"],
+        for_employees: event_object.assigned_to,
+        added_by: event_object.added_by,
+      };
+
+      await notify.add_notification(event_add);
 
       return res.status(200).send({
         message: "Event Added Successfully",
@@ -2191,8 +2202,32 @@ router.post(
             event_id: data.event_id,
             organisation_id: req.employee.organisation_id,
           },
-          { $set: event_object }
+          {
+            $set: {
+              organisation_id: req.employee.organisation_id,
+              title: data.title,
+              description: data.description,
+              date: moment(data.date).toDate(),
+              type: data.type?.toLowerCase(),
+              assigned_to: data.assigned_to,
+              updated_by: {
+                name: `${req.employee.first_name} ${req.employee.last_name}`,
+                employee_id: req.employee.employee_id,
+                email: req.employee.email,
+              },
+            },
+          }
         );
+        //add notification
+        let event_update = {
+          organisation_id: req.employee.organisation_id,
+          message: `Event named ${event_object.title} with type ${event_object.type} was updated by ${event.updated_by.name} (${event.updated_by.employee_id})..!!`,
+          for_roles: ["1", "2", "3", "4"],
+          for_employees: event_object.assigned_to,
+          added_by: event_object.added_by,
+        };
+
+        await notify.add_notification(event_update);
 
         return res.status(200).send({
           message: "Event Updated Successfully",
@@ -2224,6 +2259,16 @@ router.post(
       if (!result) {
         return res.status(404).send("Event not found for deletion");
       }
+      //add notification
+      let event_delete = {
+        organisation_id: req.employee.organisation_id,
+        message: `Event  named ${event_object.title} with type ${event_object.type} was deleted by ${req.employee.first_name} ${req.employee.last_name} (${req.employee.employee_id})..!!`,
+        for_roles: ["1", "2", "3", "4"],
+        for_employees: data.assigned_to,
+        added_by: event_object.added_by,
+      };
+
+      await notify.add_notification(event_delete);
 
       return res.status(200).send({ message: "Event Deleted Successfully" });
     }
@@ -2264,7 +2309,7 @@ router.post(
       organisation_id: data.organisation_id,
       lead_name: data.lead_name?.toLowerCase(),
       key: data.key,
-      source: data.org_type,
+      source: data.org_type || "self",
       email: data.email?.toLowerCase(),
       company: data.company?.toLowerCase(),
       status: data.status?.toLowerCase(),

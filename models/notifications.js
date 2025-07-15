@@ -11,18 +11,6 @@ const notifications_schema = new mongoose.Schema(
 
     organisation_id: { type: String, required: true },
 
-    type: {
-      type: String,
-      //   enum: ["event", "employee", "task", "lead", "announcement"],
-      required: true,
-    },
-
-    action: {
-      type: String,
-      enum: ["added", "updated", "assigned", "deleted"],
-      required: true,
-    },
-
     message: { type: String, required: true },
 
     for_roles: { type: [String], default: [] }, // e.g., ["1", "2"]
@@ -31,7 +19,7 @@ const notifications_schema = new mongoose.Schema(
       type: [
         {
           employee_id: { type: String, required: true },
-          name: { type: String, required: true },
+          employee_name: { type: String, required: true },
         },
       ],
       default: [],
@@ -41,12 +29,6 @@ const notifications_schema = new mongoose.Schema(
       employee_id: { type: String, required: true },
       name: { type: String, required: true },
       email: { type: String, required: true },
-    },
-
-    updated_by: {
-      employee_id: { type: String },
-      name: { type: String },
-      email: { type: String },
     },
 
     created_at: { type: Date, default: Date.now },
