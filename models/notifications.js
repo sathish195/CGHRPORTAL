@@ -30,8 +30,6 @@ const notifications_schema = new mongoose.Schema(
       default: {},
     },
     updated_by: { type: Object, default: {} },
-
-    created_at: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
