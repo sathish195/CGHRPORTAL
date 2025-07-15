@@ -2244,7 +2244,7 @@ router.post(
     console.log(rawInput);
 
     // Validate input
-    const { error, value: data } = validations.add_update_postings(rawInput);
+    const { error, value: data } = validations.add_leads(rawInput);
     if (error) return res.status(400).send(error.details[0].message);
 
     // Access control from payload
