@@ -16,6 +16,7 @@ const moment = require("moment-timezone");
 const Nodemailer = require("nodemailer");
 const slowDown = require("../../middlewares/slow_down");
 const Fuse = require("fuse.js");
+const encrypt_decrypt = require("../helpers/encrypt_decrypt");
 
 //forgot password  route to reset employee's forgot password
 router.post(
