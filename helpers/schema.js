@@ -1131,13 +1131,18 @@ function add_update_postings(data) {
     posting_id: Joi.string().optional().allow("", null),
     title: Joi.string().required(),
     description: Joi.string().required(),
-    images: Joi.array().items(
-      Joi.object({
-        url: Joi.string().custom(base64ImageSizeValidator).required().messages({
-          "string.pattern.base": "Size should be 256 KB only.",
-        }),
-      })
-    ),
+    images: Joi.array()
+      .max(1)
+      .items(
+        Joi.object({
+          url: Joi.string()
+            .custom(base64ImageSizeValidator)
+            .required()
+            .messages({
+              "string.pattern.base": "Size should be 256 KB only.",
+            }),
+        })
+      ),
   });
   return schema.validate(data);
 }
@@ -1147,7 +1152,7 @@ function get_postings(data) {
     limit: Joi.number().required(),
     organisation_id: Joi.string().required(),
     key: Joi.string().required(),
-    posting_id:Joi.string().optional().allow("", null),
+    posting_id: Joi.string().optional().allow("", null),
   });
   return schema.validate(data);
 }
