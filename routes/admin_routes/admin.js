@@ -2340,11 +2340,11 @@ router.post(
     // Construct lead object
     const lead_object = {
       organisation_id: data.organisation_id,
-      lead_name: data.lead_name?.toLowerCase(),
+      lead_name: data.lead_name,
       key: data.key,
       source: data.source || "self",
       email: data.email?.toLowerCase(),
-      company: data.company?.toLowerCase(),
+      company: data.company,
       status: data.status?.toLowerCase(),
       assigned_to: data.assigned_to || [],
       next_follow_up: moment(data.next_follow_up).toDate(),
