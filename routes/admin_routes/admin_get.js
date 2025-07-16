@@ -1496,7 +1496,8 @@ router.post(
 router.post(
   "/postings",
   Async(async (req, res) => {
-    const data = encrypt_decrypt.decryptobj(req.body.enc);
+    const data = req.body;
+    // encrypt_decrypt.decryptobj(req.body.enc);
 
     // Validate limit & skip
     const { error } = validations.get_postings(data);
@@ -1506,6 +1507,22 @@ router.post(
     const keys = ["scanglobal", "crm"];
     if (!keys.includes(data.key)) {
       return res.status(403).send("Access denied");
+    }
+    // ✅ If postings_id is provided, return single post
+    if (data.posting_id && data.posting_id.trim() !== "") {
+      const post = await mongoFunctions.find_one(
+        "POSTINGS",
+        {
+          posting_id: data.posting_id,
+          organisation_id: data.organisation_id,
+          key: data.key,
+        },
+        { key: 0, _id: 0, __v: 0, organisation_id: 0 }
+      );
+
+      if (!post) return res.status(404).send("Post not found");
+
+      return res.status(200).send({ posting: post });
     }
 
     // Base filter

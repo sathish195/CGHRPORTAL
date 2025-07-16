@@ -1146,9 +1146,8 @@ function get_postings(data) {
     skip: Joi.number().required(),
     limit: Joi.number().required(),
     organisation_id: Joi.string().required(),
-    key: Joi.string()
-      // .valid(1, 2) // 1 - add, 2 - update, 3 - delete
-      .required(),
+    key: Joi.string().required(),
+    posting_id:Joi.string().optional().allow("", null),
   });
   return schema.validate(data);
 }
