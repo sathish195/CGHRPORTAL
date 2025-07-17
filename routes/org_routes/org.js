@@ -21,24 +21,36 @@ const fs = require("fs");
 const path = require("path");
 const fsp = require("fs").promises;
 
+//add organisation
 router.post(
   "/add_update_org_details",
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("add update org details route hit");
-    let data = req.body;
-    const { error } = validations.add_update_org(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-    if (req.employee.admin_type !== "1")
-      return res.status(403).send("Only Admin Can Access This Endpoint");
+    console.log("add_update_org_details route hit");
 
-    let find_org = await mongoFunctions.find_one("ORGANISATIONS", {
+    const data = req.body;
+
+    // 1. Validate Input
+    const { error } = validations.add_update_org(data);
+    if (error) {
+      return res.status(400).send({ error: error.details[0].message });
+    }
+
+    // 2. Access Check
+    if (req.employee.admin_type !== "1") {
+      return res
+        .status(403)
+        .send({ error: "Only Admin Can Access This Endpoint" });
+    }
+
+    // 3. Check if Organisation Exists
+    const find_org = await mongoFunctions.find_one("ORGANISATIONS", {
       email: req.employee.email,
     });
 
     let org_data_up;
-    let org_data = {
+    const org_data = {
       email: req.employee.email,
       organisation_name: data.organisation_name.toUpperCase(),
       organisation_details: {
@@ -46,77 +58,85 @@ router.post(
         org_mail_id: data.org_mail_id,
         address: data.address,
       },
+      about: data.about,
+      social_media_urls: data.social_media_urls,
       "images.logo": data.logo,
     };
+
     if (find_org) {
-      // //restrict access
-      let find_access = await functions.hasAccess(
-        find_org.billing_type.type,
+      // 4. Check Access to Feature
+      const hasAccess = await functions.hasAccess(
+        find_org.billing_type?.type,
         "controls"
       );
-      if (!find_access) {
-        return res.status(400).send("Access Denied For This Feature!!");
+      if (!hasAccess) {
+        return res
+          .status(403)
+          .send({ error: "Access Denied For This Feature!" });
       }
-      //billing
-      const updates = { ...org_data };
 
-      // Check if billing_type update is needed
-      let new_billing = data.billing_type;
-      const old_billing = find_org.billing_type;
-
-      let billingNeedsUpdate = false;
-
-      if (
+      // 5. Billing Update Check
+      const new_billing = data.billing_type;
+      const old_billing = find_org.billing_type || {};
+      let billingNeedsUpdate =
         new_billing &&
-        (!old_billing ||
-          old_billing.type !== new_billing.type ||
-          old_billing.plan !== new_billing.plan)
-      ) {
-        billingNeedsUpdate = true;
+        (old_billing.type !== new_billing.type ||
+          old_billing.plan !== new_billing.plan);
 
-        if (new_billing.type === "paid") {
-          const payment_date = new Date();
-          let expiry_date = new Date(payment_date);
+      if (billingNeedsUpdate && new_billing.type === "paid") {
+        const payment_date = new Date();
+        const expiry_date = new Date(payment_date);
 
-          switch (new_billing.plan) {
-            case "6_months":
-              expiry_date.setMonth(expiry_date.getMonth() + 6);
-              break;
-            case "3_months":
-              expiry_date.setMonth(expiry_date.getMonth() + 3);
-              break;
-            case "1_year":
-              expiry_date.setFullYear(expiry_date.getFullYear() + 1);
-              break;
-            default:
-              return res.status(400).send("Invalid billing plan.");
-          }
-
-          new_billing.payment_date = payment_date;
-          new_billing.exp_date = expiry_date;
+        switch (new_billing.plan) {
+          case "6_months":
+            expiry_date.setMonth(expiry_date.getMonth() + 6);
+            break;
+          case "3_months":
+            expiry_date.setMonth(expiry_date.getMonth() + 3);
+            break;
+          case "1_year":
+            expiry_date.setFullYear(expiry_date.getFullYear() + 1);
+            break;
+          default:
+            return res.status(400).send({ error: "Invalid billing plan." });
         }
 
-        updates.billing_type = new_billing;
+        new_billing.payment_date = payment_date;
+        new_billing.exp_date = expiry_date;
+        org_data.billing_type = new_billing;
+
         console.log("Billing details updated.");
       }
+
+      // 6. Update Organisation
       org_data_up = await mongoFunctions.find_one_and_update(
         "ORGANISATIONS",
         { email: req.employee.email },
-        updates,
+        org_data.billing_type
+          ? { ...org_data, billing_type: new_billing }
+          : org_data,
         { new: true }
       );
-      console.log("organisation details updated");
+
+      console.log("Organisation details updated.");
+      await redisFunctions.update_redis("ORGANISATIONS", org_data_up);
+      return res.status(200).send({
+        success: "Organisation Details Updated Successfully.",
+        data: org_data_up,
+      });
     } else {
-      let find_id = await mongoFunctions.find_one("ORGANISATIONS", {
+      // 7. Check if employee ID already used
+      const find_id = await mongoFunctions.find_one("ORGANISATIONS", {
         employee_id: req.employee.employee_id,
       });
       if (find_id) {
-        return res
-          .status(400)
-          .send("Employee ID Already Exists For Another Organisation");
+        return res.status(400).send({
+          error: "Employee ID Already Exists For Another Organisation",
+        });
       }
-      // 2. Set payment and expiry date
-      let billing_type = data.billing_type;
+
+      // 8. Handle Billing Dates
+      let billing_type = data.billing_type || {};
       let payment_date = null;
       let expiry_date = null;
 
@@ -135,23 +155,22 @@ router.post(
             expiry_date.setFullYear(expiry_date.getFullYear() + 1);
             break;
           default:
-            return res.status(400).send("Invalid billing plan.");
+            return res.status(400).send({ error: "Invalid billing plan." });
         }
-        console.log(payment_date);
-        console.log(expiry_date);
 
-        // attach dates to billing_type
         billing_type.payment_date = payment_date;
         billing_type.exp_date = expiry_date;
+        console.log(payment_date, expiry_date);
       }
 
-      let new_org_data = {
+      // 9. Create Organisation
+      const new_org_data = {
         organisation_id: functions.get_random_string("O", 15, true),
         organisation_name: data.organisation_name.toUpperCase(),
         employee_id: req.employee.employee_id,
         email: req.employee.email,
         ...org_data,
-        billing_type: billing_type,
+        billing_type,
         roles: [
           {
             role_id: functions.get_random_string("R", 15, true),
@@ -175,12 +194,16 @@ router.post(
           },
         ],
       };
+
       org_data_up = await mongoFunctions.create_new_record(
         "ORGANISATIONS",
         new_org_data
       );
-      console.log("new organisation details added");
-      alertDev("new org created");
+      console.log("New organisation details added");
+
+      alertDev("New organisation created");
+
+      // 10. Update Employee Record with Organisation ID
       await mongoFunctions.find_one_and_update(
         "EMPLOYEE",
         { employee_id: req.employee.employee_id },
@@ -190,33 +213,29 @@ router.post(
         },
         { new: true }
       );
-      console.log("org id updated to admin record");
-      let stats = await mongoFunctions.find_one_and_update(
+
+      console.log("Org ID updated to admin record");
+
+      // 11. Update Stats
+      const stats = await mongoFunctions.find_one_and_update(
         "ADMIN_STATS",
         { stats_id: "1" },
-        {
-          $inc: {
-            no_of_orgs: 1,
-          },
-        },
-        {
-          upsert: true,
-          returnDocument: "after",
-        }
+        { $inc: { no_of_orgs: 1 } },
+        { upsert: true, returnDocument: "after" }
       );
-      console.log(stats);
-      // if (!stats) {
-      //   return res.status(400).send("Stats Update Failed..!!");
-      // }
-      await redisFunctions.update_redis("ADMIN_STATS", stats);
-    }
-    await redisFunctions.update_redis("ORGANISATIONS", org_data_up);
+      console.log("Admin stats updated", stats);
 
-    return res
-      .status(200)
-      .send({ success: "Organisation Details Added..!", data: org_data_up });
+      await redisFunctions.update_redis("ADMIN_STATS", stats);
+      await redisFunctions.update_redis("ORGANISATIONS", org_data_up);
+
+      return res.status(201).send({
+        success: "New Organisation Created Successfully.",
+        data: org_data_up,
+      });
+    }
   })
 );
+
 //add update department
 router.post(
   "/add_update_department",

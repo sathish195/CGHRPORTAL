@@ -10,7 +10,14 @@ const ORGANISATION_Schema = new mongoose.Schema(
     },
     organisation_name: { type: String, required: true },
     email: { type: String, required: true, index: true },
-    employee_id: { type: String, required: true, unique: true }, // Corrected field name to match 'employee_id'
+    employee_id: { type: String, required: true, unique: true },
+    about: { type: String },
+    social_media_urls: {
+      facebook_url: { type: String },
+      instagram_url: { type: String },
+      twitter_url: { type: String },
+      google_url: { type: String },
+    }, // Corrected field name to match 'employee_id'
 
     departments: { type: Array, default: [] },
     roles: [

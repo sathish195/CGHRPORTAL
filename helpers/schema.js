@@ -104,31 +104,47 @@ const base64FileSizeValidator = (value, helpers) => {
 function add_update_org(data) {
   const schema = Joi.object({
     organisation_name: Joi.string().min(5).max(50).required().trim(),
-    organisation_type: Joi.string().min(2).max(15).required(),
+
+    about: Joi.string().min(5).max(1500).optional().allow("").trim(),
+
+    social_media_urls: Joi.object({
+      facebook_url: Joi.string().uri().optional().allow(""),
+      instagram_url: Joi.string().uri().optional().allow(""),
+      twitter_url: Joi.string().uri().optional().allow(""),
+      linkedin_url: Joi.string().uri().optional().allow(""),
+    }).optional(),
+
+    organisation_type: Joi.string().min(2).max(15).required().trim(),
+
     logo: Joi.string()
       .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
       .required()
       .messages({
-        "any.invalid": "Size should be 256kb only",
+        "any.invalid": "Logo image size should not exceed 256KB",
       }),
+
     org_mail_id: Joi.string()
-      .email()
-      .forbidden(/[\+]/, {
-        message: "Email cannot contain the plus (+) character",
-      })
+      .email({ tlds: { allow: false } })
+      .pattern(/^[^+]+$/, { name: "no plus character" }) // disallow "+" in email
       .lowercase()
       .max(55)
-      .required(),
-    address: Joi.string().min(5).max(100).required(),
+      .required()
+      .messages({
+        "string.pattern.name": "Email cannot contain the plus (+) character",
+      }),
+
+    address: Joi.string().min(5).max(100).required().trim(),
+
     billing_type: Joi.object({
       type: Joi.string().valid("free", "paid").required(),
       plan: Joi.when("type", {
         is: "paid",
         then: Joi.string().valid("6_months", "3_months", "1_year").required(),
-        otherwise: Joi.string().allow(null, ""),
+        otherwise: Joi.string().allow(null, "").optional(),
       }),
-    }),
+    }).required(),
   });
+
   return schema.validate(data);
 }
 function add_update_department(data) {
