@@ -160,6 +160,7 @@ function add_update_role(data) {
     organisation_id: Joi.string().min(10).max(18).required(),
     role_name: Joi.string().trim().strip().min(5).max(20).required(),
     role_id: Joi.string().allow(null, "").optional(),
+    priority: Joi.string().allow(null, "").optional(),
   });
   return schema.validate(data);
 }
@@ -250,11 +251,6 @@ function add_employee_by_admin(data) {
         "any.required": "Employee ID is required",
       }),
     password: Joi.string().trim().allow(null, "").optional(),
-    // .required()
-    // .min(8)
-    // .max(60)
-    // .pattern(/(?=.*[A-Z])/, "uppercase") // At least one uppercase letter
-    // .pattern(/(?=.*[@$!%*?&])/, "special"), //atleast one special character
     email: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
@@ -283,11 +279,6 @@ function add_employee_by_admin(data) {
     date_of_join: Joi.date().required(),
 
     date_of_birth: Joi.date().required(),
-    // Joi.string()
-    //   .regex(/^\d{2}\d{2}\d{4}$/)
-    //   .message("Date must be in DDMMYYYY format")
-    //   .required()
-    //   .custom(validate_dob),
     expertise: Joi.string().trim().allow(null, "").optional(),
     gender: Joi.string().valid("male", "female", "others").trim().required(),
     marital_status: Joi.string()
@@ -364,7 +355,6 @@ function add_employee_by_admin(data) {
         .optional(),
     }).required(),
     mobile_number: Joi.string().trim().allow(null, "").optional(),
-    // mobile_number: Joi.string().min(10).max(10).required(),
     personal_email_address: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
@@ -396,9 +386,9 @@ function add_employee_by_admin(data) {
           "permanent address can only contain letters, numbers, spaces, periods, commas, and hyphens.",
       })
       .required(),
-    work_experience: Joi.array().items(work_experience_obj).required(),
+    work_experience: Joi.array().items(work_experience_obj).optional(),
     educational_details: Joi.array().items(educational_details_obj).required(),
-    dependent_details: Joi.array().items(dependent_details_obj).required(),
+    dependent_details: Joi.array().items(dependent_details_obj).optional(),
   });
   return schema.validate(data);
 }

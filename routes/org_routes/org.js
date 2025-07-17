@@ -217,7 +217,7 @@ router.post(
       .send({ success: "Organisation Details Added..!", data: org_data_up });
   })
 );
-
+//add update department
 router.post(
   "/add_update_department",
   Auth,
@@ -226,256 +226,281 @@ router.post(
     console.log("add update department route hit");
     let data = req.body;
 
-    // Validate data
-    var { error } = validations.add_update_department(data);
+    // ✅ Validate input
+    const { error } = validations.add_update_department(data);
     if (error) return res.status(400).send(error.details[0].message);
+
+    // ✅ Only Director or Manager can access
     const admin_types = ["1", "2"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res
         .status(403)
         .send("Only Director Or Manager Can Access This Endpoint");
     }
-    // let org = await mongoFunctions.find_one("ORGANISATIONS", {
-    //     email: req.employee.email,
-    // });
 
-    // Retrieve organisation data from Redis
+    // ✅ Fetch organisation data from Redis
     let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
     );
-    if (org_data && org_data.organisation_id === data.organisation_id) {
-      console.log("feteched org data from redis");
-      // //restrict access
-      let find_access = await functions.hasAccess(
-        org_data.billing_type.type,
-        "controls"
+
+    if (!org_data || org_data.organisation_id !== data.organisation_id) {
+      return res.status(400).send("Invalid Organisation Id");
+    }
+
+    console.log("fetched org data from redis");
+
+    // ✅ Access control check
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "controls"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
+
+    // ✅ Determine if it's an update or add operation
+    const isUpdate =
+      data.department_id && data.department_id.toLowerCase().length > 9;
+
+    // ✅ Department name duplicate check
+    let department_exists = false;
+    if (isUpdate) {
+      department_exists = org_data.departments.some(
+        (e) =>
+          e.department_name.toLowerCase() ===
+            data.department_name.toLowerCase() &&
+          e.department_id.toLowerCase() !== data.department_id.toLowerCase()
       );
-      if (!find_access) {
-        return res.status(400).send("Access Denied For This Feature!!");
-      }
-      // Check if department already exists
-      let department_exists = org_data.departments.find(
+    } else {
+      department_exists = org_data.departments.some(
         (e) =>
           e.department_name.toLowerCase() === data.department_name.toLowerCase()
       );
+    }
 
-      if (department_exists) {
-        return res.status(400).send("Department Already Exists..!");
-      }
-      const department = org_data.departments.find(
+    if (department_exists) {
+      return res.status(400).send("Department Already Exists..!");
+    }
+
+    // ✅ Main update or add logic
+    let department_data_up;
+
+    if (isUpdate) {
+      const current_department = org_data.departments.find(
         (e) =>
           e.department_id.toLowerCase() === data.department_id.toLowerCase()
       );
+      if (!current_department) {
+        return res.status(400).send("Department Id Doesn't Exist");
+      }
 
-      // Update or add department
-      let department_data_up;
-
-      if (data.department_id && data.department_id.length > 9) {
-        if (!department) {
-          return res.status(400).send("Department Id Doesn't Exists");
+      // ✅ Update department name in ORGANISATIONS
+      department_data_up = await mongoFunctions.find_one_and_update(
+        "ORGANISATIONS",
+        {
+          organisation_id: org_data.organisation_id,
+          "departments.department_id": data.department_id,
+        },
+        {
+          $set: {
+            "departments.$[dep].department_name":
+              data.department_name.toLowerCase(),
+          },
+        },
+        {
+          arrayFilters: [{ "dep.department_id": data.department_id }],
+          new: true,
         }
-        department_data_up = await mongoFunctions.find_one_and_update(
-          "ORGANISATIONS",
-          {
-            organisation_id: org_data.organisation_id,
-            "departments.department_id": data.department_id,
-          },
-          {
-            $set: {
-              "departments.$[dep].department_name":
-                data.department_name.toLowerCase(),
-            },
-          },
-          {
-            arrayFilters: [{ "dep.department_id": data.department_id }],
-            new: true,
-          }
-        );
-        console.log("department data updated");
-        await mongoFunctions.update_many(
-          "EMPLOYEE",
-          {
-            organisation_id: org_data.organisation_id,
-            "work_info.department_id": data.department_id,
-          },
-          {
-            $set: {
-              "work_info.department_name": data.department_name.toLowerCase(),
-            },
-          }
-        );
-        console.log("department name updated to all employees");
-      } else {
-        let new_department_data = {
-          department_id: functions.get_random_string("D", 10, true),
-          department_name: data.department_name.toLowerCase(),
-        };
+      );
 
-        department_data_up = await mongoFunctions.find_one_and_update(
-          "ORGANISATIONS",
-          {
-            organisation_id: org_data.organisation_id,
-          },
-          {
-            $push: {
-              departments: new_department_data,
-            },
-          },
-          { new: true }
-        );
-        console.log("new department data added");
-      }
+      console.log("department data updated");
 
-      if (department_data_up) {
-        await redisFunctions.update_redis("ORGANISATIONS", department_data_up);
-        console.log("updated department details in redis");
-        return res.status(200).send({
-          success: "Department Details Added..!",
-          data: department_data_up,
-        });
-      }
+      // ✅ Propagate name change to EMPLOYEE collection
+      await mongoFunctions.update_many(
+        "EMPLOYEE",
+        {
+          organisation_id: org_data.organisation_id,
+          "work_info.department_id": data.department_id,
+        },
+        {
+          $set: {
+            "work_info.department_name": data.department_name.toLowerCase(),
+          },
+        }
+      );
 
-      return res.status(400).send("Failed To Add");
+      console.log("department name updated in employees");
+
+      await redisFunctions.update_redis("ORGANISATIONS", department_data_up);
+      return res.status(200).send({
+        success: "Department Updated Successfully..!",
+        data: department_data_up,
+      });
+    } else {
+      // ✅ Add new department
+      let new_department_data = {
+        department_id: functions.get_random_string("D", 10, true),
+        department_name: data.department_name.toLowerCase(),
+      };
+
+      department_data_up = await mongoFunctions.find_one_and_update(
+        "ORGANISATIONS",
+        {
+          organisation_id: org_data.organisation_id,
+        },
+        {
+          $push: {
+            departments: new_department_data,
+          },
+        },
+        { new: true }
+      );
+
+      console.log("new department data added");
+
+      await redisFunctions.update_redis("ORGANISATIONS", department_data_up);
+      return res.status(200).send({
+        success: "Department Added Successfully..!",
+        data: department_data_up,
+      });
     }
-
-    return res.status(400).send("Invalid Organisation Id");
   })
 );
+
+//add update designation
 router.post(
   "/add_update_designation",
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("add update designation route hit");
+    console.log("add/update designation route hit");
+
     let data = req.body;
 
-    // Validate data
-    var { error } = validations.add_update_designation(data);
+    // ✅ Validate input
+    const { error } = validations.add_update_designation(data);
     if (error) return res.status(400).send(error.details[0].message);
+
+    // ✅ Allow only Director or Manager
     const admin_types = ["1", "2"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res
         .status(403)
         .send("Only Director Or Manager Can Access This Endpoint");
     }
-    // org = await mongoFunctions.find_one("ORGANISATIONS", {
-    //     email: req.employee.email,
-    // });
-    // Retrieve organisation data from Redis
+
+    // ✅ Get organisation data
     let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
     );
 
-    if (org_data && org_data.organisation_id === data.organisation_id) {
-      // Check if designation already exists
-      console.log("designation data fetched from redis");
-      // //restrict access
-      let find_access = await functions.hasAccess(
-        org_data.billing_type.type,
-        "controls"
-      );
-      if (!find_access) {
-        return res.status(400).send("Access Denied For This Feature!!");
-      }
-      let designation_exists = org_data.designations.find(
-        (e) =>
-          e.designation_name.toLowerCase() ===
-          data.designation_name.toLowerCase()
-      );
-
-      if (designation_exists) {
-        return res.status(400).send("Designation Already Exists..!");
-      }
-      const designation = org_data.designations.find(
-        (e) =>
-          e.designation_id.toLowerCase() === data.designation_id.toLowerCase()
-      );
-
-      let designation_up;
-
-      // Update or add designation
-      if (data.designation_id && data.designation_id.length > 9) {
-        if (!designation) {
-          return res.status(400).send("Designation Id Doesn't Exists");
-        }
-        designation_up = await mongoFunctions.find_one_and_update(
-          "ORGANISATIONS",
-          {
-            organisation_id: org_data.organisation_id,
-            "designations.designation_id": data.designation_id,
-            // "designations.leaves.leave_id": data.leave_id
-          },
-          {
-            $set: {
-              "designations.$[des].designation_name":
-                data.designation_name.toLowerCase(),
-              // ""
-            },
-          },
-          {
-            arrayFilters: [
-              {
-                "des.designation_id": data.designation_id,
-                // "des.leave.leave_id": data.leave_id
-              },
-            ],
-            new: true,
-          }
-        );
-        console.log("designation data updated");
-        await mongoFunctions.update_many(
-          "EMPLOYEE",
-          {
-            organisation_id: org_data.organisation_id,
-            "work_info.designation_id": data.designation_id,
-          },
-          {
-            $set: {
-              "work_info.designation_name": data.designation_name.toLowerCase(),
-            },
-          }
-        );
-        console.log("designation name updated to all employees");
-      } else {
-        let new_designation_data = {
-          designation_id: functions.get_random_string("D", 10, true),
-          designation_name: data.designation_name.toLowerCase(),
-          // leaves:processedLeaves,
-        };
-
-        designation_up = await mongoFunctions.find_one_and_update(
-          "ORGANISATIONS",
-          {
-            organisation_id: org_data.organisation_id,
-          },
-          {
-            $push: {
-              designations: new_designation_data,
-            },
-          },
-          { new: true }
-        );
-        console.log("designation details added");
-      }
-
-      // Update Redis cache
-      await redisFunctions.update_redis("ORGANISATIONS", designation_up);
-      console.log("updated designation details in redis");
-
-      return res.status(200).send({
-        success: "Designation Details Added..!",
-        data: designation_up,
-      });
+    if (!org_data || org_data.organisation_id !== data.organisation_id) {
+      return res.status(400).send("Invalid Organisation Id");
     }
 
-    return res.status(400).send("Invalid Organisation Id");
+    // ✅ Check feature access
+    const hasModuleAccess = await functions.hasAccess(
+      org_data.billing_type.type,
+      "controls"
+    );
+    if (!hasModuleAccess) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
+
+    const isUpdate =
+      data.designation_id && data.designation_id.toString().length > 9;
+
+    // ✅ Check for duplicates
+    const isDuplicate = org_data.designations.some((e) => {
+      const nameMatch =
+        e.designation_name.toLowerCase() ===
+        data.designation_name.toLowerCase();
+      return isUpdate
+        ? nameMatch && e.designation_id !== data.designation_id
+        : nameMatch;
+    });
+
+    if (isDuplicate) {
+      return res.status(400).send("Designation Already Exists..!");
+    }
+
+    let updated_org;
+
+    if (isUpdate) {
+      // ✅ Update designation
+      updated_org = await mongoFunctions.find_one_and_update(
+        "ORGANISATIONS",
+        {
+          organisation_id: org_data.organisation_id,
+          "designations.designation_id": data.designation_id,
+        },
+        {
+          $set: {
+            "designations.$[des].designation_name":
+              data.designation_name.toLowerCase(),
+          },
+        },
+        {
+          arrayFilters: [{ "des.designation_id": data.designation_id }],
+          new: true,
+        }
+      );
+
+      // ✅ Update all employees with new designation name
+      await mongoFunctions.update_many(
+        "EMPLOYEE",
+        {
+          organisation_id: org_data.organisation_id,
+          "work_info.designation_id": data.designation_id,
+        },
+        {
+          $set: {
+            "work_info.designation_name": data.designation_name.toLowerCase(),
+          },
+        }
+      );
+
+      console.log("designation updated in employees");
+    } else {
+      // ✅ Add new designation
+      const new_designation = {
+        designation_id: functions.get_random_string("D", 10, true),
+        designation_name: data.designation_name.toLowerCase(),
+      };
+
+      updated_org = await mongoFunctions.find_one_and_update(
+        "ORGANISATIONS",
+        {
+          organisation_id: org_data.organisation_id,
+        },
+        {
+          $push: {
+            designations: new_designation,
+          },
+        },
+        { new: true }
+      );
+    }
+
+    // ✅ Update Redis
+    await redisFunctions.update_redis("ORGANISATIONS", updated_org);
+    console.log("updated redis");
+
+    // ✅ Final response
+    return res.status(200).send({
+      message: isUpdate
+        ? "Designation updated successfully..!"
+        : "Designation added successfully..!",
+      data: updated_org,
+    });
   })
 );
 
+//add update role
 router.post(
   "/add_update_role",
   Auth,
@@ -487,12 +512,13 @@ router.post(
     // Validate data
     const { error } = validations.add_update_role(data);
     if (error) return res.status(400).send(error.details[0].message);
-    if (req.employee.admin_type !== "1")
-      return res.status(403).send("Only Director can access this endpoint");
 
-    // org = await mongoFunctions.find_one("ORGANISATIONS", {
-    //     email: req.employee.email,
-    // });
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director Or Manager Can Access This Endpoint");
+    }
 
     // Fetch organization data from Redis
     let org_data = await redisFunctions.redisGet(
@@ -501,10 +527,8 @@ router.post(
       true
     );
 
-    // Check if organization data exists and the organization ID matches
     if (org_data && org_data.organisation_id === data.organisation_id) {
-      // Check if the role already exists
-      // //restrict access
+      // Restrict access
       let find_access = await functions.hasAccess(
         org_data.billing_type.type,
         "controls"
@@ -512,16 +536,26 @@ router.post(
       if (!find_access) {
         return res.status(400).send("Access Denied For This Feature!!");
       }
-      let role_exists = org_data.roles.find(
-        (e) => e.role_name.toLowerCase() === data.role_name.toLowerCase()
-      );
-      if (role_exists) {
-        return res.status(400).send("Role Already Exists..!");
-      }
 
       let role_data_up;
-      if (data.role_id && data.role_id.length > 9) {
-        // Update existing role
+
+      // ✅ Check if updating
+      const isUpdate =
+        data.role_id && data.role_id.trim() !== "" && data.role_id.length > 2;
+
+      if (isUpdate) {
+        // ✅ While updating — check if another role with same name exists
+        let duplicate_role = org_data.roles.find(
+          (e) =>
+            e.role_name.toLowerCase() === data.role_name.toLowerCase() &&
+            e.role_id !== data.role_id
+        );
+
+        if (duplicate_role) {
+          return res.status(400).send("Role Already Exists..!");
+        }
+
+        // ✅ Update existing role
         role_data_up = await mongoFunctions.find_one_and_update(
           "ORGANISATIONS",
           {
@@ -531,6 +565,7 @@ router.post(
           {
             $set: {
               "roles.$[r].role_name": data.role_name.toLowerCase(),
+              "roles.$[r].admin_type": data.priority,
             },
           },
           {
@@ -538,7 +573,9 @@ router.post(
             new: true,
           }
         );
-        employee_data_up = await mongoFunctions.update_many(
+
+        // ✅ Also update role name in employee records
+        await mongoFunctions.update_many(
           "EMPLOYEE",
           {
             organisation_id: org_data.organisation_id,
@@ -550,12 +587,31 @@ router.post(
             },
           }
         );
+
+        // ✅ Update Redis
+        await redisFunctions.update_redis("ORGANISATIONS", role_data_up);
+
+        return res.status(200).send({
+          success: "Role Updated Successfully..!",
+          data: role_data_up,
+        });
       } else {
-        // Add new role
+        // ✅ While adding — check for full duplicate role name
+        let duplicate_role = org_data.roles.find(
+          (e) => e.role_name.toLowerCase() === data.role_name.toLowerCase()
+        );
+
+        if (duplicate_role) {
+          return res.status(400).send("Role Already Exists..!");
+        }
+
+        // ✅ Add new role
         let new_role_data = {
           role_id: functions.get_random_string("R", 10, true),
           role_name: data.role_name.toLowerCase(),
+          admin_type: data.priority,
         };
+
         role_data_up = await mongoFunctions.find_one_and_update(
           "ORGANISATIONS",
           {
@@ -568,15 +624,15 @@ router.post(
           },
           { new: true }
         );
+
+        // ✅ Update Redis
+        await redisFunctions.update_redis("ORGANISATIONS", role_data_up);
+
+        return res.status(200).send({
+          success: "Role Added Successfully..!",
+          data: role_data_up,
+        });
       }
-
-      // Update Redis with the new role data
-      await redisFunctions.update_redis("ORGANISATIONS", role_data_up);
-
-      return res.status(200).send({
-        success: "Role Details Added..!",
-        data: role_data_up,
-      });
     }
 
     return res.status(400).send("Invalid Organisation id");
@@ -588,12 +644,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    // let org = await mongoFunctions.find_one("ORGANISATIONS", {
-    //     organisation_id: req.employee.organisation_id,
-    // });
-    // await redisFunctions.update_redis("ORGANISATIONS", org);
-
-    // await redisFunctions.update_redis("")
     //check admin type
     const admin_types = ["1", "2", "3"];
     if (!admin_types.includes(req.employee?.admin_type)) {
