@@ -21,7 +21,7 @@ const fs = require("fs");
 const path = require("path");
 const fsp = require("fs").promises;
 
-//add organisation
+//add update organisation
 router.post(
   "/add_update_org_details",
   Auth,
@@ -64,6 +64,27 @@ router.post(
     };
 
     if (find_org) {
+      // ❗ Uniqueness Check for update
+      const existing_by_name = await mongoFunctions.find_one("ORGANISATIONS", {
+        organisation_name: data.organisation_name.toUpperCase(),
+        email: { $ne: req.employee.email }, // not the current org
+      });
+      if (existing_by_name) {
+        return res
+          .status(400)
+          .send({ error: "Organisation Name Already Exists" });
+      }
+
+      const existing_by_email = await mongoFunctions.find_one("ORGANISATIONS", {
+        email: data.email,
+        email: { $ne: req.employee.email },
+      });
+      if (existing_by_email) {
+        return res
+          .status(400)
+          .send({ error: "Email Already Exists For Another Organisation" });
+      }
+
       // 4. Check Access to Feature
       const hasAccess = await functions.hasAccess(
         find_org.billing_type?.type,
@@ -104,7 +125,6 @@ router.post(
         new_billing.payment_date = payment_date;
         new_billing.exp_date = expiry_date;
         org_data.billing_type = new_billing;
-
         console.log("Billing details updated.");
       }
 
@@ -125,6 +145,25 @@ router.post(
         data: org_data_up,
       });
     } else {
+      // ❗ Uniqueness Check for create
+      const existing_by_name = await mongoFunctions.find_one("ORGANISATIONS", {
+        organisation_name: data.organisation_name.toUpperCase(),
+      });
+      if (existing_by_name) {
+        return res
+          .status(400)
+          .send({ error: "Organisation Name Already Exists" });
+      }
+
+      const existing_by_email = await mongoFunctions.find_one("ORGANISATIONS", {
+        email: req.employee.email,
+      });
+      if (existing_by_email) {
+        return res
+          .status(400)
+          .send({ error: "Email Already Exists For Another Organisation" });
+      }
+
       // 7. Check if employee ID already used
       const find_id = await mongoFunctions.find_one("ORGANISATIONS", {
         employee_id: req.employee.employee_id,
