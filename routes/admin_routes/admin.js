@@ -2400,7 +2400,18 @@ router.post(
       }
 
       if (["3", "4"].includes(admin_type)) {
-        // Only partial update allowed
+        // ✅ Check if employee is assigned to this lead
+        const isAssigned = existing_lead.assigned_to.some(
+          (emp) => emp.employee_id === data.employee_id
+        );
+
+        if (!isAssigned) {
+          return res
+            .status(403)
+            .send("Access denied: Not assigned to this lead");
+        }
+
+        // Partial update allowed
         await mongoFunctions.find_one_and_update(
           "LEADS",
           {
