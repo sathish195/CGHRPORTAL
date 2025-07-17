@@ -369,13 +369,13 @@ router.post(
   })
 );
 
-//add update designation
+// Route: Add / Update Designation
 router.post(
   "/add_update_designation",
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("add/update designation route hit");
+    console.log("🔁 Add/Update Designation route hit");
 
     let data = req.body;
 
@@ -383,15 +383,15 @@ router.post(
     const { error } = validations.add_update_designation(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // ✅ Allow only Director or Manager
+    // ✅ Only allow Director or Manager
     const admin_types = ["1", "2"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res
         .status(403)
-        .send("Only Director Or Manager Can Access This Endpoint");
+        .send("Only Director or Manager can access this endpoint");
     }
 
-    // ✅ Get organisation data
+    // ✅ Get Organisation Data from Redis
     let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
@@ -399,39 +399,51 @@ router.post(
     );
 
     if (!org_data || org_data.organisation_id !== data.organisation_id) {
-      return res.status(400).send("Invalid Organisation Id");
+      return res.status(400).send("Invalid Organisation ID");
     }
 
-    // ✅ Check feature access
+    // ✅ Check Feature Access
     const hasModuleAccess = await functions.hasAccess(
       org_data.billing_type.type,
       "controls"
     );
     if (!hasModuleAccess) {
-      return res.status(400).send("Access Denied For This Feature!!");
+      return res.status(403).send("Access Denied For This Feature");
     }
 
+    // ✅ Determine if Add or Update
     const isUpdate =
       data.designation_id && data.designation_id.toString().length > 9;
 
-    // ✅ Check for duplicates
-    const isDuplicate = org_data.designations.some((e) => {
-      const nameMatch =
-        e.designation_name.toLowerCase() ===
-        data.designation_name.toLowerCase();
-      return isUpdate
-        ? nameMatch && e.designation_id !== data.designation_id
-        : nameMatch;
-    });
-
-    if (isDuplicate) {
-      return res.status(400).send("Designation Already Exists..!");
+    // ✅ Duplicate Check
+    let isDuplicate = false;
+    if (isUpdate) {
+      // Check excluding current item for updates
+      isDuplicate = org_data.designations.some(
+        (e) =>
+          e.designation_name.toLowerCase() ===
+            data.designation_name.toLowerCase() &&
+          e.designation_id !== data.designation_id
+      );
+      if (isDuplicate)
+        return res
+          .status(400)
+          .send("Another designation with the same name already exists");
+    } else {
+      // Check globally for adds
+      isDuplicate = org_data.designations.some(
+        (e) =>
+          e.designation_name.toLowerCase() ===
+          data.designation_name.toLowerCase()
+      );
+      if (isDuplicate)
+        return res.status(400).send("Designation already exists");
     }
 
     let updated_org;
 
     if (isUpdate) {
-      // ✅ Update designation
+      // ✅ Update Designation Name
       updated_org = await mongoFunctions.find_one_and_update(
         "ORGANISATIONS",
         {
@@ -440,12 +452,12 @@ router.post(
         },
         {
           $set: {
-            "designations.$[des].designation_name":
+            "designations.$[d].designation_name":
               data.designation_name.toLowerCase(),
           },
         },
         {
-          arrayFilters: [{ "des.designation_id": data.designation_id }],
+          arrayFilters: [{ "d.designation_id": data.designation_id }],
           new: true,
         }
       );
@@ -464,9 +476,9 @@ router.post(
         }
       );
 
-      console.log("designation updated in employees");
+      console.log("✅ Designation updated in employees");
     } else {
-      // ✅ Add new designation
+      // ✅ Add New Designation
       const new_designation = {
         designation_id: functions.get_random_string("D", 10, true),
         designation_name: data.designation_name.toLowerCase(),
@@ -474,27 +486,23 @@ router.post(
 
       updated_org = await mongoFunctions.find_one_and_update(
         "ORGANISATIONS",
-        {
-          organisation_id: org_data.organisation_id,
-        },
-        {
-          $push: {
-            designations: new_designation,
-          },
-        },
+        { organisation_id: org_data.organisation_id },
+        { $push: { designations: new_designation } },
         { new: true }
       );
+
+      console.log("✅ New designation added");
     }
 
     // ✅ Update Redis
     await redisFunctions.update_redis("ORGANISATIONS", updated_org);
-    console.log("updated redis");
+    console.log("✅ Redis updated");
 
-    // ✅ Final response
+    // ✅ Final Response
     return res.status(200).send({
       message: isUpdate
-        ? "Designation updated successfully..!"
-        : "Designation added successfully..!",
+        ? "Designation updated successfully"
+        : "Designation added successfully",
       data: updated_org,
     });
   })
@@ -1303,6 +1311,7 @@ router.post(
   })
 );
 
+//add update holiday
 router.post(
   "/add_update_holiday",
   Auth,
@@ -1315,7 +1324,6 @@ router.post(
     if (error) return res.status(400).send(error.details[0].message);
 
     const data = value;
-    console.log(data);
     const admin_types = ["1", "2"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res
@@ -1332,19 +1340,21 @@ router.post(
     if (!org_data || org_data.organisation_id !== data.organisation_id) {
       return res.status(400).send("Invalid Organisation Id");
     }
-    console.log("Fetched org data from Redis");
-    // //restrict access
-    let find_access = await functions.hasAccess(
+
+    // Restrict feature access based on billing_type
+    const hasFeatureAccess = await functions.hasAccess(
       org_data.billing_type.type,
       "controls"
     );
-    if (!find_access) {
+    if (!hasFeatureAccess) {
       return res.status(400).send("Access Denied For This Feature!!");
     }
 
     let holiday_data;
+
     if (data.holiday_id && data.holiday_id.length > 9) {
-      // Update existing holiday
+      // 🔄 UPDATE Holiday
+
       holiday_data = await mongoFunctions.find_one("HOLIDAYS", {
         organisation_id: org_data.organisation_id,
         holiday_id: data.holiday_id,
@@ -1353,30 +1363,23 @@ router.post(
       if (!holiday_data) {
         return res.status(400).send("Holiday Id Doesn't Exist");
       }
-      // Check if holiday already exists
+
+      // ✅ Check for duplicates (excluding current record)
       const holiday_exists = await mongoFunctions.find_one("HOLIDAYS", {
         organisation_id: req.employee.organisation_id,
         $or: [
           {
             holiday_name: data.holiday_name.toLowerCase(),
-            holiday_id: { $ne: data.holiday_id || null },
+            holiday_id: { $ne: data.holiday_id },
           },
           {
             holiday_date: data.holiday_date,
-            holiday_id: { $ne: data.holiday_id || null },
+            holiday_id: { $ne: data.holiday_id },
           },
         ],
       });
 
       if (holiday_exists) {
-        // Check if the existing record matches the holiday name
-        // if (holiday_exists.holiday_name === data.holiday_name.toLowerCase()) {
-        //   return res
-        //     .status(400)
-        //     .send("Holiday With This Name Already Exists..!");
-        // }
-
-        // Check if the existing record matches the holiday date
         if (
           holiday_exists.holiday_date.getTime() ===
           new Date(data.holiday_date).getTime()
@@ -1385,8 +1388,15 @@ router.post(
             .status(400)
             .send("Holiday With This Date Already Exists..!");
         }
+
+        if (holiday_exists.holiday_name === data.holiday_name.toLowerCase()) {
+          return res
+            .status(400)
+            .send("Holiday With This Name Already Exists..!");
+        }
       }
 
+      // ✅ Proceed to update
       holiday_data = await mongoFunctions.find_one_and_update(
         "HOLIDAYS",
         {
@@ -1399,7 +1409,6 @@ router.post(
             holiday_date: data.holiday_date,
           },
           $push: {
-            // Include holiday_date
             modified_by: {
               employee_id: req.employee.employee_id,
               employee_name: `${req.employee.first_name} ${req.employee.last_name}`,
@@ -1408,22 +1417,45 @@ router.post(
           },
         }
       );
-      console.log("Holiday data updated");
-    } else {
-      // Check if holiday already exists
-      const holiday_exist = await mongoFunctions.find_one("HOLIDAYS", {
-        organisation_id: req.employee.organisation_id,
-        holiday_name: data.holiday_name.toLowerCase(),
+
+      return res.status(200).send({
+        success: "Holiday Details Updated Successfully!",
+        data: holiday_data,
       });
-      // if (holiday_exist) {
-      //   return res.status(400).send("Holiday Already Exists..!");
-      // }
-      // Add new holiday
+    } else {
+      // ➕ ADD new Holiday
+
+      // ✅ Check for any duplicate name or date
+      const holiday_exists = await mongoFunctions.find_one("HOLIDAYS", {
+        organisation_id: req.employee.organisation_id,
+        $or: [
+          { holiday_name: data.holiday_name.toLowerCase() },
+          { holiday_date: data.holiday_date },
+        ],
+      });
+
+      if (holiday_exists) {
+        if (
+          holiday_exists.holiday_date.getTime() ===
+          new Date(data.holiday_date).getTime()
+        ) {
+          return res
+            .status(400)
+            .send("Holiday With This Date Already Exists..!");
+        }
+
+        if (holiday_exists.holiday_name === data.holiday_name.toLowerCase()) {
+          return res
+            .status(400)
+            .send("Holiday With This Name Already Exists..!");
+        }
+      }
+
       const new_holiday_data = {
         organisation_id: req.employee.organisation_id,
         holiday_id: functions.get_random_string("H", 10, true),
         holiday_name: data.holiday_name.toLowerCase(),
-        holiday_date: data.holiday_date, // Include holiday_date
+        holiday_date: data.holiday_date,
         added_by: {
           employee_id: req.employee.employee_id,
           employee_name: `${req.employee.first_name} ${req.employee.last_name}`,
@@ -1435,17 +1467,12 @@ router.post(
         "HOLIDAYS",
         new_holiday_data
       );
-      console.log("New holiday data added");
-    }
 
-    if (holiday_data) {
       return res.status(200).send({
         success: "Holiday Details Added Successfully!",
         data: holiday_data,
       });
     }
-
-    return res.status(400).send("Failed To Add/Update Holiday");
   })
 );
 
