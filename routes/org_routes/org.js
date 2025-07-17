@@ -379,11 +379,11 @@ router.post(
 
     let data = req.body;
 
-    // ✅ Validate input
+    // ✅ Input validation
     const { error } = validations.add_update_designation(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // ✅ Only allow Director or Manager
+    // ✅ Access Control: Only Director or Manager
     const admin_types = ["1", "2"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res
@@ -402,7 +402,7 @@ router.post(
       return res.status(400).send("Invalid Organisation ID");
     }
 
-    // ✅ Check Feature Access
+    // ✅ Check feature access
     const hasModuleAccess = await functions.hasAccess(
       org_data.billing_type.type,
       "controls"
@@ -411,39 +411,38 @@ router.post(
       return res.status(403).send("Access Denied For This Feature");
     }
 
-    // ✅ Determine if Add or Update
+    // ✅ Determine if it's an update or add
     const isUpdate =
       data.designation_id && data.designation_id.toString().length > 9;
 
     // ✅ Duplicate Check
-    let isDuplicate = false;
     if (isUpdate) {
-      // Check excluding current item for updates
-      isDuplicate = org_data.designations.some(
+      const duplicate = org_data.designations.find(
         (e) =>
           e.designation_name.toLowerCase() ===
             data.designation_name.toLowerCase() &&
           e.designation_id !== data.designation_id
       );
-      if (isDuplicate)
+      if (duplicate) {
         return res
           .status(400)
           .send("Another designation with the same name already exists");
+      }
     } else {
-      // Check globally for adds
-      isDuplicate = org_data.designations.some(
+      const duplicate = org_data.designations.find(
         (e) =>
           e.designation_name.toLowerCase() ===
           data.designation_name.toLowerCase()
       );
-      if (isDuplicate)
+      if (duplicate) {
         return res.status(400).send("Designation already exists");
+      }
     }
 
     let updated_org;
 
+    // ✅ Handle Update
     if (isUpdate) {
-      // ✅ Update Designation Name
       updated_org = await mongoFunctions.find_one_and_update(
         "ORGANISATIONS",
         {
@@ -476,33 +475,41 @@ router.post(
         }
       );
 
-      console.log("✅ Designation updated in employees");
-    } else {
-      // ✅ Add New Designation
-      const new_designation = {
-        designation_id: functions.get_random_string("D", 10, true),
-        designation_name: data.designation_name.toLowerCase(),
-      };
+      console.log("✅ Designation updated in EMPLOYEE collection");
 
-      updated_org = await mongoFunctions.find_one_and_update(
-        "ORGANISATIONS",
-        { organisation_id: org_data.organisation_id },
-        { $push: { designations: new_designation } },
-        { new: true }
-      );
+      // ✅ Update Redis
+      await redisFunctions.update_redis("ORGANISATIONS", updated_org);
+      console.log("✅ Redis updated");
 
-      console.log("✅ New designation added");
+      // ✅ Separate Return for Update
+      return res.status(200).send({
+        message: "Designation updated successfully",
+        data: updated_org,
+      });
     }
+
+    // ✅ Handle Add
+    const new_designation = {
+      designation_id: functions.get_random_string("D", 10, true),
+      designation_name: data.designation_name.toLowerCase(),
+    };
+
+    updated_org = await mongoFunctions.find_one_and_update(
+      "ORGANISATIONS",
+      { organisation_id: org_data.organisation_id },
+      { $push: { designations: new_designation } },
+      { new: true }
+    );
+
+    console.log("✅ New designation added");
 
     // ✅ Update Redis
     await redisFunctions.update_redis("ORGANISATIONS", updated_org);
     console.log("✅ Redis updated");
 
-    // ✅ Final Response
+    // ✅ Separate Return for Add
     return res.status(200).send({
-      message: isUpdate
-        ? "Designation updated successfully"
-        : "Designation added successfully",
+      message: "Designation added successfully",
       data: updated_org,
     });
   })
@@ -796,7 +803,8 @@ router.post(
         .status(403)
         .send("Only Director Or Manager Can Access This Endpoint");
     }
-    // Retrieve organisation data from Redis
+
+    // Get organisation data
     const org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
@@ -805,7 +813,8 @@ router.post(
     if (!org_data) {
       return res.status(400).send("Invalid Organisation Id");
     }
-    // //restrict access
+
+    // Check feature access
     let find_access = await functions.hasAccess(
       org_data.billing_type.type,
       "controls"
@@ -814,44 +823,36 @@ router.post(
       return res.status(400).send("Access Denied For This Feature!!");
     }
 
-    console.log("Retrieved org_data:");
-
-    // Check if designation exists
+    // Find role by role_id
     const role = org_data.roles.find(
       (e) => e.role_id.toLowerCase() === data.role_id.toLowerCase()
     );
-
     if (!role) {
       return res.status(400).send("Role ID doesn't exist.");
     }
 
-    // console.log("Found designation:", designation);
+    const isUpdate = data.leave_id && data.leave_id.length > 1;
 
-    // Check if leave exists
-    const leave = role.leaves.find(
-      (e) => e.leave_id.toLowerCase() === data.leave_id.toLowerCase()
-    );
-
-    console.log("Found leave:");
-
-    if (data.leave_id && data.leave_id.length > 1) {
-      // If leave_id is provided and valid, update the existing leave
-      if (!leave) {
+    if (isUpdate) {
+      // ✅ Update case
+      const existingLeave = role.leaves.find(
+        (e) => e.leave_id.toLowerCase() === data.leave_id.toLowerCase()
+      );
+      if (!existingLeave) {
         return res.status(400).send("Leave ID doesn't exist.");
       }
-      const leaveNameConflict = role.leaves.some(
+
+      // 🔁 Check for duplicate name in other leaves (exclude current)
+      const duplicate = role.leaves.find(
         (e) =>
           e.leave_name.toLowerCase() === data.leave_name.toLowerCase() &&
           e.leave_id.toLowerCase() !== data.leave_id.toLowerCase()
       );
-
-      if (leaveNameConflict) {
-        return res
-          .status(400)
-          .send("Leave Name already exists for another leave ID.");
+      if (duplicate) {
+        return res.status(400).send("Leave Name already exists.");
       }
 
-      // Update leave
+      // ✅ Perform update
       const updatedLeave = await mongoFunctions.find_one_and_update(
         "ORGANISATIONS",
         {
@@ -874,17 +875,15 @@ router.post(
         }
       );
 
-      console.log("Updated leave:");
-
       if (!updatedLeave) {
         return res.status(404).send("Failed to update leave.");
       }
 
-      await redisFunctions.update_redis("ORGANISATIONS", updatedLeave);
-      console.log("updated leave in redis");
-
-      const remainingLeaves = data.total_leaves - leave.total_leaves;
-      let remaining = Math.max(remainingLeaves, 0);
+      // Update employees with same leave_id
+      const remaining = Math.max(
+        data.total_leaves - existingLeave.total_leaves,
+        0
+      );
 
       await mongoFunctions.update_many(
         "EMPLOYEE",
@@ -899,7 +898,7 @@ router.post(
             "leaves.$[elem].total_leaves": data.total_leaves,
           },
           $inc: {
-            "leaves.$[elem].remaining_leaves": remaining, // Increment the remaining_leaves
+            "leaves.$[elem].remaining_leaves": remaining,
           },
         },
         {
@@ -907,23 +906,23 @@ router.post(
         }
       );
 
-      console.log("updated leave for all employees");
+      await redisFunctions.update_redis("ORGANISATIONS", updatedLeave);
 
       return res.status(200).send({
         success: "Leave Updated Successfully.",
         data: updatedLeave,
       });
     } else {
-      // Check if leave with the same name already exists
-      const leaveExists = role.leaves.find(
+      // ✅ Add case
+
+      // 🔁 Check duplicate leave name for new leave
+      const duplicate = role.leaves.find(
         (e) => e.leave_name.toLowerCase() === data.leave_name.toLowerCase()
       );
-
-      if (leaveExists) {
-        return res.status(400).send("Leave Name Already Exists.");
+      if (duplicate) {
+        return res.status(400).send("Leave Name already exists.");
       }
 
-      // Add new leave
       const newLeave = {
         leave_id: functions.get_random_string("L", 9, true),
         leave_name: data.leave_name,
@@ -944,11 +943,11 @@ router.post(
         { new: true }
       );
 
-      console.log("Added new leave in organisation:");
-
       if (!updatedOrg) {
         return res.status(404).send("Failed To Add New Leave.");
       }
+
+      // Add leave for all employees of the role
       await mongoFunctions.update_many(
         "EMPLOYEE",
         {
@@ -968,10 +967,9 @@ router.post(
           },
         }
       );
-      console.log("updated new leaves for all employees");
 
       await redisFunctions.update_redis("ORGANISATIONS", updatedOrg);
-      console.log("updated new leave in redis");
+
       return res.status(200).send({
         success: "Leave Added Successfully.",
         data: updatedOrg,
