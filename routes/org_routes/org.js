@@ -1039,7 +1039,7 @@ router.post(
 
     const query = {
       organisation_id: req.employee.organisation_id,
-      employee_id: { $ne: req.employee.employee_id },
+      // employee_id: { $ne: req.employee.employee_id },
       "work_info.employee_status": { $regex: /^active$/i },
     };
     if (roleName === "2") {
