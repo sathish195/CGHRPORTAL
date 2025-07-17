@@ -34,14 +34,12 @@ router.post(
     // 1. Validate Input
     const { error } = validations.add_update_org(data);
     if (error) {
-      return res.status(400).send({ error: error.details[0].message });
+      return res.status(400).send(error.details[0].message);
     }
 
     // 2. Access Check
     if (req.employee.admin_type !== "1") {
-      return res
-        .status(403)
-        .send({ error: "Only Admin Can Access This Endpoint" });
+      return res.status(403).send("Only Admin Can Access This Endpoint");
     }
 
     // 3. Check if Organisation Exists
@@ -70,9 +68,7 @@ router.post(
         email: { $ne: req.employee.email }, // not the current org
       });
       if (existing_by_name) {
-        return res
-          .status(400)
-          .send({ error: "Organisation Name Already Exists" });
+        return res.status(400).send("Organisation Name Already Exists");
       }
 
       const existing_by_email = await mongoFunctions.find_one("ORGANISATIONS", {
@@ -82,7 +78,7 @@ router.post(
       if (existing_by_email) {
         return res
           .status(400)
-          .send({ error: "Email Already Exists For Another Organisation" });
+          .send("Email Already Exists For Another Organisation");
       }
 
       // 4. Check Access to Feature
@@ -91,9 +87,7 @@ router.post(
         "controls"
       );
       if (!hasAccess) {
-        return res
-          .status(403)
-          .send({ error: "Access Denied For This Feature!" });
+        return res.status(403).send("Access Denied For This Feature!");
       }
 
       // 5. Billing Update Check
@@ -119,7 +113,7 @@ router.post(
             expiry_date.setFullYear(expiry_date.getFullYear() + 1);
             break;
           default:
-            return res.status(400).send({ error: "Invalid billing plan." });
+            return res.status(400).send("Invalid billing plan.");
         }
 
         new_billing.payment_date = payment_date;
@@ -150,9 +144,7 @@ router.post(
         organisation_name: data.organisation_name.toUpperCase(),
       });
       if (existing_by_name) {
-        return res
-          .status(400)
-          .send({ error: "Organisation Name Already Exists" });
+        return res.status(400).send("Organisation Name Already Exists");
       }
 
       const existing_by_email = await mongoFunctions.find_one("ORGANISATIONS", {
@@ -161,7 +153,7 @@ router.post(
       if (existing_by_email) {
         return res
           .status(400)
-          .send({ error: "Email Already Exists For Another Organisation" });
+          .send("Email Already Exists For Another Organisation");
       }
 
       // 7. Check if employee ID already used
@@ -169,9 +161,9 @@ router.post(
         employee_id: req.employee.employee_id,
       });
       if (find_id) {
-        return res.status(400).send({
-          error: "Employee ID Already Exists For Another Organisation",
-        });
+        return res
+          .status(400)
+          .send("Employee ID Already Exists For Another Organisation");
       }
 
       // 8. Handle Billing Dates
@@ -194,7 +186,7 @@ router.post(
             expiry_date.setFullYear(expiry_date.getFullYear() + 1);
             break;
           default:
-            return res.status(400).send({ error: "Invalid billing plan." });
+            return res.status(400).send("Invalid billing plan.");
         }
 
         billing_type.payment_date = payment_date;
