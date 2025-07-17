@@ -1177,7 +1177,7 @@ router.post(
     return res.status(200).send({ event: event });
   })
 );
-// get_leads
+//get leads
 router.post(
   "/leads",
   Auth,
@@ -1188,24 +1188,12 @@ router.post(
     const { error } = validations.get_leads(data);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // ✅ Access control
-    const admin_types = ["1", "2", "3", "4"];
-    const admin_type = req.employee.admin_type;
-    const employee_id = req.employee.employee_id;
+    const organisation_id = req.employee.organisation_id;
 
-    if (!admin_types.includes(admin_type)) {
-      return res.status(403).send("Access Denied");
-    }
-
-    // ✅ Base filters: by organisation
+    // ✅ Base filter: only by organisation
     const filters = {
-      organisation_id: req.employee.organisation_id,
+      organisation_id,
     };
-
-    // ✅ Restrict access for admin types 3 & 4
-    if (["3", "4"].includes(admin_type)) {
-      filters["assigned_to.employee_id"] = employee_id;
-    }
 
     // ✅ Optional status filter
     if (data.status && data.status !== "") {
@@ -1245,24 +1233,15 @@ router.post(
     if (hasFilters) {
       leads_count = await mongoFunctions.count_documents("LEADS", filters);
     } else {
-      // No filters, so count all for this user's access level
-      const countFilter = {
-        organisation_id: req.employee.organisation_id,
-      };
-      if (["3", "4"].includes(admin_type)) {
-        countFilter["assigned_to.employee_id"] = employee_id;
-      }
-      leads_count = await mongoFunctions.count_documents("LEADS", countFilter);
+      leads_count = await mongoFunctions.count_documents("LEADS", {
+        organisation_id,
+      });
     }
 
-    // ✅ Total count (unfiltered, for stats)
-    const countFilter = {
-      organisation_id: req.employee.organisation_id,
-    };
-    if (["3", "4"].includes(admin_type)) {
-      countFilter["assigned_to.employee_id"] = employee_id;
-    }
-    const count = await mongoFunctions.count_documents("LEADS", countFilter);
+    // ✅ Total count (unfiltered)
+    const count = await mongoFunctions.count_documents("LEADS", {
+      organisation_id,
+    });
 
     return res.status(200).send({
       leads,
