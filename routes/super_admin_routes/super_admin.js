@@ -186,7 +186,7 @@ router.post(
 
     const new_emp_data = {
       organisation_id: functions.get_random_string("O", 5, true),
-      organisation_name: null,
+      organisation_name: "not_added",
       password: password_hash,
       employee_id: functions.get_random_string("EMP", 5, true),
 
