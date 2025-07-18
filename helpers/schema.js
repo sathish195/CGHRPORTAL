@@ -208,6 +208,7 @@ const validateDates = (value, helpers) => {
   return value;
 };
 function add_employee_by_admin(data) {
+  const currentYear = moment().year(); 
   const fileSchema = Joi.object({
     filename: Joi.string().required(),
     content: Joi.string()
@@ -243,7 +244,15 @@ function add_employee_by_admin(data) {
     institute_name: Joi.string().trim().min(2).max(50).required(),
     degree: Joi.string().trim().min(3).max(15).required(),
     specialization: Joi.string().trim().min(2).max(30).required(),
-    year_of_completion: Joi.number().required(),
+    year_of_completion: Joi.number()
+      .integer()
+      .min(1900)
+      .max(currentYear + 10)
+      .required()
+      .messages({
+        "number.min": "Year of completion cannot be before 1900.",
+        "number.max": `Year of completion cannot be after ${currentYear + 10}.`,
+      }),
   });
   const dependent_details_obj = Joi.object({
     name: Joi.string().trim(),
@@ -822,6 +831,7 @@ function add_admin_emp(data) {
     api_status: Joi.string().trim().valid("add", "update").required().messages({
       "any.only": "Status must be either 'add' or 'update'",
     }),
+    employee_id_prefix: Joi.string().trim().min(5).max(7).required(),
   });
 
   return schema.validate(data);
@@ -1007,7 +1017,7 @@ function add_leads(data) {
         "string.pattern.base": "Email Should be valid mail",
       })
       .required(),
-    company: Joi.string().optional().allow("", null),
+    // company: Joi.string().optional().allow("", null),
     comments: Joi.string().optional().allow("", null),
     route_action: Joi.number()
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete

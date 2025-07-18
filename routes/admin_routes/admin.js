@@ -95,6 +95,7 @@ router.post(
     if (!find_access) {
       return res.status(400).send("Access Denied For This Feature!!");
     }
+    console.log("1");
     const admin_types = ["1", "2"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res.status(403).send("Only Admin Or Manager Can Add New Employee");
@@ -149,12 +150,17 @@ router.post(
     // //     repo.basic_info.first_name + " " + repo.basic_info.last_name;
     // // }
     // if (!repo) return res.status(400).send("Reporting Manager Not Found..!");
+    console.log("2");
     let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
+          organisation_id: req.employee.organisation_id,
           employee_id: data.employee_id.toUpperCase(),
+          "work_info.employee_status": { $regex: /^active$/i },
         },
         {
+          "work_info.employee_status": { $regex: /^active$/i },
+          // organisation_id: req.employee.organisation_id,
           "basic_info.email": data.email.toLowerCase(),
         },
       ],
@@ -180,24 +186,39 @@ router.post(
     let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
+          "work_info.employee_status": { $regex: /^active$/i },
+          // organisation_id: req.employee.organisation_id,
           "contact_details.personal_email_address":
             data.personal_email_address.toLowerCase(),
         },
 
         {
+          "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.pan": data.identity_info.pan,
         },
         {
+          "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.aadhaar": data.identity_info.aadhaar,
         },
         {
+          "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.uan": data.identity_info.uan,
         },
         {
+          "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.passport": data.identity_info.passport_number,
         },
         {
+          "work_info.employee_status": { $regex: /^active$/i },
           "contact_details.mobile_number": data.mobile_number,
+        },
+        {
+          "work_info.employee_status": { $regex: /^active$/i },
+          "identity_info.emirates_id": data.identity_info.emirates_id,
+        },
+        {
+          "work_info.employee_status": { $regex: /^active$/i },
+          "identity_info.labour_card_id": data.identity_info.labour_card_id,
         },
       ],
     });
@@ -250,7 +271,23 @@ router.post(
       ) {
         return res.status(400).send("PAN Number Already Exists");
       }
+      if (
+        find_adhar.identity_info.emirates_id &&
+        find_adhar.identity_info.emirates_id.length > 0 &&
+        find_adhar.identity_info.emirates_id === data.identity_info.emirates_id
+      ) {
+        return res.status(400).send("Emirates ID Already Exists");
+      }
+      if (
+        find_adhar.identity_info.labour_card_id &&
+        find_adhar.identity_info.labour_card_id.length > 0 &&
+        find_adhar.identity_info.labour_card_id ===
+          data.identity_info.labour_card_id
+      ) {
+        return res.status(400).send("Labour Card ID Already Exists");
+      }
     }
+    console.log("3");
     const new_password = data.password;
     let password_hash = await bcrypt.hash_password(new_password);
     let new_emp_data = {
@@ -423,33 +460,51 @@ router.post(
     let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
+          "work_info.employee_status": { $regex: /^active$/i },
           "basic_info.email": data.email.toLowerCase(),
           employee_id: { $ne: data.employee_id },
         },
         {
+          "work_info.employee_status": { $regex: /^active$/i },
+          // organisation_id: req.employee.organisation_id,
           "contact_details.personal_email_address":
             data.personal_email_address.toLowerCase(),
           employee_id: { $ne: data.employee_id },
         },
 
         {
+          "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.pan": data.identity_info.pan,
           employee_id: { $ne: data.employee_id },
         },
         {
+          "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.aadhaar": data.identity_info.aadhaar,
           employee_id: { $ne: data.employee_id },
         },
         {
+          "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.uan": data.identity_info.uan,
           employee_id: { $ne: data.employee_id },
         },
         {
+          "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.passport_number": data.identity_info.passport_number,
           employee_id: { $ne: data.employee_id },
         },
         {
+          "work_info.employee_status": { $regex: /^active$/i },
           "contact_details.mobile_number": data.mobile_number,
+          employee_id: { $ne: data.employee_id },
+        },
+        {
+          "work_info.employee_status": { $regex: /^active$/i },
+          "identity_info.emirates_id": data.identity_info.emirates_id,
+          employee_id: { $ne: data.employee_id },
+        },
+        {
+          "work_info.employee_status": { $regex: /^active$/i },
+          "identity_info.labour_card_id": data.identity_info.labour_card_id,
           employee_id: { $ne: data.employee_id },
         },
       ],
@@ -510,6 +565,21 @@ router.post(
         find_adhar.identity_info.pan === data.identity_info.pan
       ) {
         return res.status(400).send("PAN Number Already Exists");
+      }
+      if (
+        find_adhar.identity_info.emirates_id &&
+        find_adhar.identity_info.emirates_id.length > 0 &&
+        find_adhar.identity_info.emirates_id === data.identity_info.emirates_id
+      ) {
+        return res.status(400).send("Emirates ID Already Exists");
+      }
+      if (
+        find_adhar.identity_info.labour_card_id &&
+        find_adhar.identity_info.labour_card_id.length > 0 &&
+        find_adhar.identity_info.labour_card_id ===
+          data.identity_info.labour_card_id
+      ) {
+        return res.status(400).send("Labour Card ID Already Exists");
       }
     }
 
@@ -2336,15 +2406,25 @@ router.post(
     if (!["1", "2", "3", "4"].includes(admin_type)) {
       return res.status(403).send("Unauthorized: Invalid admin type");
     }
+    // ✅ Get Organisation Data from Redis
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      data.organisation_id,
+      true
+    );
+
+    if (!org_data || org_data.organisation_id !== data.organisation_id) {
+      return res.status(400).send("Invalid Organisation ID");
+    }
 
     // Construct lead object
     const lead_object = {
       organisation_id: data.organisation_id,
       lead_name: data.lead_name,
       key: data.key,
-      source: data.source || "self",
+      source: data.source || org_data.organisation_name,
       email: data.email?.toLowerCase(),
-      company: data.company,
+      // company: data.company,
       status: data.status?.toLowerCase(),
       assigned_to: data.assigned_to || [],
       next_follow_up: moment(data.next_follow_up).toDate(),
@@ -2489,7 +2569,7 @@ router.post(
             key: data.key,
             source: data.source || "self",
             email: data.email?.toLowerCase(),
-            company: data.company?.toLowerCase(),
+            // company: data.company?.toLowerCase(),
             status: data.status?.toLowerCase(),
             assigned_to: data.assigned_to || [],
             next_follow_up: moment(data.next_follow_up).toDate(),
@@ -2801,9 +2881,9 @@ router.post(
     }
 
     // 3. Build regex-based filter
-    let filter = {};
+    let filter = { organisation_id: req.employee.organisation_id };
     const leadName = data.lead_name?.trim();
-    const company = data.company?.trim();
+    // const company = data.company?.trim();
 
     if (leadName) {
       filter.lead_name = { $regex: leadName, $options: "i" }; // case-insensitive partial match

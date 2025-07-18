@@ -186,9 +186,9 @@ router.post(
 
     const new_emp_data = {
       organisation_id: functions.get_random_string("O", 5, true),
-      organisation_name: "not_added",
+      organisation_name: null,
       password: password_hash,
-      employee_id: functions.get_random_string("O", 7, true),
+      employee_id: data.employee_id_prefix + "0001",
 
       basic_info: {
         first_name: data.first_name,
@@ -225,6 +225,8 @@ router.post(
         pan: null,
         aadhaar: null,
         passport: null,
+        emirates_id: null,
+        labour_card_id: null,
       },
 
       contact_details: {
