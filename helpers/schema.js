@@ -831,7 +831,7 @@ function add_admin_emp(data) {
     api_status: Joi.string().trim().valid("add", "update").required().messages({
       "any.only": "Status must be either 'add' or 'update'",
     }),
-    employee_id_prefix: Joi.string().trim().min(5).max(7).required(),
+    // employee_id_prefix: Joi.string().trim().min(5).max(7).required(),
   });
 
   return schema.validate(data);

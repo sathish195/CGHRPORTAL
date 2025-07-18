@@ -188,7 +188,7 @@ router.post(
       organisation_id: functions.get_random_string("O", 5, true),
       organisation_name: null,
       password: password_hash,
-      employee_id: data.employee_id_prefix + "0001",
+      employee_id: functions.get_random_string("EMP", 5, true),
 
       basic_info: {
         first_name: data.first_name,
