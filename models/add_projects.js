@@ -14,6 +14,7 @@ const Project_schema = new mongoose.Schema(
     created_by: { type: Object, required: true },
     modified_by: { type: Array, required: true },
     assign_track: { type: Array, required: true },
+    attachments: { type: Array, default: [] },
   },
   { timestamps: true }
 );

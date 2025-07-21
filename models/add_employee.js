@@ -45,6 +45,7 @@ const EMPLOYEE_Schema = new mongoose.Schema(
       passport_attachment: { type: Array, default: [] },
       emirates_attachment: { type: Array, default: [] },
       labour_card_attachment: { type: Array, default: [] },
+      other_attachments: { type: Array, default: [] },
     },
     contact_details: {
       mobile_number: { type: String },

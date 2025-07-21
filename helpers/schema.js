@@ -208,7 +208,7 @@ const validateDates = (value, helpers) => {
   return value;
 };
 function add_employee_by_admin(data) {
-  const currentYear = moment().year(); 
+  const currentYear = moment().year();
   const fileSchema = Joi.object({
     filename: Joi.string().required(),
     content: Joi.string()
@@ -378,6 +378,12 @@ function add_employee_by_admin(data) {
           Joi.array().items(fileSchema) // array of file objects
         )
         .optional(),
+      other_attachments: Joi.alternatives()
+        .try(
+          fileSchema, // single file object
+          Joi.array().items(fileSchema) // array of file objects
+        )
+        .optional(),
     }).required(),
     mobile_number: Joi.string().trim().allow(null, "").optional(),
     personal_email_address: Joi.string()
@@ -522,6 +528,19 @@ function edit_profile(data) {
   return schema.validate(data);
 }
 function add_project(data) {
+  const fileSchema = Joi.object({
+    filename: Joi.string().required(),
+    content: Joi.string()
+      .pattern(/^data:.*;base64,[a-zA-Z0-9+/=]+$/)
+      .custom(base64FileSizeValidator)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Content must be a valid base64-encoded string with data URI.",
+        "any.invalid": "File size must not exceed 256 KB",
+      }),
+    contentType: Joi.string().optional(),
+  });
   const schema = Joi.object({
     project_name: Joi.string().min(3).max(50).required().trim(),
     description: Joi.string()
@@ -544,6 +563,12 @@ function add_project(data) {
       .valid("active", "in_active", "completed")
       .required(),
     project_id: Joi.string().optional().allow(""),
+    attachments: Joi.alternatives()
+      .try(
+        fileSchema, // single file object
+        Joi.array().items(fileSchema) // array of file objects
+      )
+      .optional(),
   });
   return schema.validate(data);
 }
@@ -634,11 +659,30 @@ function get_task_by_id(data) {
   return schema.validate(data);
 }
 function update_project(data) {
+  const fileSchema = Joi.object({
+    filename: Joi.string().required(),
+    content: Joi.string()
+      .pattern(/^data:.*;base64,[a-zA-Z0-9+/=]+$/)
+      .custom(base64FileSizeValidator)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Content must be a valid base64-encoded string with data URI.",
+        "any.invalid": "File size must not exceed 256 KB",
+      }),
+    contentType: Joi.string().optional(),
+  });
   const schema = Joi.object({
     project_id: Joi.string().min(5).max(12).required(),
     status: Joi.string()
       .valid("new", "in_progress", "under_review", "completed")
       .required(),
+    attachments: Joi.alternatives()
+      .try(
+        fileSchema, // single file object
+        Joi.array().items(fileSchema) // array of file objects
+      )
+      .optional(),
   });
   return schema.validate(data);
 }
@@ -1033,7 +1077,8 @@ function add_leads(data) {
         "booked",
         "not_interested",
         "no_response",
-        "on_hold"
+        "on_hold",
+        "follow-up"
       )
       .required(),
     assigned_to: Joi.array().items(assignedTo).optional().default([]),
@@ -1069,7 +1114,8 @@ function get_leads(data) {
         "booked",
         "not_interested",
         "no_response",
-        "on_hold"
+        "on_hold",
+        "follow-up"
       )
       .optional()
       .allow("", null),
@@ -1133,7 +1179,7 @@ function send_email_data(data) {
 function lead_search(data) {
   const schema = Joi.object({
     lead_name: Joi.string().required().allow("", null),
-    company: Joi.string().required().allow("", null),
+    source: Joi.string().required().allow("", null),
   });
   return schema.validate(data);
 }
