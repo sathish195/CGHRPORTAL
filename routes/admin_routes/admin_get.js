@@ -1242,9 +1242,10 @@ router.post(
     const count = await mongoFunctions.count_documents("LEADS", {
       organisation_id,
     });
-    let status = mongoFunctions.distinct("LEADS", "status", {
+    let status = await mongoFunctions.distinct("LEADS", "status", {
       organisation_id,
     });
+    console.log(status);
 
     return res.status(200).send({
       leads,
