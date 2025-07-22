@@ -1218,6 +1218,43 @@ function get_postings(data) {
   });
   return schema.validate(data);
 }
+//add_update listings
+function add_update_listings(data) {
+  const schema = Joi.object({
+    route_action: Joi.number()
+      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
+      .required(),
+    organisation_id: Joi.string().required(),
+    key: Joi.string().required(),
+    listing_id: Joi.string().optional().allow("", null),
+    name: Joi.string().required(),
+    description: Joi.string().required(),
+    images: Joi.array()
+      .max(1)
+      .items(
+        Joi.object({
+          url: Joi.string()
+            .custom(base64ImageSizeValidator)
+            .required()
+            .messages({
+              "string.pattern.base": "Size should be 256 KB only.",
+            }),
+        })
+      ),
+  });
+  return schema.validate(data);
+}
+//get listings
+function get_postings(data) {
+  const schema = Joi.object({
+    skip: Joi.number().required(),
+    limit: Joi.number().required(),
+    organisation_id: Joi.string().required(),
+    key: Joi.string().required(),
+    posting_id: Joi.string().optional().allow("", null),
+  });
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {

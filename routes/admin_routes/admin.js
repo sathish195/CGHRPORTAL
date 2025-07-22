@@ -2890,8 +2890,8 @@ router.post(
 
     if (leadName) {
       filter.lead_name = { $regex: leadName, $options: "i" }; // case-insensitive partial match
-    } else if (source) {
-      filter.source = { $regex: source, $options: "i" };
+    } else if (data.source) {
+      filter.source = { $regex: data.source, $options: "i" };
     } else {
       return res
         .status(400)
