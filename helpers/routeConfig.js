@@ -68,7 +68,7 @@ module.exports = (app) => {
     })
   );
   app.use(
-    "/events",
+    "/crm",
     events,
     queue({
       activeLimit: 1,

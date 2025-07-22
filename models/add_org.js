@@ -16,7 +16,7 @@ const ORGANISATION_Schema = new mongoose.Schema(
       facebook_url: { type: String },
       instagram_url: { type: String },
       twitter_url: { type: String },
-      google_url: { type: String },
+      linkedin_url: { type: String },
     }, // Corrected field name to match 'employee_id'
 
     departments: { type: Array, default: [] },
