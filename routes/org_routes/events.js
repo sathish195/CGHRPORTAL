@@ -21,6 +21,7 @@ const fs = require("fs");
 const path = require("path");
 const fsp = require("fs").promises;
 const moment = require("moment");
+const encrypt_decrypt = require("../../helpers/encrypt_decrypt");
 
 router.post(
   "/notifications",
@@ -86,6 +87,183 @@ router.post(
     return res.status(200).send({
       notifications,
       count: total,
+    });
+  })
+);
+
+//listings route(no auth route)
+router.post(
+  "/add_update_listings",
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let rawInput = encrypt_decrypt.decryptobj(req.body.enc);
+
+    // Validate input
+    const { error, value: data } = validations.add_update_listings(rawInput);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    //Access control from payload
+    const keys = ["scanglobal", "crm"];
+    if (!keys.includes(data.key)) {
+      return res.status(403).send("Access denied");
+    }
+
+    // Validate route_action
+    const allowed_actions = [1, 2, 3];
+    if (!allowed_actions.includes(data.route_action)) {
+      return res.status(400).send("Invalid route_action provided");
+    }
+
+    // Construct postings data
+    const listings_object = {
+      organisation_id: data.organisation_id,
+      name: data.name || "",
+      location: data.location || "",
+      area_sqft: data.area_sqft || null,
+      images: data.images || [],
+      amenities: data.amenities || [],
+      key: data.key,
+    };
+
+    let listings;
+
+    if (data.route_action === 1) {
+      // ➕ ADD
+      const new_listing_id = functions.get_random_string("LIST", 10, true);
+      listings_object.listing_id = new_listing_id;
+
+      listings = await mongoFunctions.create_new_record(
+        "LISTINGS",
+        listings_object
+      );
+
+      return res.status(200).send({
+        message: "Listing Added Successfully",
+        // posting: postings,
+      });
+    } else if (data.route_action === 2) {
+      // 🔄 UPDATE
+      if (!data.listing_id || data.listing_id.length <= 2) {
+        return res.status(400).send("Posting ID required for update");
+      }
+
+      const existing_listing = await mongoFunctions.find_one("LISTINGS", {
+        listing_id: data.listing_id,
+        organisation_id: data.organisation_id,
+        key: data.key,
+      });
+
+      if (!existing_listing) {
+        return res.status(404).send("Posting not found for update");
+      }
+
+      listings = await mongoFunctions.find_one_and_update(
+        "LISTINGS",
+        {
+          listing_id: data.listing_id,
+          organisation_id: data.organisation_id,
+          key: data.key,
+        },
+        { $set: listings_object }
+      );
+
+      return res.status(200).send({
+        message: "Listing Updated Successfully",
+        // posting: postings,
+      });
+    } else if (data.route_action === 3) {
+      // ❌ DELETE
+      if (!data.listing_id || data.listing_id.length <= 2) {
+        return res.status(400).send("Listing ID required for deletion");
+      }
+
+      const result = await mongoFunctions.find_one_and_delete("LISTINGS", {
+        listing_id: data.listing_id,
+        organisation_id: data.organisation_id,
+        key: data.key,
+      });
+
+      if (!result) {
+        return res.status(404).send("Listing not found for deletion");
+      }
+
+      return res.status(200).send({
+        message: "Listing Deleted Successfully",
+      });
+    }
+  })
+);
+//get postings(no auth route)
+router.post(
+  "/listings",
+  Async(async (req, res) => {
+    const data = encrypt_decrypt.decryptobj(req.body.enc);
+
+    // Validate limit & skip
+    const { error } = validations.get_listings(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    ///Access control from payload
+    const keys = ["scanglobal", "crm"];
+    if (!keys.includes(data.key)) {
+      return res.status(403).send("Access denied");
+    }
+    // ✅ If postings_id is provided, return single post
+    if (data.listing_id && data.listing_id.trim() !== "") {
+      const post = await mongoFunctions.find_one(
+        "LISTINGS",
+        {
+          listing_id: data.listing_id,
+          organisation_id: data.organisation_id,
+          key: data.key,
+        },
+        { key: 0, _id: 0, __v: 0, organisation_id: 0 }
+      );
+
+      if (!post) return res.status(404).send("Listing not found");
+
+      return res.status(200).send({ listing: post });
+    }
+
+    // Base filter
+    const filters = {
+      organisation_id: data.organisation_id,
+      key: data.key,
+    };
+
+    // ✅ Add date filter only if date is not null or empty string
+    if (data.date && data.date !== "") {
+      const startOfDay = new Date(data.date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(data.date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      filters.date = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
+
+    // Fetch filtered postings
+    const find_listings = await mongoFunctions.lazy_loading(
+      "LISTINGS",
+      filters,
+      { key: 0, _id: 0, __v: 0, organisation_id: 0 },
+      { createdAt: -1 },
+      data.limit,
+      data.skip
+    );
+
+    const count = await mongoFunctions.count_documents("LISTINGS", {
+      organisation_id: data.organisation_id,
+      key: data.key,
+    });
+
+    // Return result
+    return res.status(200).send({
+      listings: find_listings,
+      count: count,
     });
   })
 );

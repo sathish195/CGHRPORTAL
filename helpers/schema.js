@@ -543,6 +543,18 @@ function add_project(data) {
   });
   const schema = Joi.object({
     project_name: Joi.string().min(3).max(50).required().trim(),
+    email: Joi.string()
+      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+      .trim()
+      .min(10)
+      .max(55)
+      .email()
+      .messages({
+        "string.pattern.base": "Email Should be valid mail",
+      })
+      .required(),
+    // company: Joi.string().optional().allow("", null),
+    comments: Joi.string().optional().allow("", null),
     description: Joi.string()
       .trim()
       .min(10)
@@ -1254,13 +1266,13 @@ function add_update_listings(data) {
   return schema.validate(data);
 }
 //get listings
-function get_postings(data) {
+function get_listings(data) {
   const schema = Joi.object({
     skip: Joi.number().required(),
     limit: Joi.number().required(),
     organisation_id: Joi.string().required(),
     key: Joi.string().required(),
-    posting_id: Joi.string().optional().allow("", null),
+    listing_id: Joi.string().optional().allow("", null),
   });
   return schema.validate(data);
 }
@@ -1323,4 +1335,6 @@ module.exports = {
   lead_search,
   add_update_postings,
   get_postings,
+  add_update_listings,
+  get_listings,
 };

@@ -15,6 +15,7 @@ const { POSTINGS } = require("../models/postings");
 const { TEMPLATES } = require("../models/templates");
 const { EMAILS } = require("../models/emails");
 const { NOTIFICATIONS } = require("../models/notifications");
+const { LISTINGS } = require("../models/listings");
 
 const fs = require("fs");
 const path = require("path");

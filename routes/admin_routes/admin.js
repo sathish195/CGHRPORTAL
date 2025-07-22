@@ -744,6 +744,8 @@ router.post(
             description: data.description,
             project_status: data.project_status,
             attachments: data.attachments,
+            comments: data.comments,
+            email: data.email,
           },
           $push: {
             modified_by: {
@@ -795,6 +797,8 @@ router.post(
         description: data.description,
         status: data.status,
         project_status: data.project_status,
+        email: data.email,
+        comments: data.comments,
         created_by: {
           employee_id: req.employee.employee_id,
           employee_name: req.employee.first_name + " " + req.employee.last_name,
@@ -2925,107 +2929,6 @@ router.post(
   Async(async (req, res) => {
     let rawInput = encrypt_decrypt.decryptobj(req.body.enc);
     console.log(rawInput);
-
-    // Validate input
-    const { error, value: data } = validations.add_update_postings(rawInput);
-    if (error) return res.status(400).send(error.details[0].message);
-
-    //Access control from payload
-    const keys = ["scanglobal", "crm"];
-    if (!keys.includes(data.key)) {
-      return res.status(403).send("Access denied");
-    }
-
-    // Validate route_action
-    const allowed_actions = [1, 2, 3];
-    if (!allowed_actions.includes(data.route_action)) {
-      return res.status(400).send("Invalid route_action provided");
-    }
-
-    // Construct postings data
-    const postings_object = {
-      organisation_id: data.organisation_id,
-      title: data.title || "",
-      description: data.description || "",
-      key: data.key || null,
-      images: data.images || [],
-    };
-
-    let postings;
-
-    if (data.route_action === 1) {
-      // ➕ ADD
-      const new_posting_id = functions.get_random_string("POST", 10, true);
-      postings_object.posting_id = new_posting_id;
-
-      postings = await mongoFunctions.create_new_record(
-        "POSTINGS",
-        postings_object
-      );
-
-      return res.status(200).send({
-        message: "Posting Added Successfully",
-        // posting: postings,
-      });
-    } else if (data.route_action === 2) {
-      // 🔄 UPDATE
-      if (!data.posting_id || data.posting_id.length <= 2) {
-        return res.status(400).send("Posting ID required for update");
-      }
-
-      const existing_posting = await mongoFunctions.find_one("POSTINGS", {
-        posting_id: data.posting_id,
-        organisation_id: data.organisation_id,
-        key: data.key,
-      });
-
-      if (!existing_posting) {
-        return res.status(404).send("Posting not found for update");
-      }
-
-      postings = await mongoFunctions.find_one_and_update(
-        "POSTINGS",
-        {
-          posting_id: data.posting_id,
-          organisation_id: data.organisation_id,
-          key: data.key,
-        },
-        { $set: postings_object }
-      );
-
-      return res.status(200).send({
-        message: "Posting Updated Successfully",
-        // posting: postings,
-      });
-    } else if (data.route_action === 3) {
-      // ❌ DELETE
-      if (!data.posting_id || data.posting_id.length <= 2) {
-        return res.status(400).send("Posting ID required for deletion");
-      }
-
-      const result = await mongoFunctions.find_one_and_delete("POSTINGS", {
-        posting_id: data.posting_id,
-        organisation_id: data.organisation_id,
-        key: data.key,
-      });
-
-      if (!result) {
-        return res.status(404).send("Posting not found for deletion");
-      }
-
-      return res.status(200).send({
-        message: "Posting Deleted Successfully",
-      });
-    }
-  })
-);
-
-//listings route(no auth route)
-router.post(
-  "/add_update_listings",
-  rateLimit(60, 10),
-  Async(async (req, res) => {
-    let rawInput = encrypt_decrypt.decryptobj(req.body.enc);
 
     // Validate input
     const { error, value: data } = validations.add_update_postings(rawInput);
