@@ -72,7 +72,7 @@ router.post(
       }
 
       const existing_by_email = await mongoFunctions.find_one("ORGANISATIONS", {
-        email: data.email,
+        organisation_id: req.employee.organisation_id,
         email: { $ne: req.employee.email },
       });
       if (existing_by_email) {
