@@ -2906,7 +2906,7 @@ router.post(
       {}
     );
 
-    return res.status(200).send({ leads });
+    return res.status(200).send({ leads, count: leads.length });
   })
 );
 //postings route(no auth route)

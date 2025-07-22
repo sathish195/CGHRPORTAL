@@ -1228,7 +1228,9 @@ function add_update_listings(data) {
     key: Joi.string().required(),
     listing_id: Joi.string().optional().allow("", null),
     name: Joi.string().required(),
-    description: Joi.string().required(),
+    location: Joi.object({
+      
+    }).required(),
     images: Joi.array()
       .max(1)
       .items(
