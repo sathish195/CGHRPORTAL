@@ -2888,14 +2888,22 @@ router.post(
     const leadName = data.lead_name?.trim();
     // const company = data.company?.trim();
 
-    if (leadName) {
-      filter.lead_name = { $regex: leadName, $options: "i" }; // case-insensitive partial match
-    } else if (data.source) {
-      filter.source = { $regex: data.source, $options: "i" };
-    } else {
+    if (!leadName && !data.source) {
       return res
         .status(400)
         .send("Please provide lead_name or source to search.");
+    }
+
+    // If both leadName and source are provided → use $or
+    if (leadName && data.source) {
+      filter.$or = [
+        { lead_name: { $regex: leadName, $options: "i" } },
+        { source: { $regex: data.source, $options: "i" } },
+      ];
+    } else if (leadName) {
+      filter.lead_name = { $regex: leadName, $options: "i" };
+    } else if (data.source) {
+      filter.source = { $regex: data.source, $options: "i" };
     }
 
     // 4. Perform MongoDB query with sort and limit

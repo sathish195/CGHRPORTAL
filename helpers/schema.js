@@ -1228,9 +1228,16 @@ function add_update_listings(data) {
     key: Joi.string().required(),
     listing_id: Joi.string().optional().allow("", null),
     name: Joi.string().required(),
-    location: Joi.object({
-      
-    }).required(),
+    location: Joi.string().required(),
+    area_sqft: Joi.string().required(),
+    amenities: Joi.array()
+      .items(
+        Joi.object({
+          name: Joi.string().required(),
+          count: Joi.number().integer().min(0).required(),
+        })
+      )
+      .optional(),
     images: Joi.array()
       .max(1)
       .items(
