@@ -1195,9 +1195,9 @@ router.post(
       organisation_id,
     };
 
-    // ✅ Optional status filter
+    // ✅ Optional status filter (case-insensitive)
     if (data.status && data.status !== "") {
-      filters.status = data.status.toLowerCase();
+      filters.status = { $regex: `^${data.status}$`, $options: "i" };
     }
 
     // ✅ Optional date filter
@@ -1242,9 +1242,18 @@ router.post(
     const count = await mongoFunctions.count_documents("LEADS", {
       organisation_id,
     });
-    let status = await mongoFunctions.distinct("LEADS", "status", {
-      organisation_id,
-    });
+    let status = [
+      "New",
+      "Contacted",
+      "Interested",
+      "Qualified",
+      "inProgress",
+      "booked",
+      "notInterested",
+      "noResponse",
+      "onHold",
+      "followUp",
+    ];
     console.log(status);
 
     return res.status(200).send({
