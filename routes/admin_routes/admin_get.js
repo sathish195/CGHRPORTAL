@@ -1249,12 +1249,12 @@ router.post(
       "Contacted",
       "Interested",
       "Qualified",
-      "inProgress",
-      "booked",
-      "notInterested",
-      "noResponse",
-      "onHold",
-      "followUp",
+      "InProgress",
+      "Booked",
+      "NotInterested",
+      "NoResponse",
+      "OnHold",
+      "FollowUp",
     ];
     console.log(status);
 

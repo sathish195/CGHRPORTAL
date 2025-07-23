@@ -1085,12 +1085,12 @@ function add_leads(data) {
         "Contacted",
         "Interested",
         "Qualified",
-        "inProgress",
-        "booked",
-        "notInterested",
-        "noResponse",
-        "onHold",
-        "followUp"
+        "InProgress",
+        "Booked",
+        "NotInterested",
+        "NoResponse",
+        "OnHold",
+        "FollowUp"
       )
       .required(),
     assigned_to: Joi.array().items(assignedTo).optional().default([]),
@@ -1122,12 +1122,12 @@ function get_leads(data) {
         "Contacted",
         "Interested",
         "Qualified",
-        "inProgress",
-        "booked",
-        "notInterested",
-        "noResponse",
-        "onHold",
-        "followUp"
+        "InProgress",
+        "Booked",
+        "NotInterested",
+        "NoResponse",
+        "OnHold",
+        "FollowUp"
       )
       .optional()
       .allow("", null),
