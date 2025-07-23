@@ -1492,6 +1492,7 @@ router.post(
   "/postings",
   Async(async (req, res) => {
     const data = encrypt_decrypt.decryptobj(req.body.enc);
+    console.log(data);
 
     // Validate limit & skip
     const { error } = validations.get_postings(data);
