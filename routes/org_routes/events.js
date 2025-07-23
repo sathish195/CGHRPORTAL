@@ -259,7 +259,7 @@ router.post(
     const find_listings = await mongoFunctions.lazy_loading(
       "LISTINGS",
       filters,
-      { key: 0, _id: 0, __v: 0, organisation_id: 0 },
+      { key: 0, _id: 0, __v: 0, "location._id": 0, organisation_id: 0 },
       { createdAt: -1 },
       data.limit,
       data.skip
