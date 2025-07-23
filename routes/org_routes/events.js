@@ -277,7 +277,6 @@ router.post(
     for (const listing of find_listings) {
       cleanId(listing.images);
       cleanId(listing.amenities);
-      cleanId(listing.location);
     }
 
     const count = await mongoFunctions.count_documents("LISTINGS", {
