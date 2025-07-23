@@ -2432,7 +2432,7 @@ router.post(
       source: data.source || org_data.organisation_name,
       email: data.email?.toLowerCase(),
       // company: data.company,
-      status: data.status?.toLowerCase(),
+      status: data.status,
       assigned_to: data.assigned_to || [],
       next_follow_up: moment(data.next_follow_up).toDate(),
       comments: data.comments || "",
@@ -2507,7 +2507,7 @@ router.post(
           },
           {
             $set: {
-              status: data.status?.toLowerCase(),
+              status: data.status,
               comments: data.comments || "",
               files: data.files || [],
               next_follow_up: moment(data.next_follow_up).toDate(),
@@ -2577,7 +2577,7 @@ router.post(
             source: data.source || "self",
             email: data.email?.toLowerCase(),
             // company: data.company?.toLowerCase(),
-            status: data.status?.toLowerCase(),
+            status: data.status,
             assigned_to: data.assigned_to || [],
             next_follow_up: moment(data.next_follow_up).toDate(),
             comments: data.comments || "",
