@@ -2772,7 +2772,7 @@ router.post(
 router.post(
   "/compose_email",
   Auth,
-  rateLimit(60, 10),
+  rateLimit(60, 60),
   Async(async (req, res) => {
     const rawInput = req.body;
 
@@ -2873,7 +2873,7 @@ router.post(
 router.post(
   "/lead_search",
   Auth,
-  rateLimit(60, 10),
+  rateLimit(60, 60),
   Async(async (req, res) => {
     const rawInput = req.body;
 

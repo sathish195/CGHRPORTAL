@@ -1038,6 +1038,7 @@ router.post(
 router.post(
   "/events",
   Auth,
+  slowDown,
   Async(async (req, res) => {
     const data = req.body;
     const admin_type = req.employee.admin_type;
@@ -1181,6 +1182,7 @@ router.post(
 router.post(
   "/leads",
   Auth,
+  slowDown,
   Async(async (req, res) => {
     const data = req.body;
 

@@ -1094,7 +1094,7 @@ function add_leads(data) {
       )
       .required(),
     assigned_to: Joi.array().items(assignedTo).optional().default([]),
-    next_follow_up: Joi.date().iso().required().allow("", null).messages({
+    next_follow_up: Joi.date().iso().required().messages({
       "date.base": "Date must be a valid ISO 8601 date",
       "date.format": "Date must be in ISO 8601 format",
     }),
