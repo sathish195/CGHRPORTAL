@@ -1256,7 +1256,7 @@ function add_update_listings(data) {
     key: Joi.string().required(),
     type: Joi.string().required(),
     price: Joi.number().required(),
-    listing_id: Joi.string().required(),
+    listing_id: Joi.string().optional().allow("", null),
     name: Joi.string().required(),
     description: Joi.string().required(),
     location: locationSchema.optional(),

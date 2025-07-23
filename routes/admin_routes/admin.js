@@ -76,6 +76,7 @@ router.post(
 router.post(
   "/add_employee",
   Auth,
+  rateLimit(60, 10),
   Async(async (req, res) => {
     console.log("add employee route hit");
     let data = req.body;
