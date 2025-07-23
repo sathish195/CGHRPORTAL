@@ -1081,16 +1081,16 @@ function add_leads(data) {
     status: Joi.string()
       .trim()
       .valid(
-        "new",
-        "contacted",
-        "interested",
-        "qualified",
-        "in_progress",
+        "New",
+        "Contacted",
+        "Interested",
+        "Qualified",
+        "inProgress",
         "booked",
-        "not_interested",
-        "no_response",
-        "on_hold",
-        "follow-up"
+        "notInterested",
+        "noResponse",
+        "onHold",
+        "followUp"
       )
       .required(),
     assigned_to: Joi.array().items(assignedTo).optional().default([]),
@@ -1118,16 +1118,16 @@ function get_leads(data) {
     status: Joi.string()
       .trim()
       .valid(
-        "new",
-        "contacted",
-        "interested",
-        "qualified",
-        "in_progress",
+        "New",
+        "Contacted",
+        "Interested",
+        "Qualified",
+        "inProgress",
         "booked",
-        "not_interested",
-        "no_response",
-        "on_hold",
-        "follow-up"
+        "notInterested",
+        "noResponse",
+        "onHold",
+        "followUp"
       )
       .optional()
       .allow("", null),
@@ -1232,16 +1232,38 @@ function get_postings(data) {
 }
 //add_update listings
 function add_update_listings(data) {
+  // ✅ Location schema (optional as per request)
+  const locationSchema = Joi.object({
+    address: Joi.string().required(),
+    city: Joi.string().required(),
+    state: Joi.string().required(),
+    country: Joi.string().required(),
+    pincode: Joi.string()
+      .pattern(/^\d{6}$/)
+      .message("Pincode must be a 6-digit number")
+      .required(),
+    landmark: Joi.string().allow("", null),
+    latitude: Joi.number().min(-90).max(90).required(),
+    longitude: Joi.number().min(-180).max(180).required(),
+  });
+
+  // ✅ Main schema
   const schema = Joi.object({
     route_action: Joi.number()
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
       .required(),
     organisation_id: Joi.string().required(),
     key: Joi.string().required(),
-    listing_id: Joi.string().optional().allow("", null),
+    type: Joi.string().required(),
+    price: Joi.number().required(),
+    listing_id: Joi.string().required(),
     name: Joi.string().required(),
-    location: Joi.string().required(),
-    area_sqft: Joi.string().required(),
+    description: Joi.string().required(),
+    location: locationSchema.optional(),
+    bedrooms: Joi.number().optional(),
+    bathrooms: Joi.number().optional(),
+    balconies: Joi.number().optional(),
+    area_sqft: Joi.string().optional(),
     amenities: Joi.array()
       .items(
         Joi.object({
@@ -1251,18 +1273,16 @@ function add_update_listings(data) {
       )
       .optional(),
     images: Joi.array()
-      .max(1)
       .items(
         Joi.object({
           url: Joi.string()
-            .custom(base64ImageSizeValidator)
-            .required()
-            .messages({
-              "string.pattern.base": "Size should be 256 KB only.",
-            }),
+            .custom(base64ImageSizeValidator, "Base64 image size validation")
+            .required(),
         })
-      ),
+      )
+      .optional(),
   });
+
   return schema.validate(data);
 }
 //get listings
