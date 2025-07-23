@@ -207,7 +207,8 @@ router.post(
   "/listings",
   rateLimit(60, 60),
   Async(async (req, res) => {
-    const data = encrypt_decrypt.decryptobj(req.body.enc);
+    const data = req.body;
+    // encrypt_decrypt.decryptobj(req.body.enc);
 
     // Validate limit & skip
     const { error } = validations.get_listings(data);
@@ -264,6 +265,20 @@ router.post(
       data.limit,
       data.skip
     );
+    const cleanId = (array) => {
+      if (!Array.isArray(array)) return;
+      array.forEach((item) => {
+        if (item && typeof item === "object") {
+          if ("_id" in item) delete item._id;
+        }
+      });
+    };
+
+    for (const listing of find_listings) {
+      cleanId(listing.images);
+      cleanId(listing.amenities);
+      cleanId(listing.location);
+    }
 
     const count = await mongoFunctions.count_documents("LISTINGS", {
       organisation_id: data.organisation_id,
