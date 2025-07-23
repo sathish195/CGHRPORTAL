@@ -96,7 +96,7 @@ router.post(
   "/add_update_listings",
   rateLimit(60, 10),
   Async(async (req, res) => {
-    const rawInput = req.body;
+    const rawInput = encrypt_decrypt.decryptobj(req.body.enc);
 
     // ✅ Validate input
     const { error, value: data } = validations.add_update_listings(rawInput);
@@ -206,8 +206,7 @@ router.post(
 router.post(
   "/listings",
   Async(async (req, res) => {
-    const data = req.body;
-    // encrypt_decrypt.decryptobj(req.body.enc);
+    const data = encrypt_decrypt.decryptobj(req.body.enc);
 
     // Validate limit & skip
     const { error } = validations.get_listings(data);
