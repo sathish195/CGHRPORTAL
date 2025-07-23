@@ -1272,6 +1272,7 @@ router.post(
 router.post(
   "/templates",
   Auth,
+  slowDown,
   Async(async (req, res) => {
     const data = req.body;
 
@@ -1314,6 +1315,7 @@ router.post(
 router.post(
   "/sent_emails",
   Auth,
+  slowDown,
   Async(async (req, res) => {
     const data = req.body;
 
@@ -1490,6 +1492,7 @@ router.post(
 //get postings(no auth route)
 router.post(
   "/postings",
+  slowDown,
   Async(async (req, res) => {
     const data = encrypt_decrypt.decryptobj(req.body.enc);
     console.log(data);

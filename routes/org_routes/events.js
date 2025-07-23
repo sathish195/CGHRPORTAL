@@ -26,7 +26,7 @@ const encrypt_decrypt = require("../../helpers/encrypt_decrypt");
 router.post(
   "/notifications",
   Auth,
-  rateLimit(60, 10),
+  rateLimit(60, 60),
   Async(async (req, res) => {
     const data = req.body;
 
@@ -94,7 +94,7 @@ router.post(
 //listings route(no auth route)
 router.post(
   "/add_update_listings",
-  rateLimit(60, 10),
+  rateLimit(60, 20),
   Async(async (req, res) => {
     const rawInput = encrypt_decrypt.decryptobj(req.body.enc);
 
@@ -205,6 +205,7 @@ router.post(
 //get postings(no auth route)
 router.post(
   "/listings",
+  rateLimit(60, 60),
   Async(async (req, res) => {
     const data = encrypt_decrypt.decryptobj(req.body.enc);
 
