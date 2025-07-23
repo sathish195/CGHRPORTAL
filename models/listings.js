@@ -3,22 +3,21 @@ const mongoose = require("mongoose");
 const listingSchema = new mongoose.Schema(
   {
     location: {
-      type: [
-        {
-          address: { type: String },
-          city: { type: String },
-          state: { type: String },
-          country: { type: String },
-          pincode: {
-            type: String,
-            match: [/^\d{6}$/, "Pincode must be a 6-digit number"],
-          },
-          landmark: { type: String, default: "" },
-          latitude: { type: Number, default: 0 },
-          longitude: { type: Number, default: 0 },
+      type: {
+        address: { type: String },
+        city: { type: String },
+        state: { type: String },
+        country: { type: String },
+        pincode: {
+          type: String,
+          match: [/^\d{6}$/, "Pincode must be a 6-digit number"],
         },
-      ],
-      default: [],
+        landmark: { type: String, default: "" },
+        latitude: { type: Number, default: 0 },
+        longitude: { type: Number, default: 0 },
+      },
+
+      default: {},
     },
     organisation_id: { type: String, required: true },
     key: { type: String, required: true },

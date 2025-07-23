@@ -1259,7 +1259,7 @@ function add_update_listings(data) {
     listing_id: Joi.string().optional().allow("", null),
     name: Joi.string().required(),
     description: Joi.string().required(),
-    location: Joi.array().items(locationSchema).optional(),
+    location: locationSchema.optional(),
     bedrooms: Joi.number().optional(),
     bathrooms: Joi.number().optional(),
     balconies: Joi.number().optional(),
