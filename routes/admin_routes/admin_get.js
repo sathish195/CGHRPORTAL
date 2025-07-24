@@ -1196,7 +1196,7 @@ router.post(
     const filters = {
       organisation_id,
     };
-    if (req.employee.admin_type !== 1) {
+    if (req.employee.admin_type !== "1") {
       filters.assigned_to = {
         $elemMatch: { employee_id: req.employee.employee_id },
       };
