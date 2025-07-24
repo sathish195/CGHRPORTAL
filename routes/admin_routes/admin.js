@@ -2871,57 +2871,63 @@ router.post(
   })
 );
 //leads search
-router.post(
-  "/lead_search",
-  Auth,
-  rateLimit(60, 60),
-  Async(async (req, res) => {
-    const rawInput = req.body;
+// Helper to escape user input for regex
+function escapeRegex(text) {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+}
 
-    // 1. Validate input
-    const { error, value: data } = validations.lead_search(rawInput);
-    if (error) return res.status(400).send(error.details[0].message);
+// Leads Search Route
+router.post("/lead_search", Auth, rateLimit(60, 60), async (req, res) => {
+  const rawInput = req.body;
 
-    // 2. Access control
-    const admin_types = ["1", "2"];
-    if (!admin_types.includes(req.employee.admin_type)) {
-      return res.status(403).send("Only Director or Manager can compose email");
-    }
+  // 1. Validate input
+  const { error, value: data } = validations.lead_search(rawInput);
+  if (error) return res.status(400).send(error.details[0].message);
 
-    // 3. Build regex-based filter
-    let filter = { organisation_id: req.employee.organisation_id };
-    const leadName = data.lead_name?.trim();
-    // const company = data.company?.trim();
+  // 2. Only admin_type 1 and 2 can search
+  const admin_types = ["1", "2"];
+  if (!admin_types.includes(req.employee.admin_type)) {
+    return res
+      .status(403)
+      .send("Only Director or Manager can perform this search");
+  }
 
-    if (!leadName && !data.source) {
-      return res
-        .status(400)
-        .send("Please provide lead_name or source to search.");
-    }
+  // 3. Prepare filter
+  const leadName = data.lead_name?.trim();
+  const source = data.source?.trim();
 
-    // If both leadName and source are provided → use $or
-    if (leadName && data.source) {
-      filter.$or = [
-        { lead_name: { $regex: leadName, $options: "i" } },
-        { source: { $regex: data.source, $options: "i" } },
-      ];
-    } else if (leadName) {
-      filter.lead_name = { $regex: leadName, $options: "i" };
-    } else if (data.source) {
-      filter.source = { $regex: data.source, $options: "i" };
-    }
+  if (!leadName && !source) {
+    return res
+      .status(400)
+      .send("Please provide lead_name or source to search.");
+  }
 
-    // 4. Perform MongoDB query with sort and limit
-    const leads = await mongoFunctions.find(
-      "LEADS",
-      filter,
-      { createdAt: -1 }, // sort
-      {}
-    );
+  const filter = {
+    organisation_id: req.employee.organisation_id,
+  };
 
-    return res.status(200).send({ leads, count: leads.length });
-  })
-);
+  if (leadName && source) {
+    filter.$or = [
+      { lead_name: { $regex: escapeRegex(leadName), $options: "i" } },
+      { source: { $regex: escapeRegex(source), $options: "i" } },
+    ];
+  } else if (leadName) {
+    filter.lead_name = { $regex: escapeRegex(leadName), $options: "i" };
+  } else if (source) {
+    filter.source = { $regex: escapeRegex(source), $options: "i" };
+  }
+
+  // 4. Fetch data
+  const leads = await mongoFunctions.find(
+    "LEADS",
+    filter,
+    { createdAt: -1 },
+    {}
+  );
+
+  return res.status(200).send({ leads, count: leads.length });
+});
+
 //postings route(no auth route)
 
 router.post(
