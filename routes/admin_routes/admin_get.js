@@ -1197,9 +1197,10 @@ router.post(
       organisation_id,
     };
     if (req.employee.admin_type !== 1) {
-      filters["assigned_to.employee_id"] = req.employee.employee_id;
+      filters.assigned_to = {
+        $elemMatch: { employee_id: req.employee.employee_id },
+      };
     }
-
     // ✅ Optional status filter (case-insensitive)
     if (data.status && data.status !== "") {
       filters.status = { $regex: `^${data.status}$`, $options: "i" };
