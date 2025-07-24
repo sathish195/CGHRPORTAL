@@ -2575,7 +2575,7 @@ router.post(
             organisation_id: data.organisation_id,
             lead_name: data.lead_name?.toLowerCase(),
             key: data.key,
-            source: data.source || req.employee.organisation_name,
+            source: data.source || org_data.organisation_name,
             email: data.email?.toLowerCase(),
             // company: data.company?.toLowerCase(),
             status: data.status,
