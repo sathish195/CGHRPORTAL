@@ -363,25 +363,25 @@ function add_employee_by_admin(data) {
       passport_attachment: Joi.alternatives()
         .try(
           fileSchema, // single file object
-          Joi.array().items(fileSchema) // array of file objects
+          Joi.array().items(fileSchema).length(2) // array of file objects
         )
         .optional(),
       emirates_attachment: Joi.alternatives()
         .try(
           fileSchema, // single file object
-          Joi.array().items(fileSchema) // array of file objects
+          Joi.array().items(fileSchema).length(2) // array of file objects
         )
         .optional(),
       labour_card_attachment: Joi.alternatives()
         .try(
           fileSchema, // single file object
-          Joi.array().items(fileSchema) // array of file objects
+          Joi.array().items(fileSchema).length(2) // array of file objects
         )
         .optional(),
       other_attachments: Joi.alternatives()
         .try(
           fileSchema, // single file object
-          Joi.array().items(fileSchema) // array of file objects
+          Joi.array().items(fileSchema).length(2) // array of file objects
         )
         .optional(),
     }).required(),
@@ -1067,14 +1067,14 @@ function add_leads(data) {
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
       .min(10)
-      .max(55)
+      .max(255)
       .email()
       .messages({
         "string.pattern.base": "Email Should be valid mail",
       })
       .required(),
     // company: Joi.string().optional().allow("", null),
-    comments: Joi.string().optional().allow("", null),
+    comments: Joi.string().min(3).max(1000).optional().allow("", null),
     route_action: Joi.number()
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
       .required(),
@@ -1101,7 +1101,7 @@ function add_leads(data) {
     files: Joi.alternatives()
       .try(
         fileSchema, // single file object
-        Joi.array().items(fileSchema) // array of file objects
+        Joi.array().items(fileSchema).max(2) // array of file objects
       )
       .optional(),
   });
@@ -1203,8 +1203,8 @@ function add_update_postings(data) {
     organisation_id: Joi.string().required(),
     key: Joi.string().required(),
     posting_id: Joi.string().optional().allow("", null),
-    title: Joi.string().required(),
-    description: Joi.string().required(),
+    title: Joi.string().min(3).max(70).required(),
+    description: Joi.string().min(10).max(1000).required(),
     images: Joi.array()
       .max(1)
       .items(
@@ -1232,12 +1232,11 @@ function get_postings(data) {
 }
 //add_update listings
 function add_update_listings(data) {
-  // ✅ Location schema (optional as per request)
   const locationSchema = Joi.object({
-    address: Joi.string().required(),
-    city: Joi.string().required(),
-    state: Joi.string().required(),
-    country: Joi.string().required(),
+    address: Joi.string().min(5).max(255).required(),
+    city: Joi.string().min(2).max(100).required(),
+    state: Joi.string().min(2).max(100).required(),
+    country: Joi.string().min(2).max(100).required(),
     pincode: Joi.string()
       .pattern(/^\d{6}$/)
       .message("Pincode must be a 6-digit number")
@@ -1254,11 +1253,11 @@ function add_update_listings(data) {
       .required(),
     organisation_id: Joi.string().required(),
     key: Joi.string().required(),
-    type: Joi.string().required(),
+    type: Joi.string().min(3).max(50).required(),
     price: Joi.number().required(),
     listing_id: Joi.string().optional().allow("", null),
-    name: Joi.string().required(),
-    description: Joi.string().required(),
+    name: Joi.string().min(3).max(100).required(),
+    description: Joi.string().min(10).max(1000).required(),
     location: locationSchema.optional(),
     bedrooms: Joi.number().optional(),
     bathrooms: Joi.number().optional(),
@@ -1273,6 +1272,7 @@ function add_update_listings(data) {
       )
       .optional(),
     images: Joi.array()
+      .max(2)
       .items(
         Joi.object({
           url: Joi.string()
