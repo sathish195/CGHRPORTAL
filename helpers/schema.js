@@ -1204,7 +1204,7 @@ function add_update_postings(data) {
     key: Joi.string().required(),
     posting_id: Joi.string().optional().allow("", null),
     title: Joi.string().min(3).max(70).required(),
-    description: Joi.string().min(10).max(1000).required(),
+    description: Joi.string().min(10).required(),
     images: Joi.array()
       .max(1)
       .items(
