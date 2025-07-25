@@ -381,7 +381,7 @@ function add_employee_by_admin(data) {
       other_attachments: Joi.alternatives()
         .try(
           fileSchema, // single file object
-          Joi.array().items(fileSchema).max(2) // array of file objects
+          Joi.array().items(fileSchema).max(3) // array of file objects
         )
         .optional(),
     }).required(),
