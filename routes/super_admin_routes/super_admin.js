@@ -208,7 +208,7 @@ router.post(
         employment_type: "Full-time",
         employee_status: data.status,
         source_of_hire: null,
-        reporting_manager: null,
+        reporting_manager: "",
         date_of_join: today,
       },
 
