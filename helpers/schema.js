@@ -1074,7 +1074,7 @@ function add_leads(data) {
       })
       .required(),
     // company: Joi.string().optional().allow("", null),
-    comments: Joi.string().min(3).max(1000).optional().allow("", null),
+    comments: Joi.string().min(3).optional().allow("", null),
     route_action: Joi.number()
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
       .required(),
