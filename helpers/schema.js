@@ -363,25 +363,25 @@ function add_employee_by_admin(data) {
       passport_attachment: Joi.alternatives()
         .try(
           fileSchema, // single file object
-          Joi.array().items(fileSchema).length(2) // array of file objects
+          Joi.array().items(fileSchema).max(2) // array of file objects
         )
         .optional(),
       emirates_attachment: Joi.alternatives()
         .try(
           fileSchema, // single file object
-          Joi.array().items(fileSchema).length(2) // array of file objects
+          Joi.array().items(fileSchema).max(2) // array of file objects
         )
         .optional(),
       labour_card_attachment: Joi.alternatives()
         .try(
           fileSchema, // single file object
-          Joi.array().items(fileSchema).length(2) // array of file objects
+          Joi.array().items(fileSchema).max(2) // array of file objects
         )
         .optional(),
       other_attachments: Joi.alternatives()
         .try(
           fileSchema, // single file object
-          Joi.array().items(fileSchema).length(2) // array of file objects
+          Joi.array().items(fileSchema).max(2) // array of file objects
         )
         .optional(),
     }).required(),
