@@ -1238,12 +1238,17 @@ function add_update_listings(data) {
     state: Joi.string().min(2).max(100).required(),
     country: Joi.string().min(2).max(100).required(),
     pincode: Joi.string()
-      .pattern(/^\d{6}$/)
-      .message("Pincode must be a 6-digit number")
-      .required(),
+      .trim()
+      .pattern(/^[A-Za-z0-9\- ]{3,10}$/)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Pincode must be 3 to 10 characters, and can contain letters, digits, hyphens, or spaces.",
+        "string.empty": "Pincode is required.",
+      }),
     landmark: Joi.string().allow("", null),
-    latitude: Joi.number().min(-90).max(90).required(),
-    longitude: Joi.number().min(-180).max(180).required(),
+    latitude: Joi.number().min(-90).max(90).optional(),
+    longitude: Joi.number().min(-180).max(180).optional(),
   });
 
   // ✅ Main schema
