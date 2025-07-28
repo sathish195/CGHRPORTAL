@@ -347,6 +347,7 @@ cron.schedule(
   },
   { scheduled: true, timezone: "Asia/Kolkata" }
 );
+// alertDev("Welcome to cg hr portal staging bot");
 
 cron.schedule(
   "00 9 * * *",

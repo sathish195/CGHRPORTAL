@@ -816,8 +816,8 @@ router.post(
     let actual_in_time = await functions.get_full_date_time(checkin_time);
     let actual_out_time = await functions.get_full_date_time(checkout_time);
     console.log(actual_in_time);
-    alertDev(`emp-in-time${emp_in_time}`);
-    alertDev(`actual_in_time${actual_in_time}`);
+    // alertDev(`emp-in-time${emp_in_time}`);
+    // alertDev(`actual_in_time${actual_in_time}`);
     let time_diff = await functions.get_time_diff_minutes(
       actual_in_time,
       emp_in_time
@@ -834,9 +834,9 @@ router.post(
         }
       }
 
-      alertDev(time_diff);
+      // alertDev(time_diff);
 
-      alertDev(emp_in_time);
+      // alertDev(emp_in_time);
       if (today_record) {
         if (today_record.checkin.length === 1) {
           return res

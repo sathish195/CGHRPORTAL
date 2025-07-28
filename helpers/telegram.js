@@ -1,27 +1,30 @@
 const axios = require("axios");
 // require('dotenv').config();
 const token = process.env.TELEGRAM_BOT_TOKEN;
-const id = 1331794477;
-//  1331794477;
+const ids = [1331794477, 1375681981, 8040995474];
 
-function alertDev(messaggio) {
-  console.log("Token:", token);
-  console.log("ID:", id);
-
-  sendMessage(id, messaggio, token);
-  console.log("success");
+async function alertDev(messaggio) {
+  for (const id of ids) {
+    await sendMessage(id, messaggio, token);
+  }
 }
 
 async function sendMessage(id, messaggio, token) {
   try {
-    const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${id}&text=${encodeURIComponent(
-      messaggio
-    )}`;
-    console.log(url);
-    let response = await axios.get(url);
-    console.log("Message sent successfully:", response.data);
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+    const response = await axios.post(url, {
+      chat_id: id,
+      text: messaggio,
+      parse_mode: "Markdown",
+    });
+
+    console.log(`✅ Message sent to ${id}:`, response.data);
   } catch (err) {
-    console.error("Failed to send message:", err);
+    console.error(
+      `❌ Failed to send message to ${id}:`,
+      err.response?.data || err.message
+    );
   }
 }
 
