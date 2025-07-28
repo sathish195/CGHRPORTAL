@@ -1016,6 +1016,7 @@ function add_update_events(data) {
     }),
     type: Joi.string().trim().min(2).max(20).required(),
     assigned_to: Joi.array().items(assignedTo).required(),
+    event_id: Joi.string().trim().optional().allow("", null),
   });
 
   return schema.validate(data);
