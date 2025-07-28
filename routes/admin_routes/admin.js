@@ -398,7 +398,7 @@ router.post(
   rateLimit(60, 10),
   Async(async (req, res) => {
     console.log("update employee profile by admin route hit");
-    console.log(req.data);
+    // console.log(req.data);
     var { error, value } = validations.add_employee_by_admin(req.body);
     let data = value;
 
@@ -639,7 +639,7 @@ router.post(
             }))
           : find_emp.leaves,
     };
-    console.log(find_emp.leaves);
+    // console.log(find_emp.leaves);
     let new_emp = await mongoFunctions.find_one_and_update(
       "EMPLOYEE",
       { employee_id: data.employee_id },
@@ -872,7 +872,7 @@ router.post(
     const employeeIds = Array.isArray(data.employee_id)
       ? data.employee_id
       : [data.employee_id];
-    console.log(employeeIds);
+    // console.log(employeeIds);
 
     if (data.action.toLowerCase() === "add") {
       for (const employeeId of employeeIds) {
@@ -1161,7 +1161,7 @@ router.post(
       project_id: data.project_id,
       // team: { $elemMatch: { employee_id: req.employee.employee_id } }
     });
-    console.log(data.roject_id);
+    // console.log(data.roject_id);
     if (!findId) {
       return res.status(400).send("Project Does Not Exist");
     }
@@ -1313,7 +1313,7 @@ router.post(
           task_data_up.task_id
         );
 
-        console.log(s);
+        // console.log(s);
       }
 
       console.log("task updated successfully");
@@ -1509,13 +1509,13 @@ router.post(
         );
     }
     if (!findId) return res.status(400).send("No Leave Application Found");
-    console.log(findId);
+    // console.log(findId);
     const findEmployee = await mongoFunctions.find_one("EMPLOYEE", {
       organisation_id: req.employee.organisation_id,
       employee_id: findId.employee_id,
       "leaves.leave_id": findId.leave_type_id,
     });
-    console.log(findEmployee);
+    // console.log(findEmployee);
     if (!findEmployee)
       return res
         .status(400)
@@ -1580,7 +1580,7 @@ router.post(
         overallStatus = "Pending";
       }
     }
-    console.log(overallStatus);
+    // console.log(overallStatus);
 
     let updated_leave_data = await mongoFunctions.find_one_and_update(
       "LEAVE",
@@ -1602,7 +1602,7 @@ router.post(
           $inc: { "leaves.$.remaining_leaves": -findId.days_taken },
         }
       );
-      console.log(h.leaves);
+      // console.log(h.leaves);
 
       // Create leave records for each date between from_date and to_date
       const fromDate = new Date(updated_leave_data.from_date);
@@ -1628,7 +1628,7 @@ router.post(
               $lt: endDate,
             },
           });
-          console.log(attendanceCheck.length);
+          // console.log(attendanceCheck.length);
 
           // If there's an existing attendance record for that date, delete it
           if (attendanceCheck.length > 0) {
@@ -1640,7 +1640,7 @@ router.post(
                 $lt: endDate,
               },
             });
-            console.log(h);
+            // console.log(h);
           }
           // Exclude weekend
           const attendance_object = {
@@ -1711,7 +1711,7 @@ router.post(
           $set: { lop_leaves: findId.days_taken }, // Set the LOP leaves
         }
       );
-      console.log(l.leaves);
+      // console.log(l.leaves);
     }
 
     return res.status(200).send("Leave Status Updated Successfully");
@@ -1742,7 +1742,7 @@ router.post(
         .send(
           `Leave Application Is Already In The ${data.leave_status} Status`
         );
-    console.log(findId);
+    // console.log(findId);
     const findEmployee = await mongoFunctions.find_one("EMPLOYEE", {
       organisation_id: req.employee.organisation_id,
       employee_id: findId.employee_id,
@@ -1825,7 +1825,7 @@ router.post(
               $lt: endDate,
             },
           });
-          console.log(attendanceCheck.length);
+          // console.log(attendanceCheck.length);
 
           // If there's an existing attendance record for that date, delete it
           if (attendanceCheck.length > 0) {
@@ -1837,7 +1837,7 @@ router.post(
                 $lt: endDate,
               },
             });
-            console.log(h);
+            // console.log(h);
           }
           const attendance_object = {
             attendance_id:
@@ -2004,7 +2004,7 @@ router.post(
       // Create the next day of toDate
       const nextDayToDate = new Date(toDateObj);
       nextDayToDate.setUTCDate(nextDayToDate.getUTCDate() + 1);
-      console.log("Next Day to Date:", nextDayToDate);
+      // console.log("Next Day to Date:", nextDayToDate);
 
       // Check the comparison
       // const isTodayInLeaveRange = fromDateObj <= today && today < nextDayToDate;
@@ -2139,8 +2139,8 @@ router.post(
       if (localOutTime < ten_AM) {
         return res.status(400).send("Checkout Time Cannot Be Before 10 AM.");
       }
-      console.log(localInTime);
-      console.log(localOutTime);
+      // console.log(localInTime);
+      // console.log(localOutTime);
       if (localOutTime < localInTime) {
         return res
           .status(400)
@@ -2166,7 +2166,7 @@ router.post(
     // console.log(m);
 
     const s = await stats.calculate_working_minutes(attendance_obj);
-    console.log(s);
+    // console.log(s);
     return res.status(200).send({
       success: "Attendance Updated Successfully",
       data: [
@@ -2397,7 +2397,7 @@ router.post(
   rateLimit(60, 10),
   Async(async (req, res) => {
     const rawInput = encrypt_decrypt.decryptobj(req.body.enc);
-    console.log(rawInput);
+    // console.log(rawInput);
 
     // Validate input
     const { error, value: data } = validations.add_leads(rawInput);
@@ -2935,7 +2935,7 @@ router.post(
   rateLimit(60, 10),
   Async(async (req, res) => {
     let rawInput = encrypt_decrypt.decryptobj(req.body.enc);
-    console.log(rawInput);
+    // console.log(rawInput);
 
     // Validate input
     const { error, value: data } = validations.add_update_postings(rawInput);

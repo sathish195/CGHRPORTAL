@@ -71,7 +71,7 @@ router.post(
   rateLimit(60, 40),
   Async(async (req, res) => {
     data = req.body;
-    console.log(data);
+    // console.log(data);
     //validate data
     var { error } = validations.Sadmin_login(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -91,8 +91,8 @@ router.post(
       data.password,
       s_admin.password
     );
-    console.log(validPassword);
-    console.log(s_admin.password);
+    // console.log(validPassword);
+    // console.log(s_admin.password);
     if (!validPassword) return res.status(400).send("Incorrect Password");
 
     const up_s_admin = await mongoFunctions.find_one_and_update(
@@ -114,7 +114,7 @@ router.post(
       process.env.jwtPrivateKey,
       { expiresIn: "7d" }
     );
-    console.log(token);
+    // console.log(token);
 
     return res.status(200).send({
       success: "Logged In Successfully",
@@ -130,7 +130,7 @@ router.post(
   Auth,
   Async(async (req, res) => {
     const data = req.body;
-    console.log(req.employee);
+    // console.log(req.employee);
 
     const { error } = validations.add_admin_emp(data);
     if (error) return res.status(400).send(error.details[0].message);

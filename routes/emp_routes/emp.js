@@ -31,7 +31,6 @@ router.post(
   rateLimit(60, 40),
   Async(async (req, res) => {
     data = req.body;
-    console.log(data);
     //validate data
     var { error } = validations.emp_login(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -91,7 +90,6 @@ router.post(
       process.env.jwtPrivateKey,
       { expiresIn: "7d" }
     );
-    console.log(token);
 
     return res.status(200).send({
       success: "Logged In Successfully",
@@ -371,7 +369,7 @@ router.post(
         images: { dp: data.image },
         "personal_details.about_me": data.about_me,
       };
-      console.log(update);
+      // console.log(update);
     } else if (data.image.length > 10 && data.about_me.length < 1) {
       if (!find_emp.images) {
         update = { images: { dp: data.image } };
@@ -389,7 +387,7 @@ router.post(
       update,
       { new: true }
     );
-    console.log(update);
+    // console.log(update);
     console.log("profile updated successfully");
     return res.status(200).send({
       success: "Profile Updated Successfully",
@@ -407,7 +405,7 @@ router.post(
   Async(async (req, res) => {
     console.log("edit profile route hit");
     let data = req.body;
-    console.log(req.body);
+    // console.log(req.body);
     var { error } = validations.edit_profile(data);
     if (error) return res.status(400).send(error.details[0].message);
     let org_data = await redis.redisGet(
@@ -596,7 +594,7 @@ router.post(
         task_data_up.modified_by,
         task_data_up.task_id
       );
-      console.log(s);
+      // console.log(s);
     }
 
     if (!task_data_up) return res.status(400).send("Task Update Failed");
@@ -724,7 +722,7 @@ router.post(
       data.from_date,
       data.to_date
     );
-    console.log(leaves_count);
+    // console.log(leaves_count);
     if (leaves_count > emp_leave_obj.remaining_leaves)
       return res.status(400).send("Leaves Limit Exceeded..!");
     let leave_record_obj = {
@@ -772,7 +770,7 @@ router.post(
     // if (req.employee.admin_type === "1") {
     //   return res.status(400).send("Admin Do Not Checkin");
     // }
-    console.log(-269 > -270);
+    // console.log(-269 > -270);
 
     let org_data = await redis.redisGet(
       "CRM_ORGANISATIONS",
@@ -948,4 +946,3 @@ router.post(
   })
 );
 //update lead status
-

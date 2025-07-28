@@ -171,7 +171,7 @@ router.post(
           status: "in_progress",
           task_status: { $not: /in_active/i },
         });
-        console.log("managers", tasks);
+        // console.log("managers", tasks);
       } else {
         tasks = await mongoFunctions.find("TASKS", {
           organisation_id: req.employee.organisation_id,
@@ -188,7 +188,7 @@ router.post(
           (task) => task.employee_id === employee.employee_id
         );
 
-        console.log(employee_tasks);
+        // console.log(employee_tasks);
 
         return {
           ...employee,
@@ -475,7 +475,7 @@ router.post(
     }
 
     const userRole = req.employee.admin_type;
-    console.log(userRole);
+    // console.log(userRole);
     const organisationId = req.employee.organisation_id;
     const employeeId = req.employee.employee_id;
 
@@ -849,7 +849,7 @@ router.post(
         query.leave_status = data.leave_status;
       }
     }
-    console.log(query);
+    // console.log(query);
 
     // Fetch leave applications with pagination
     // alertDev(`query in get leaves-->${JSON.stringify(query)}`);
@@ -926,7 +926,7 @@ router.post(
     if (data.employee_id && data.employee_id.length > 5) {
       condition["employee_id"] = data.employee_id;
     }
-    console.log(condition);
+    // console.log(condition);
 
     if (data?.week_date) {
       const start = new Date(data.week_date);
@@ -1029,7 +1029,7 @@ router.post(
       completed: completed.length,
     };
 
-    console.log(count);
+    // console.log(count);
     return res.status(200).send([count]);
   })
 );
@@ -1259,7 +1259,7 @@ router.post(
       "OnHold",
       "FollowUp",
     ];
-    console.log(status);
+    // console.log(status);
 
     return res.status(200).send({
       leads,
@@ -1498,7 +1498,7 @@ router.post(
   slowDown,
   Async(async (req, res) => {
     const data = encrypt_decrypt.decryptobj(req.body.enc);
-    console.log(data);
+    // console.log(data);
 
     // Validate limit & skip
     const { error } = validations.get_postings(data);

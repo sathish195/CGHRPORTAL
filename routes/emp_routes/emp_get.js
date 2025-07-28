@@ -333,13 +333,12 @@ router.post(
         $not: /in_active/i,
       },
     };
-    console.log(query);
+
     // Add project_id filter if provided
     if (data.project_id) {
       query.project_id = data.project_id;
     }
 
-    console.log(query);
     if (
       userRole === "2" &&
       req.employee.designation_name !== "project manager"
@@ -356,7 +355,6 @@ router.post(
           $not: /in_active/i,
         },
       };
-      console.log(query);
 
       if (data.status && data.status.length > 0) {
         query.status = data.status;
@@ -375,7 +373,6 @@ router.post(
       if (data.status && data.status.length > 0) {
         query.status = data.status;
       }
-      console.log(query);
 
       if (data.date) {
         const date = new Date(data.date);
@@ -403,7 +400,6 @@ router.post(
           $not: /in_active/i,
         },
       };
-      console.log(query);
 
       if (data.status && data.status.length > 0) {
         query.status = data.status;
@@ -446,8 +442,6 @@ router.post(
         };
       }
     }
-    console.log("query------------------->", query);
-
     // Find tasks using the query object
     const findTask = await mongoFunctions.lazy_loading(
       "TASKS",
@@ -458,7 +452,6 @@ router.post(
       skip
     );
     console.log("all tasks fetched successfully");
-    console.log(findTask);
 
     return res.status(200).send(findTask);
   })
@@ -551,7 +544,6 @@ router.post(
     // Add date range to the query
     query.from_date = { $gte: startOfMonth, $lte: endOfMonth };
 
-    console.log(query);
     let leaveApplications = await mongoFunctions.lazy_loading(
       "LEAVE",
       query,
@@ -648,8 +640,6 @@ router.post(
       if (!data || data.length === 0) {
         return res.status(404).send("No employee data found.");
       }
-
-      console.log(data);
 
       const excelData = data.map((employee) => {
         const educationDetails = employee.educational_details || [];
@@ -936,7 +926,7 @@ router.post(
           "EMPLOYEE",
           new_emp_data
         );
-        console.log(new_emp);
+
         if (!new_emp) {
           return res.status(400).send("Failed To Add New Employee.");
         }
