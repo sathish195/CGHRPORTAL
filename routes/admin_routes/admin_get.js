@@ -1194,7 +1194,7 @@ router.post(
 
     // ✅ Base filter: only by organisation
     const filters = {
-      organisation_id,
+      organisation_id: organisation_id,
     };
     if (!["1", "2"].includes(req.employee.admin_type)) {
       filters["assigned_to.employee_id"] = req.employee.employee_id;
@@ -1218,6 +1218,7 @@ router.post(
         $lte: endOfDay,
       };
     }
+    console.log(filters);
 
     // ✅ Pagination fetch
     const leads = await mongoFunctions.lazy_loading(
@@ -1228,10 +1229,12 @@ router.post(
       data.limit,
       data.skip
     );
+    console.log(leads.length);
 
     // ✅ Determine whether filters were applied
     const hasFilters =
-      (data.date && data.date !== "") || (data.status && data.status !== "");
+      (data.date && data.date !== "") || (data.status && data.status !== "")||
+      ["3", "4"].includes(req.employee.admin_type);
 
     // ✅ leads_count: filtered if filters applied, otherwise total count
     let leads_count;
@@ -1239,14 +1242,18 @@ router.post(
       leads_count = await mongoFunctions.count_documents("LEADS", filters);
     } else {
       leads_count = await mongoFunctions.count_documents("LEADS", {
-        organisation_id,
+        organisation_id: organisation_id,
       });
     }
+    let countFilter = {
+      organisation_id: organisation_id,
+    };
 
+    if (!["1", "2"].includes(req.employee.admin_type)) {
+      countFilter["assigned_to.employee_id"] = req.employee.employee_id;
+    }
     // ✅ Total count (unfiltered)
-    const count = await mongoFunctions.count_documents("LEADS", {
-      organisation_id,
-    });
+    const count = await mongoFunctions.count_documents("LEADS", countFilter);
     let status = [
       "New",
       "Contacted",
