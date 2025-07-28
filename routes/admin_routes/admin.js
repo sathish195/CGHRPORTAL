@@ -631,7 +631,7 @@ router.post(
       educational_details: data.educational_details,
       dependent_details: data.dependent_details,
       leaves:
-        role_data.role_id !== data.role_id && role_data.leaves.length > 0
+        find_emp.role_id !== data.role_id && role_data.leaves.length > 0
           ? role_data.leaves.map((e) => ({
               ...e,
               used_leaves: 0,
