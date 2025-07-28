@@ -10,7 +10,7 @@ const listingSchema = new mongoose.Schema(
         country: { type: String },
         pincode: {
           type: String,
-          match: [/^\d{6}$/, "Pincode must be a 6-digit number"],
+          // match: [/^\d{6}$/, "Pincode must be a 6-digit number"],
         },
         landmark: { type: String, default: "" },
         latitude: { type: Number, default: 0 },
