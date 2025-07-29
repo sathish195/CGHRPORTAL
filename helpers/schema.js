@@ -255,10 +255,11 @@ function add_employee_by_admin(data) {
       }),
   });
   const dependent_details_obj = Joi.object({
-    name: Joi.string().trim(),
-    relation: Joi.string().trim(),
-    dependent_mobile_number: Joi.string().trim(),
+    name: Joi.string().trim().allow("", null),
+    relation: Joi.string().trim().allow("", null),
+    dependent_mobile_number: Joi.string().trim().allow("", null),
   });
+
   const schema = Joi.object({
     organisation_id: Joi.string().trim().min(15).max(17).required(),
     employee_id: Joi.string()
