@@ -223,23 +223,24 @@ function add_employee_by_admin(data) {
     contentType: Joi.string().optional(),
   });
   const work_experience_obj = Joi.object({
-    company_name: Joi.string().trim().min(3).max(30).required(),
-    job_title: Joi.string().trim().min(2).max(25).required(),
-    from_date: Joi.date().required(),
-    to_date: Joi.date().required(),
+    company_name: Joi.string().trim().min(3).max(30).allow("", null),
+    job_title: Joi.string().trim().min(2).max(25).allow("", null),
+    from_date: Joi.date().allow(null),
+    to_date: Joi.date().allow(null),
     job_description: Joi.string()
       .regex(/^\S.*\S$/)
       .trim()
       .min(5)
       .max(300)
       .pattern(/^[A-Za-z0-9\s.,-]+$/, "valid characters")
-      .required()
+      .allow("", null)
       .messages({
         "string.pattern.base":
           "job description can only contain letters, numbers, spaces, periods, commas, and hyphens.",
       }),
-    // experience: Joi.number().positive().required(),
+    // experience: Joi.number().positive().allow(null),
   }).custom(validateDates, "date comparison validation");
+
   const educational_details_obj = Joi.object({
     institute_name: Joi.string().trim().min(2).max(50).required(),
     degree: Joi.string().trim().min(3).max(15).required(),
@@ -420,10 +421,7 @@ function add_employee_by_admin(data) {
       .required(),
     work_experience: Joi.array().items(work_experience_obj).min(0).optional(),
 
-    educational_details: Joi.array()
-      .items(educational_details_obj)
-      .min(0)
-      .required(),
+    educational_details: Joi.array().items(educational_details_obj).required(),
 
     dependent_details: Joi.array()
       .items(dependent_details_obj)
