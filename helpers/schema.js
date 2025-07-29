@@ -225,8 +225,8 @@ function add_employee_by_admin(data) {
   const work_experience_obj = Joi.object({
     company_name: Joi.string().trim().min(3).max(30).allow("", null),
     job_title: Joi.string().trim().min(2).max(25).allow("", null),
-    from_date: Joi.date().allow(null),
-    to_date: Joi.date().allow(null),
+    from_date: Joi.date().allow("", null),
+    to_date: Joi.date().allow("", null),
     job_description: Joi.string()
       .regex(/^\S.*\S$/)
       .trim()
