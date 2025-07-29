@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const leads_schema = new mongoose.Schema(
   {
     lead_id: { type: String, required: true, unique: true, index: true },
-    lead_name: { type: String, required: true },
+    lead_name: { type: String },
     organisation_id: { type: String, required: true },
     key: { type: String, required: true },
     source: { type: String },
