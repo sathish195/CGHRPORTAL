@@ -417,9 +417,17 @@ function add_employee_by_admin(data) {
           "permanent address can only contain letters, numbers, spaces, periods, commas, and hyphens.",
       })
       .required(),
-    work_experience: Joi.array().items(work_experience_obj).optional(),
-    educational_details: Joi.array().items(educational_details_obj).required(),
-    dependent_details: Joi.array().items(dependent_details_obj).optional(),
+    work_experience: Joi.array().items(work_experience_obj).min(0).optional(),
+
+    educational_details: Joi.array()
+      .items(educational_details_obj)
+      .min(0)
+      .required(),
+
+    dependent_details: Joi.array()
+      .items(dependent_details_obj)
+      .min(0)
+      .optional(),
   });
   return schema.validate(data);
 }
