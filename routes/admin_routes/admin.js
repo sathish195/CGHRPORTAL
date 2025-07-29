@@ -2548,7 +2548,7 @@ router.post(
       // Check for duplicates in the new assignment list
       const idCountMap = {};
 
-      new_emp_ids.forEach((id) => {
+      new_emp_ids.forEach((employee_id) => {
         idCountMap[employee_id] = (idCountMap[employee_id] || 0) + 1;
       });
 
