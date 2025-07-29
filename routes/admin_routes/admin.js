@@ -2540,28 +2540,35 @@ router.post(
       const old_emp_ids = existing_lead.assigned_to.map((e) => e.employee_id);
       const new_emp_ids = data.assigned_to.map((e) => e.employee_id);
 
+      // Check if both arrays contain the same set of employee IDs
       const isSameSet =
         old_emp_ids.length === new_emp_ids.length &&
-        old_emp_ids.every((id) => new_emp_ids.includes(id));
+        old_emp_ids.every((employee_id) => new_emp_ids.includes(employee_id));
 
-      if (!isSameSet) {
-        let duplicate_ids = new_emp_ids.filter((id) =>
-          old_emp_ids.includes(id)
-        );
-        duplicate_ids = [...new Set(duplicate_ids)];
+      // Check for duplicates in the new assignment list
+      const idCountMap = {};
 
-        const duplicate_with_names = duplicate_ids.map((id) => {
-          const emp = data.assigned_to.find((e) => e.employee_id === id);
-          return `${emp?.employee_name || "Unknown"} (${id})`;
-        });
+      new_emp_ids.forEach((id) => {
+        idCountMap[employee_id] = (idCountMap[employee_id] || 0) + 1;
+      });
 
-        if (duplicate_with_names.length > 0) {
-          return res
-            .status(400)
-            .send(
-              `Employee(s) already assigned: ${duplicate_with_names.join(", ")}`
-            );
-        }
+      const duplicate_ids = Object.keys(idCountMap).filter(
+        (employee_id) => idCountMap[employee_id] > 1
+      );
+
+      // Map duplicate IDs to employee names
+      const duplicate_with_names = duplicate_ids.map((id) => {
+        const emp = data.assigned_to.find((e) => e.employee_id === employee_id);
+        return `${emp?.employee_name || "Unknown"} (${employee_id})`;
+      });
+
+      // If there are true duplicates (same employee assigned more than once), throw error
+      if (duplicate_with_names.length > 0) {
+        return res
+          .status(400)
+          .send(
+            `Employee(s) already assigned: ${duplicate_with_names.join(", ")}`
+          );
       }
 
       const update_admin = await mongoFunctions.find_one_and_update(
