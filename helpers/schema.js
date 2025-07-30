@@ -1270,7 +1270,16 @@ function add_update_listings(data) {
     price: Joi.number().required(),
     listing_id: Joi.string().optional().allow("", null),
     name: Joi.string().min(3).max(100).required(),
-    description: Joi.string().min(10).max(1000).required(),
+    description: Joi.string()
+      .min(10)
+      .max(1000)
+      .pattern(/^[A-Za-z0-9\s.,-]+$/)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Description can only contain letters, numbers, spaces, commas (,), periods (.), and hyphens (-).",
+      }),
+
     location: locationSchema.optional(),
     bedrooms: Joi.number().optional(),
     bathrooms: Joi.number().optional(),
