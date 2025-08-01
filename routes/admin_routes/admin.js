@@ -746,7 +746,7 @@ router.post(
             project_status: data.project_status,
             attachments: data.attachments,
             comments: data.comments,
-            email: data.email,
+            // email: data.email,
           },
           $push: {
             modified_by: {
@@ -798,7 +798,7 @@ router.post(
         description: data.description,
         status: data.status,
         project_status: data.project_status,
-        email: data.email,
+        // email: data.email,
         comments: data.comments,
         created_by: {
           employee_id: req.employee.employee_id,

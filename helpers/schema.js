@@ -550,16 +550,16 @@ function add_project(data) {
   });
   const schema = Joi.object({
     project_name: Joi.string().min(3).max(50).required().trim(),
-    email: Joi.string()
-      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
-      .trim()
-      .min(10)
-      .max(55)
-      .email()
-      .messages({
-        "string.pattern.base": "Email Should be valid mail",
-      })
-      .required(),
+    // email: Joi.string()
+    //   .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+    //   .trim()
+    //   .min(10)
+    //   .max(55)
+    //   .email()
+    //   .messages({
+    //     "string.pattern.base": "Email Should be valid mail",
+    //   })
+    //   .required(),
     // company: Joi.string().optional().allow("", null),
     comments: Joi.string().optional().allow("", null),
     description: Joi.string()
