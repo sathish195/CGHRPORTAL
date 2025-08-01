@@ -232,7 +232,11 @@ router.post(
       );
       console.log("New organisation details added");
 
-      alertDev("New organisation created");
+      alertDev(
+        `🚀 New organisation created: *${
+          new_org_data.organisation_name || "N/A"
+        }*`
+      );
 
       // 10. Update Employee Record with Organisation ID
       await mongoFunctions.find_one_and_update(

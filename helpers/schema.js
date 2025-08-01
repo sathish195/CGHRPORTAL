@@ -387,7 +387,7 @@ function add_employee_by_admin(data) {
         )
         .optional(),
     }).required(),
-    mobile_number: Joi.string().trim().allow(null, "").optional(),
+    mobile_number: Joi.string().trim().allow(null, "").required(),
     personal_email_address: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
