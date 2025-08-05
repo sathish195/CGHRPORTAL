@@ -9,7 +9,6 @@ module.exports = {
     try {
       const decoded = jwt.verify(token, process.env.jwtPrivateKey);
       req.employee = decoded;
-      console.log(req.employee);
       if (req.employee.status === "disable") {
         return res
           .status(401)

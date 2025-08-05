@@ -6,12 +6,12 @@ const EMPLOYEE_Schema = new mongoose.Schema(
     organisation_id: { type: String, required: true, index: true },
     organisation_name: { type: String, required: true },
     password: { type: String, required: true },
-    employee_id: { type: String, required: true, unique: true, index: true },
+    employee_id: { type: String, required: true, index: true },
     basic_info: {
       first_name: { type: String },
       last_name: { type: String },
       nick_name: { type: String },
-      email: { type: String, index: true },
+      email: { type: String, index: true, required: true, unique: true },
     },
     work_info: {
       department_id: { type: String },
@@ -40,6 +40,12 @@ const EMPLOYEE_Schema = new mongoose.Schema(
       pan: { type: String, default: "" },
       aadhaar: { type: String, default: "" },
       passport_number: { type: String, default: "" },
+      emirates_id: { type: String, default: "" },
+      labour_card_id: { type: String, default: "" },
+      passport_attachment: { type: Array, default: [] },
+      emirates_attachment: { type: Array, default: [] },
+      labour_card_attachment: { type: Array, default: [] },
+      other_attachments: { type: Array, default: [] },
     },
     contact_details: {
       mobile_number: { type: String },
@@ -51,36 +57,34 @@ const EMPLOYEE_Schema = new mongoose.Schema(
     work_experience: {
       type: [
         {
-          company_name: { type: String },
-          job_title: { type: String },
-          from_date: { type: Date },
-          to_date: { type: Date },
-          job_description: { type: String },
+          company_name: { type: String, default: "" },
+          job_title: { type: String, default: "" },
+          from_date: { type: Date, default: null },
+          to_date: { type: Date, default: null },
+          job_description: { type: String, default: "" },
           // experience: { type: String }
         },
       ],
-      default: [],
     },
+
     educational_details: {
       type: [
         {
-          institute_name: { type: String },
-          degree: { type: String },
-          specialization: { type: String },
-          year_of_completion: { type: Number },
+          institute_name: { type: String, default: "" },
+          degree: { type: String, default: "" },
+          specialization: { type: String, default: "" },
+          year_of_completion: { type: Number, default: 0 },
         },
       ],
-      default: [],
     },
     dependent_details: {
       type: [
         {
-          name: { type: String },
-          relation: { type: String },
-          dependent_mobile_number: { type: String },
+          name: { type: String, default: "" },
+          relation: { type: String, default: "" },
+          dependent_mobile_number: { type: String, default: "" },
         },
       ],
-      default: [],
     },
     leaves: [
       {

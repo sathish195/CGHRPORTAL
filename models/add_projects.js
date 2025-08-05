@@ -5,6 +5,8 @@ const Project_schema = new mongoose.Schema(
     organisation_id: { type: String, required: true, index: true },
     project_id: { type: String, required: true, unique: true, index: true },
     project_name: { type: String, required: true },
+    // email: { type: String, required: true },
+    comments: { type: String, default: "" },
     description: { type: String, required: true },
     start_date: { type: Date, required: true },
     end_date: { type: Date, required: true },
@@ -14,6 +16,7 @@ const Project_schema = new mongoose.Schema(
     created_by: { type: Object, required: true },
     modified_by: { type: Array, required: true },
     assign_track: { type: Array, required: true },
+    attachments: { type: Array, default: [] },
   },
   { timestamps: true }
 );

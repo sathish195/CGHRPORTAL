@@ -21,8 +21,6 @@ router.post(
   Async(async (req, res) => {
     const error = req.validations.error;
     // alertDev("error")
-    console.log(error);
-
     return res.send(error);
   })
 );
@@ -31,7 +29,6 @@ router.post(
   rateLimit(60, 40),
   Async(async (req, res) => {
     data = req.body;
-    console.log(data);
     //validate data
     var { error } = validations.emp_login(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -44,8 +41,6 @@ router.post(
       data.password,
       employee.password
     );
-    console.log(validPassword);
-    console.log(employee.password);
     if (!validPassword) return res.status(400).send("Incorrect Password");
     if (
       // employee &&
@@ -91,7 +86,6 @@ router.post(
       process.env.jwtPrivateKey,
       { expiresIn: "7d" }
     );
-    console.log(token);
 
     return res.status(200).send({
       success: "Logged In Successfully",
@@ -143,7 +137,6 @@ router.post(
 router.post(
   "/reset_forgot_password",
   Async(async (req, res) => {
-    console.log("reset forgot password route hit");
     let data = req.body;
     //validate data
     var { error } = validations.emp_reset_forgot_password(data);
@@ -166,9 +159,6 @@ router.post(
       data.new_password,
       employee.password
     );
-    console.log(verifyPassword);
-    console.log(employee.password);
-    console.log(data.new_password);
     if (verifyPassword)
       return res
         .status(400)
@@ -282,7 +272,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("reset(change password) route hit");
     let data = req.body;
     //validate data
     var { error } = validations.emp_reset_password(data);
@@ -317,8 +306,6 @@ router.post(
       data.new_password,
       employee.password
     );
-    console.log(verifyPassword);
-    console.log(employee.password);
     if (verifyPassword)
       return res.status(400).send("Password Should Not Same As Old Password");
 
@@ -341,7 +328,6 @@ router.post(
   Auth,
   rateLimit(60, 15),
   Async(async (req, res) => {
-    console.log("update dp route hit");
     if (req.employee.collection !== "EMPLOYEE")
       return res.status(400).send("Invalid Token Details");
     let data = req.body;
@@ -371,7 +357,7 @@ router.post(
         images: { dp: data.image },
         "personal_details.about_me": data.about_me,
       };
-      console.log(update);
+      // console.log(update);
     } else if (data.image.length > 10 && data.about_me.length < 1) {
       if (!find_emp.images) {
         update = { images: { dp: data.image } };
@@ -389,8 +375,7 @@ router.post(
       update,
       { new: true }
     );
-    console.log(update);
-    console.log("profile updated successfully");
+    // console.log(update);
     return res.status(200).send({
       success: "Profile Updated Successfully",
       data: {
@@ -405,9 +390,8 @@ router.post(
   "/edit_profile",
   Auth,
   Async(async (req, res) => {
-    console.log("edit profile route hit");
     let data = req.body;
-    console.log(req.body);
+    // console.log(req.body);
     var { error } = validations.edit_profile(data);
     if (error) return res.status(400).send(error.details[0].message);
     let org_data = await redis.redisGet(
@@ -550,7 +534,6 @@ router.post(
   rateLimit(60, 10),
   Auth,
   Async(async (req, res) => {
-    console.log("update task route hit");
     let data = req.body;
     const { error } = validations.update_task(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -591,12 +574,11 @@ router.post(
       findId.status === "in_progress" &&
       (task_data_up.status === "under_review" || task_data_up.status === "hold")
     ) {
-      console.log("entered into flow");
       let s = await stats.calculate_working_time(
         task_data_up.modified_by,
         task_data_up.task_id
       );
-      console.log(s);
+      // console.log(s);
     }
 
     if (!task_data_up) return res.status(400).send("Task Update Failed");
@@ -611,9 +593,7 @@ router.post(
         data.status,
         findId.status
       );
-      console.log("done adding stats");
     }
-    console.log("Task updtaed successfully");
     return res.status(200).send("Task Updated Successfully");
   })
 );
@@ -623,7 +603,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("apply leave route hit");
     // if (req.employee.admin_type === "1") {
     //   return res.status(400).send("Access denied: Director Do Not Apply Leave");
     // }
@@ -700,17 +679,6 @@ router.post(
       {},
       { createdAt: -1 }
     );
-    console.log(new Date(data.from_date));
-    console.log(new Date(data.to_date));
-
-    console.log(
-      new Date(
-        new Date(data.to_date).setDate(new Date(data.to_date).getDate() + 1)
-      )
-    );
-
-    // console.log(over_lapping_leaves);
-    // console.log(over_lapping_leaves.leave_status);
 
     if (
       over_lapping_leaves &&
@@ -724,7 +692,7 @@ router.post(
       data.from_date,
       data.to_date
     );
-    console.log(leaves_count);
+
     if (leaves_count > emp_leave_obj.remaining_leaves)
       return res.status(400).send("Leaves Limit Exceeded..!");
     let leave_record_obj = {
@@ -772,7 +740,6 @@ router.post(
     // if (req.employee.admin_type === "1") {
     //   return res.status(400).send("Admin Do Not Checkin");
     // }
-    console.log(-269 > -270);
 
     let org_data = await redis.redisGet(
       "CRM_ORGANISATIONS",
@@ -788,7 +755,6 @@ router.post(
     if (!find_emp) return res.status(400).send("Employee Not Found..!");
 
     const now = new Date();
-    console.log("now----->", now);
 
     const start_day = new Date(now.setHours(0, 0, 0, 0));
     const end_day = new Date(now.setHours(23, 59, 59, 999));
@@ -812,33 +778,27 @@ router.post(
     const currentHour = time.getHours();
 
     // Check if the current time is after 10 AM
-    console.log(currentHour);
     const checkin_time = "10:00";
     const checkout_time = "7:00";
     let actual_in_time = await functions.get_full_date_time(checkin_time);
     let actual_out_time = await functions.get_full_date_time(checkout_time);
-    console.log(actual_in_time);
-    alertDev(`emp-in-time${emp_in_time}`);
-    alertDev(`actual_in_time${actual_in_time}`);
+    // alertDev(`emp-in-time${emp_in_time}`);
+    // alertDev(`actual_in_time${actual_in_time}`);
     let time_diff = await functions.get_time_diff_minutes(
       actual_in_time,
       emp_in_time
     );
-    console.log(time_diff);
 
     if (data.type === "checkin") {
       if (!today_record || today_record.checkin.length === 0) {
-        console.log(time_diff);
         if (time_diff < -270) {
-          console.log(time_diff);
-          console.log("flow came here");
           return res.status(400).send(" Check-Ins Not Allowed After Half Day");
         }
       }
 
-      alertDev(time_diff);
+      // alertDev(time_diff);
 
-      alertDev(emp_in_time);
+      // alertDev(emp_in_time);
       if (today_record) {
         if (today_record.checkin.length === 1) {
           return res
@@ -947,3 +907,4 @@ router.post(
     }
   })
 );
+//update lead status

@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const { employee_id } = require("./schema");
 const mongoFunctions = require("./mongoFunctions");
+const redisFunctions = require("./redisFunctions");
 const fs = require("fs");
 const path = require("path");
 const { alertDev } = require("./telegram");
@@ -35,7 +36,6 @@ module.exports = {
 
     const isFromWeekend = fromDate.getDay() === 6 || fromDate.getDay() === 0; // Saturday is 6, Sunday is 0
     const isToWeekend = toDate.getDay() === 6 || toDate.getDay() === 0;
-    console.log(isFromWeekend, isToWeekend);
     return isFromWeekend && isToWeekend;
   },
   get_time_diff_minutes: async (date1, date2) => {
@@ -117,7 +117,6 @@ module.exports = {
         totalDays++;
       }
     }
-    console.log(totalDays);
     return totalDays;
   },
   add_overall_stats: async (object, date) => {
@@ -155,12 +154,19 @@ module.exports = {
         update,
         { upsert: true, returnDocument: "after" }
       );
-
-      console.log("Result:", result);
     }
   },
 
   update_status: (leave_status_up) => {},
+  hasAccess: async (userPlan, featureName) => {
+    // find_admin controls
+    const find_controls = await redisFunctions.redisGet(
+      "CGHR_ADMIN_CONTROLS",
+      "ADMIN_CONTROLS",
+      true
+    );
+    return find_controls.billing[userPlan]?.[featureName] === true;
+  },
   mongoBackup: async () => {
     const collectionNames = [
       "EMPLOYEE",
@@ -173,12 +179,10 @@ module.exports = {
       "HOLIDAYS",
     ];
 
-    console.log("Collections found:", collectionNames);
 
     for (const name of collectionNames) {
       await mongoFunctions.download_collection(name);
     }
-    console.log("completed dumping");
     return true;
   },
   mongoRestore: async () => {
@@ -192,8 +196,6 @@ module.exports = {
       "ATTENDANCE",
       "HOLIDAYS",
     ];
-
-    console.log("Collections found:", collectionNames);
 
     for (const collection of collectionNames) {
       const filePath = path.join(
@@ -216,10 +218,6 @@ module.exports = {
       }
       let d = await mongoFunctions.delete_many(collection);
       let s = await mongoFunctions.insert_many_records(collection, docs);
-
-      console.log(
-        `✅ Restored ${docs.length} documents to collection: ${collection}`
-      );
     }
     return true;
   },

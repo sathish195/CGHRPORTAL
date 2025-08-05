@@ -6,10 +6,20 @@ const { STATS } = require("../models/add_stats");
 const { LEAVE } = require("../models/add_leaves");
 const { ATTENDANCE } = require("../models/add_attendance");
 const { HOLIDAYS } = require("../models/add_holiday");
-const { alertDev } = require("./telegram");
-// const { FILES } = require("../models/add_file");
+const { SUPER_ADMIN } = require("../models/add_super_admin");
+const { ADMIN_CONTROLS } = require("../models/add_admin_controls");
+const { ADMIN_STATS } = require("../models/stats");
+const { EVENTS } = require("../models/add_events");
+const { LEADS } = require("../models/leads");
+const { POSTINGS } = require("../models/postings");
+const { TEMPLATES } = require("../models/templates");
+const { EMAILS } = require("../models/emails");
+const { NOTIFICATIONS } = require("../models/notifications");
+const { LISTINGS } = require("../models/listings");
+
 const fs = require("fs");
 const path = require("path");
+const { alertDev } = require("./telegram");
 
 module.exports = {
   create_new_record: async (collection, data) => {
@@ -110,6 +120,10 @@ module.exports = {
   count_documents: async (collection, condition = {}) => {
     return await eval(collection).countDocuments(condition);
   },
+  distinct: async (collection, field, condition = {}) => {
+    return await eval(collection).distinct(field, condition);
+  },
+
   download_collection: async (collection) => {
     return await eval(collection)
       .find({})

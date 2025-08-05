@@ -41,9 +41,6 @@ const createAttendanceRecords = async (employees, status = "") => {
   });
 
   await Promise.all(absenceUpdates);
-  console.log(
-    `Attendance records created for all employees with status '${status}'.`
-  );
   alertDev(
     `Attendance records created for all employees with status '${status}'.`
   );
@@ -71,9 +68,6 @@ const createHolidayRecords = async (
   });
 
   await Promise.all(absenceUpdates);
-  console.log(
-    `Attendance records created for all employees with status '${status}'.`
-  );
   alertDev(
     `Attendance records created for all employees with status '${status}'.`
   );
@@ -180,9 +174,6 @@ const updateStatusOfNotCheckouts = async () => {
           );
 
           const minutes = await calculate_working_minutes(check);
-          console.log(
-            `Working minutes for ${record.attendance_id}: ${minutes}`
-          );
         })
     );
 
@@ -193,8 +184,6 @@ const updateStatusOfNotCheckouts = async () => {
     if (missingEmployees.length > 0) {
       await createAttendanceRecords(missingEmployees, "absent");
     }
-
-    console.log("Attendance status updated successfully for not checked outs.");
     alertDev("Attendance status updated successfully for not checked outs");
   } catch (error) {
     console.error("Error updating attendance status:", error);
@@ -210,23 +199,16 @@ const updateStatusBasedOnHolidays = async () => {
   const employees = await mongoFunctions.find("EMPLOYEE");
   const holidays = await mongoFunctions.find("HOLIDAYS");
   const today = new Date();
-  console.log(today);
   // today.setHours(0, 0, 0, 0);
   const todayString = today.toISOString().split("T")[0]; // Get the date in YYYY-MM-DD format
-  console.log(todayString);
 
   const holidayNames = holidays
     .filter((holiday) => {
       const holidayDate = new Date(holiday.holiday_date);
       const holidayString = holidayDate.toISOString().split("T")[0];
-      console.log(
-        `Checking holiday: ${holidayString} against today: ${todayString}`
-      );
       return holidayString === todayString;
     })
     .map((holiday) => holiday.holiday_name);
-
-  console.log(holidayNames);
 
   if (holidayNames.length > 0) {
     const holidayName = holidayNames[0];
@@ -247,7 +229,6 @@ const updateStatusBasedOnHolidays = async () => {
       await createHolidayRecords(employees, holidayName, "holiday");
     }
   }
-  console.log("Holiday not found");
 };
 const updateStatusOfNotCheckins = async () => {
   const { start, end } = getCurrentDayRange();
@@ -266,12 +247,10 @@ const updateStatusOfNotCheckins = async () => {
   const employeeIdsInAttendance = new Set(
     attendanceRecord.map((record) => record.employee_id)
   );
-  console.log(employeeIdsInAttendance);
   // Find missing employees
   const missingEmployees = activeEmployees.filter(
     (employee) => !employeeIdsInAttendance.has(employee.employee_id)
   );
-  console.log(missingEmployees);
   if (missingEmployees.length > 0) {
     await createAttendanceRecords(missingEmployees, "absent");
   }
@@ -304,9 +283,6 @@ cron.schedule(
   async () => {
     await updateAttendanceStatus();
     alertDev("Running cron to update status in weekdays");
-    console.log(
-      "Running a job every day at 9:30 AM to update attendance status at Asia/Kolkata timezone"
-    );
   },
   { scheduled: true, timezone: "Asia/Kolkata" }
 );
@@ -315,9 +291,6 @@ cron.schedule(
   async () => {
     await updateStatusOfNotCheckins();
     alertDev("Running cron to update absent status in weekdays");
-    console.log(
-      "Running a job every day at 11:00 AM to update attendance status at Asia/Kolkata timezone"
-    );
   },
   { scheduled: true, timezone: "Asia/Kolkata" }
 );
@@ -327,9 +300,6 @@ cron.schedule(
   async () => {
     await updateStatusInWeekends();
     alertDev("Running cron to update status in holidays and weekends");
-    console.log(
-      "Running a job every day at 9:30 AM to update attendance status in weekends at Asia/Kolkata timezone"
-    );
   },
   { scheduled: true, timezone: "Asia/Kolkata" }
 );
@@ -337,25 +307,19 @@ cron.schedule(
 cron.schedule(
   "00 21 * * *",
   async () => {
-    console.log("running cron");
     await updateStatusOfNotCheckouts();
 
     alertDev("Running cron to update status of not checked outs");
-    console.log(
-      "Running a job every day at 11:30 PM to update attendance of not checked outs at Asia/Kolkata timezone"
-    );
   },
   { scheduled: true, timezone: "Asia/Kolkata" }
 );
+// alertDev("Welcome to cg hr portal bot group");
 
 cron.schedule(
   "00 9 * * *",
   async () => {
     await updateStatusBasedOnHolidays();
     alertDev("Running cron to update attendance status based on holidays");
-    console.log(
-      "Running a job every day at midnight to update attendance status based on holiday list at Asia/Kolkata timezone"
-    );
   },
   { scheduled: true, timezone: "Asia/Kolkata" }
 );

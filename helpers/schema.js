@@ -68,33 +68,81 @@ function emp_reset_password(data) {
   return schema.validate(data);
 }
 
-// const base64ImageSizeValidator = (value, helpers) => {
-//     const buffer = Buffer.from(value, "base64");
-//     const sizeInBytes = buffer.length;
-//     const limitBytes = 250 * 1024;
-//     if (sizeInBytes <= limitBytes) return value;
-//     else return helpers.error("any.invalid");
-//   };
+const base64ImageSizeValidator = (value, helpers) => {
+  const buffer = Buffer.from(value, "base64");
+  const sizeInBytes = buffer.length;
+  const limitBytes = 256 * 1024;
+  if (sizeInBytes <= limitBytes) return value;
+  else return helpers.error("any.invalid");
+};
+const base64FileSizeValidator = (value, helpers) => {
+  const matches = value.match(/^data:(.+);base64,(.+)$/);
+  if (!matches) {
+    return helpers.error("string.pattern.base", {
+      message: "Invalid base64 format. Must include data URI prefix.",
+    });
+  }
+
+  const mimeType = matches[1];
+  const base64Data = matches[2];
+
+  const buffer = Buffer.from(base64Data, "base64");
+  const sizeInBytes = buffer.length;
+  const limitBytes = 256 * 1024; // 250 KB
+
+  if (sizeInBytes > limitBytes) {
+    return helpers.error("any.invalid", {
+      message: "File size must not exceed 250 KB",
+    });
+  }
+
+  return value;
+};
+
 function add_update_org(data) {
   const schema = Joi.object({
     organisation_name: Joi.string().min(5).max(50).required().trim(),
-    organisation_type: Joi.string().min(2).max(15).required(),
+
+    about: Joi.string().min(5).max(1500).optional().allow("").trim(),
+
+    social_media_urls: Joi.object({
+      facebook_url: Joi.string().uri().optional().allow(""),
+      instagram_url: Joi.string().uri().optional().allow(""),
+      twitter_url: Joi.string().uri().optional().allow(""),
+      linkedin_url: Joi.string().uri().optional().allow(""),
+    }).optional(),
+
+    organisation_type: Joi.string().min(2).max(15).required().trim(),
+
     logo: Joi.string()
-      // .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
+      .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
       .required()
       .messages({
-        "any.invalid": "Size should be 250kb only",
+        "any.invalid": "Logo image size should not exceed 256KB",
       }),
+
     org_mail_id: Joi.string()
-      .email()
-      .forbidden(/[\+]/, {
-        message: "Email cannot contain the plus (+) character",
-      })
+      .email({ tlds: { allow: false } })
+      .pattern(/^[^+]+$/, { name: "no plus character" }) // disallow "+" in email
       .lowercase()
       .max(55)
-      .required(),
-    address: Joi.string().min(5).max(100).required(),
+      .required()
+      .messages({
+        "string.pattern.name": "Email cannot contain the plus (+) character",
+      }),
+
+    address: Joi.string().min(5).max(100).required().trim(),
+
+    billing_type: Joi.object({
+      type: Joi.string().valid("free", "paid").required(),
+      plan: Joi.when("type", {
+        is: "paid",
+        then: Joi.string().valid("6_months", "3_months", "1_year").required(),
+        otherwise: Joi.string().allow(null, "").optional(),
+      }),
+    }).required(),
   });
+
   return schema.validate(data);
 }
 function add_update_department(data) {
@@ -126,6 +174,7 @@ function add_update_role(data) {
     organisation_id: Joi.string().min(10).max(18).required(),
     role_name: Joi.string().trim().strip().min(5).max(20).required(),
     role_id: Joi.string().allow(null, "").optional(),
+    priority: Joi.string().allow(null, "").optional(),
   });
   return schema.validate(data);
 }
@@ -157,35 +206,59 @@ const validateDates = (value, helpers) => {
   return value;
 };
 function add_employee_by_admin(data) {
+  const currentYear = moment().year();
+  const fileSchema = Joi.object({
+    filename: Joi.string().required(),
+    content: Joi.string()
+      .pattern(/^data:.*;base64,[a-zA-Z0-9+/=]+$/)
+      .custom(base64FileSizeValidator)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Content must be a valid base64-encoded string with data URI.",
+        "any.invalid": "File size must not exceed 256 KB",
+      }),
+    contentType: Joi.string().optional(),
+  });
   const work_experience_obj = Joi.object({
-    company_name: Joi.string().trim().min(3).max(30).required(),
-    job_title: Joi.string().trim().min(2).max(25).required(),
-    from_date: Joi.date().required(),
-    to_date: Joi.date().required(),
+    company_name: Joi.string().trim().min(3).max(30).allow("", null),
+    job_title: Joi.string().trim().min(2).max(25).allow("", null),
+    from_date: Joi.date().allow("", null),
+    to_date: Joi.date().allow("", null),
     job_description: Joi.string()
       .regex(/^\S.*\S$/)
       .trim()
       .min(5)
       .max(300)
       .pattern(/^[A-Za-z0-9\s.,-]+$/, "valid characters")
-      .required()
+      .allow("", null)
       .messages({
         "string.pattern.base":
           "job description can only contain letters, numbers, spaces, periods, commas, and hyphens.",
       }),
-    // experience: Joi.number().positive().required(),
+    // experience: Joi.number().positive().allow(null),
   }).custom(validateDates, "date comparison validation");
+
   const educational_details_obj = Joi.object({
     institute_name: Joi.string().trim().min(2).max(50).required(),
     degree: Joi.string().trim().min(3).max(15).required(),
     specialization: Joi.string().trim().min(2).max(30).required(),
-    year_of_completion: Joi.number().required(),
+    year_of_completion: Joi.number()
+      .integer()
+      .min(1900)
+      .max(currentYear + 10)
+      .required()
+      .messages({
+        "number.min": "Year of completion cannot be before 1900.",
+        "number.max": `Year of completion cannot be after ${currentYear + 10}.`,
+      }),
   });
   const dependent_details_obj = Joi.object({
-    name: Joi.string().trim(),
-    relation: Joi.string().trim(),
-    dependent_mobile_number: Joi.string().trim(),
+    name: Joi.string().trim().allow("", null),
+    relation: Joi.string().trim().allow("", null),
+    dependent_mobile_number: Joi.string().trim().allow("", null),
   });
+
   const schema = Joi.object({
     organisation_id: Joi.string().trim().min(15).max(17).required(),
     employee_id: Joi.string()
@@ -203,11 +276,6 @@ function add_employee_by_admin(data) {
         "any.required": "Employee ID is required",
       }),
     password: Joi.string().trim().allow(null, "").optional(),
-    // .required()
-    // .min(8)
-    // .max(60)
-    // .pattern(/(?=.*[A-Z])/, "uppercase") // At least one uppercase letter
-    // .pattern(/(?=.*[@$!%*?&])/, "special"), //atleast one special character
     email: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
@@ -236,11 +304,6 @@ function add_employee_by_admin(data) {
     date_of_join: Joi.date().required(),
 
     date_of_birth: Joi.date().required(),
-    // Joi.string()
-    //   .regex(/^\d{2}\d{2}\d{4}$/)
-    //   .message("Date must be in DDMMYYYY format")
-    //   .required()
-    //   .custom(validate_dob),
     expertise: Joi.string().trim().allow(null, "").optional(),
     gender: Joi.string().valid("male", "female", "others").trim().required(),
     marital_status: Joi.string()
@@ -248,9 +311,79 @@ function add_employee_by_admin(data) {
       .trim()
       .required(),
     about_me: Joi.string().trim().allow(null, "").optional().trim(),
-    identity_info: Joi.object().min(2).required(),
-    mobile_number: Joi.string().trim().allow(null, "").optional(),
-    // mobile_number: Joi.string().min(10).max(10).required(),
+    identity_info: Joi.object({
+      uan: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, "")
+        .pattern(/^\d{8,16}$/)
+        .message("UAN must be a numeric string between 8 and 16 digits"),
+
+      pan: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, "")
+        .pattern(/^[A-Z0-9]{8,15}$/i)
+        .message("PAN ID must be alphanumeric and 8–15 characters long"),
+
+      aadhaar: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, "")
+        .pattern(/^\d{12}$/)
+        .message("Aadhaar Number must be a 12-digit numeric string"),
+
+      passport_number: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, "")
+        .pattern(/^[A-Z0-9]{5,15}$/i)
+        .message(
+          "Passport number must be alphanumeric and 5–15 characters long"
+        ),
+      emirates_id: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, "")
+        .pattern(/^784-\d{4}-\d{7}-\d{1}$/)
+        .message(
+          "Invalid Emirates ID format. Expected format: 784-XXXX-XXXXXXX-X"
+        ),
+
+      labour_card_id: Joi.string()
+        .trim()
+        .optional()
+        .allow(null, "")
+        .pattern(/^\d{6,10}$/)
+        .message(
+          "Labour Card ID must be a numeric string between 6 and 10 digits"
+        ),
+      passport_attachment: Joi.alternatives()
+        .try(
+          fileSchema, // single file object
+          Joi.array().items(fileSchema).max(2) // array of file objects
+        )
+        .optional(),
+      emirates_attachment: Joi.alternatives()
+        .try(
+          fileSchema, // single file object
+          Joi.array().items(fileSchema).max(2) // array of file objects
+        )
+        .optional(),
+      labour_card_attachment: Joi.alternatives()
+        .try(
+          fileSchema, // single file object
+          Joi.array().items(fileSchema).max(2) // array of file objects
+        )
+        .optional(),
+      other_attachments: Joi.alternatives()
+        .try(
+          fileSchema, // single file object
+          Joi.array().items(fileSchema).max(3) // array of file objects
+        )
+        .optional(),
+    }).required(),
+    mobile_number: Joi.string().trim().allow(null, "").required(),
     personal_email_address: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
@@ -282,9 +415,14 @@ function add_employee_by_admin(data) {
           "permanent address can only contain letters, numbers, spaces, periods, commas, and hyphens.",
       })
       .required(),
-    work_experience: Joi.array().items(work_experience_obj).required(),
+    work_experience: Joi.array().items(work_experience_obj).min(0).optional(),
+
     educational_details: Joi.array().items(educational_details_obj).required(),
-    dependent_details: Joi.array().items(dependent_details_obj).required(),
+
+    dependent_details: Joi.array()
+      .items(dependent_details_obj)
+      .min(0)
+      .optional(),
   });
   return schema.validate(data);
 }
@@ -292,6 +430,13 @@ function add_employee_by_admin(data) {
 function employee_id(data) {
   const schema = Joi.object({
     employee_id: Joi.string().min(5).max(20).required(),
+  });
+  return schema.validate(data);
+}
+//common validation
+function event_id(data) {
+  const schema = Joi.object({
+    event_id: Joi.string().min(5).max(20).required(),
   });
   return schema.validate(data);
 }
@@ -386,8 +531,33 @@ function edit_profile(data) {
   return schema.validate(data);
 }
 function add_project(data) {
+  const fileSchema = Joi.object({
+    filename: Joi.string().required(),
+    content: Joi.string()
+      .pattern(/^data:.*;base64,[a-zA-Z0-9+/=]+$/)
+      .custom(base64FileSizeValidator)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Content must be a valid base64-encoded string with data URI.",
+        "any.invalid": "File size must not exceed 256 KB",
+      }),
+    contentType: Joi.string().optional(),
+  });
   const schema = Joi.object({
     project_name: Joi.string().min(3).max(50).required().trim(),
+    // email: Joi.string()
+    //   .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+    //   .trim()
+    //   .min(10)
+    //   .max(55)
+    //   .email()
+    //   .messages({
+    //     "string.pattern.base": "Email Should be valid mail",
+    //   })
+    //   .required(),
+    // company: Joi.string().optional().allow("", null),
+    comments: Joi.string().optional().allow("", null),
     description: Joi.string()
       .trim()
       .min(10)
@@ -408,6 +578,12 @@ function add_project(data) {
       .valid("active", "in_active", "completed")
       .required(),
     project_id: Joi.string().optional().allow(""),
+    attachments: Joi.alternatives()
+      .try(
+        fileSchema, // single file object
+        Joi.array().items(fileSchema) // array of file objects
+      )
+      .optional(),
   });
   return schema.validate(data);
 }
@@ -498,11 +674,30 @@ function get_task_by_id(data) {
   return schema.validate(data);
 }
 function update_project(data) {
+  const fileSchema = Joi.object({
+    filename: Joi.string().required(),
+    content: Joi.string()
+      .pattern(/^data:.*;base64,[a-zA-Z0-9+/=]+$/)
+      .custom(base64FileSizeValidator)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Content must be a valid base64-encoded string with data URI.",
+        "any.invalid": "File size must not exceed 256 KB",
+      }),
+    contentType: Joi.string().optional(),
+  });
   const schema = Joi.object({
     project_id: Joi.string().min(5).max(12).required(),
     status: Joi.string()
       .valid("new", "in_progress", "under_review", "completed")
       .required(),
+    attachments: Joi.alternatives()
+      .try(
+        fileSchema, // single file object
+        Joi.array().items(fileSchema) // array of file objects
+      )
+      .optional(),
   });
   return schema.validate(data);
 }
@@ -664,21 +859,43 @@ function get_emp_attendance_by_admin(data) {
   return schema.validate(data);
 }
 function add_admin_emp(data) {
+  const namePattern = /^[A-Za-z\s'-]+$/;
+
   const schema = Joi.object({
-    employee_id: Joi.string().required().min(5).max(15),
     email: Joi.string()
-      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
+      .lowercase()
+      .pattern(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+      .email()
       .min(10)
       .max(55)
-      .email()
+      .required()
       .messages({
-        "string.pattern.base": "Email Should be valid mail",
-      })
-      .required(),
+        "string.pattern.base": "Email should be a valid format",
+      }),
+
+    first_name: Joi.string().trim().pattern(namePattern).required().messages({
+      "string.pattern.base":
+        "First name must contain only letters, spaces, hyphens, or apostrophes.",
+    }),
+
+    last_name: Joi.string().trim().pattern(namePattern).required().messages({
+      "string.pattern.base":
+        "Last name must contain only letters, spaces, hyphens, or apostrophes.",
+    }),
+
+    status: Joi.string().trim().valid("active", "disable").required().messages({
+      "any.only": "Status must be either 'active' or 'disable'",
+    }),
+    api_status: Joi.string().trim().valid("add", "update").required().messages({
+      "any.only": "Status must be either 'add' or 'update'",
+    }),
+    // employee_id_prefix: Joi.string().trim().min(5).max(7).required(),
   });
+
   return schema.validate(data);
 }
+
 function add_holidays(data) {
   const schema = Joi.object({
     organisation_id: Joi.string().min(10).max(18).required(),
@@ -705,6 +922,395 @@ function tasks_count(data) {
     employee_id: Joi.string().required(),
     from_date: Joi.string().required(),
     to_date: Joi.string().required(),
+  });
+  return schema.validate(data);
+}
+function add_super_admin(data) {
+  const schema = Joi.object({
+    email: Joi.string()
+      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+      .trim()
+      .min(10)
+      .max(55)
+      .email()
+      .messages({
+        "string.pattern.base": "Email Should be valid mail",
+      })
+      .required(),
+    first_name: Joi.string().trim().min(3).max(50).required(),
+    last_name: Joi.string().trim().min(3).max(50).required(),
+    profile_picture: Joi.string()
+      .custom(base64ImageSizeValidator, "Base64 Image Size Validation")
+      .required()
+      .allow("")
+      .messages({
+        "any.invalid": "Size should be 256kb only",
+      }),
+  });
+  return schema.validate(data);
+}
+function Sadmin_login(data) {
+  const schema = Joi.object({
+    email: Joi.string().required().max(55),
+    password: Joi.string().required().min(8).max(15),
+    last_ip: Joi.string().required(),
+    fcm_token: Joi.string().required(),
+    device_id: Joi.string().required(),
+    browserid: Joi.string().required(),
+  });
+  return schema.validate(data);
+}
+function add_update_admin_controls(data) {
+  const featureSchema = Joi.object({
+    attendance: Joi.boolean().required(),
+    dashboard: Joi.boolean().required(),
+    leave_applications: Joi.boolean().required(),
+    profile: Joi.boolean().required(),
+    employee_list: Joi.boolean().required(),
+    add_employee: Joi.boolean().required(),
+    today_attendance: Joi.boolean().required(),
+    controls: Joi.boolean().required(),
+    projects: Joi.boolean().required(),
+    emp_leave_applications: Joi.boolean().required(),
+    // change_password: Joi.boolean().required(),
+    // holidays: Joi.boolean().required(),
+  });
+  const schema = Joi.object({
+    login: Joi.boolean().required(),
+    add_organisation: Joi.boolean().required(),
+    add_admin: Joi.boolean().required(),
+    suspend_organisation: Joi.boolean().required(),
+    approve_organisation: Joi.boolean().required(),
+    billing: Joi.object({
+      free: featureSchema.required(),
+      paid: featureSchema.required(),
+    }).required(),
+  });
+  return schema.validate(data);
+}
+function skipLimit(data) {
+  const schema = Joi.object({
+    skip: Joi.number().required(),
+    limit: Joi.number().required(),
+  });
+  return schema.validate(data);
+}
+function department_tree(data) {
+  const schema = Joi.object({
+    department_id: Joi.string().required(),
+    organisation_id: Joi.string().required(),
+  });
+  return schema.validate(data);
+}
+function add_update_events(data) {
+  const assignedTo = Joi.object({
+    employee_id: Joi.string().required(),
+    employee_name: Joi.string().required(),
+  });
+  const schema = Joi.object({
+    title: Joi.string().trim().min(3).max(70).required(),
+    description: Joi.string().trim().min(10).max(500).required(),
+    route_action: Joi.number()
+      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
+      .required(),
+    date: Joi.date().iso().required().messages({
+      "date.base": "Date must be a valid ISO 8601 date",
+      "date.format": "Date must be in ISO 8601 format",
+    }),
+    type: Joi.string().trim().min(2).max(20).required(),
+    assigned_to: Joi.array().items(assignedTo).required(),
+    event_id: Joi.string().trim().optional().allow("", null),
+  });
+
+  return schema.validate(data);
+}
+function get_events(data) {
+  const schema = Joi.object({
+    skip: Joi.number().required(),
+    limit: Joi.number().required(),
+    date: Joi.date().iso().required().allow("", null).messages({
+      "date.base": "Date must be a valid ISO 8601 date",
+      "date.format": "Date must be in ISO 8601 format",
+    }),
+    type: Joi.string().required().allow("", null),
+    deadline: Joi.boolean().required(),
+  });
+  return schema.validate(data);
+}
+function add_leads(data) {
+  const fileSchema = Joi.object({
+    filename: Joi.string().required(),
+    content: Joi.string()
+      .pattern(/^data:.*;base64,[a-zA-Z0-9+/=]+$/)
+      .custom(base64FileSizeValidator)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Content must be a valid base64-encoded string with data URI.",
+        "any.invalid": "File size must not exceed 256 KB",
+      }),
+    contentType: Joi.string().optional(),
+  });
+  const assignedTo = Joi.object({
+    employee_id: Joi.string().required(),
+    employee_name: Joi.string().required(),
+  });
+  const schema = Joi.object({
+    lead_id: Joi.string().trim().optional().allow("", null),
+    organisation_id: Joi.string().required(),
+    key: Joi.string().required(),
+    admin_type: Joi.string().required(),
+    source: Joi.string().optional().allow("", null),
+    added_by: Joi.object({
+      name: Joi.string().optional(),
+      employee_id: Joi.string().optional(),
+      email: Joi.string().email().optional(),
+    }).optional(),
+    lead_name: Joi.string().trim().min(3).max(30).optional(),
+    email: Joi.string()
+      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+      .trim()
+      .min(10)
+      .max(255)
+      .email()
+      .messages({
+        "string.pattern.base": "Email Should be valid mail",
+      })
+      .required(),
+    // company: Joi.string().optional().allow("", null),
+    comments: Joi.string().min(3).optional().allow("", null),
+    route_action: Joi.number()
+      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
+      .required(),
+    status: Joi.string()
+      .trim()
+      .valid(
+        "New",
+        "Contacted",
+        "Interested",
+        "Qualified",
+        "InProgress",
+        "Booked",
+        "NotInterested",
+        "NoResponse",
+        "OnHold",
+        "FollowUp"
+      )
+      .required(),
+    assigned_to: Joi.array().items(assignedTo).optional().default([]),
+    next_follow_up: Joi.date().iso().required().messages({
+      "date.base": "Date must be a valid ISO 8601 date",
+      "date.format": "Date must be in ISO 8601 format",
+    }),
+    files: Joi.alternatives()
+      .try(
+        fileSchema, // single file object
+        Joi.array().items(fileSchema).max(2) // array of file objects
+      )
+      .optional(),
+  });
+  return schema.validate(data);
+}
+function get_leads(data) {
+  const schema = Joi.object({
+    skip: Joi.number().required(),
+    limit: Joi.number().required(),
+    date: Joi.date().iso().optional().allow("", null).messages({
+      "date.base": "Date must be a valid ISO 8601 date",
+      "date.format": "Date must be in ISO 8601 format",
+    }),
+    status: Joi.string()
+      .trim()
+      .valid(
+        "New",
+        "Contacted",
+        "Interested",
+        "Qualified",
+        "InProgress",
+        "Booked",
+        "NotInterested",
+        "NoResponse",
+        "OnHold",
+        "FollowUp"
+      )
+      .optional()
+      .allow("", null),
+  });
+  return schema.validate(data);
+}
+function add_update_delete_templates(data) {
+  const schema = Joi.object({
+    type: Joi.string().trim().min(3).max(50).required(),
+    headline: Joi.string().trim().min(3).max(100).required(),
+    subject: Joi.string().trim().min(3).max(1500).required(),
+    route_action: Joi.number()
+      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
+      .required(),
+    template_id: Joi.string().optional().allow("", null),
+  });
+  return schema.validate(data);
+}
+function send_email_data(data) {
+  const fileSchema = Joi.object({
+    filename: Joi.string().required(),
+    content: Joi.string()
+      .pattern(/^data:.*;base64,[a-zA-Z0-9+/=]+$/)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "File content must be a valid base64-encoded string with data URI.",
+      }),
+    contentType: Joi.string().optional(),
+  });
+  const schema = Joi.object({
+    to: Joi.string()
+      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
+      .trim()
+      .min(10)
+      .max(55)
+      .email()
+      .messages({
+        "string.pattern.base": " To Email Should be valid mail",
+      })
+      .required(),
+    cc: Joi.string()
+      .email({ tlds: { allow: false } })
+      .min(10)
+      .max(55)
+      .trim()
+      .optional()
+      .allow("", null),
+    subject: Joi.string().trim().required(),
+    link_to_record: Joi.string().trim().required(),
+    message: Joi.string().required(),
+    files: Joi.alternatives()
+      .try(
+        fileSchema, // single file object
+        Joi.array().items(fileSchema) // array of file objects
+      )
+      .optional(),
+  });
+  return schema.validate(data);
+}
+function lead_search(data) {
+  const schema = Joi.object({
+    lead_name: Joi.string().required().allow("", null),
+    source: Joi.string().required().allow("", null),
+  });
+  return schema.validate(data);
+}
+function add_update_postings(data) {
+  const schema = Joi.object({
+    route_action: Joi.number()
+      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
+      .required(),
+    organisation_id: Joi.string().required(),
+    key: Joi.string().required(),
+    posting_id: Joi.string().optional().allow("", null),
+    title: Joi.string().min(3).max(70).required(),
+    description: Joi.string().min(10).required(),
+    images: Joi.array()
+      .max(1)
+      .items(
+        Joi.object({
+          url: Joi.string()
+            .custom(base64ImageSizeValidator)
+            .required()
+            .messages({
+              "string.pattern.base": "Size should be 256 KB only.",
+            }),
+        })
+      ),
+  });
+  return schema.validate(data);
+}
+function get_postings(data) {
+  const schema = Joi.object({
+    skip: Joi.number().required(),
+    limit: Joi.number().required(),
+    organisation_id: Joi.string().required(),
+    key: Joi.string().required(),
+    posting_id: Joi.string().optional().allow("", null),
+  });
+  return schema.validate(data);
+}
+//add_update listings
+function add_update_listings(data) {
+  const locationSchema = Joi.object({
+    address: Joi.string().min(5).max(255).required(),
+    city: Joi.string().min(2).max(100).required(),
+    state: Joi.string().min(2).max(100).required(),
+    country: Joi.string().min(2).max(100).required(),
+    pincode: Joi.string()
+      .trim()
+      .pattern(/^[A-Za-z0-9\- ]{3,10}$/)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Pincode must be 3 to 10 characters, and can contain letters, digits, hyphens, or spaces.",
+        "string.empty": "Pincode is required.",
+      }),
+    landmark: Joi.string().allow("", null),
+    latitude: Joi.number().min(-90).max(90).optional(),
+    longitude: Joi.number().min(-180).max(180).optional(),
+  });
+
+  // ✅ Main schema
+  const schema = Joi.object({
+    route_action: Joi.number()
+      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
+      .required(),
+    organisation_id: Joi.string().required(),
+    key: Joi.string().required(),
+    type: Joi.string().min(3).max(50).required(),
+    price: Joi.number().required(),
+    listing_id: Joi.string().optional().allow("", null),
+    name: Joi.string().min(3).max(100).required(),
+    description: Joi.string()
+      .min(10)
+      .max(1000)
+      .pattern(/^[A-Za-z0-9\s.,-]+$/)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Description can only contain letters, numbers, spaces, commas (,), periods (.), and hyphens (-).",
+      }),
+
+    location: locationSchema.optional(),
+    bedrooms: Joi.number().optional(),
+    bathrooms: Joi.number().optional(),
+    balconies: Joi.number().optional(),
+    area_sqft: Joi.string().optional(),
+    amenities: Joi.array()
+      .items(
+        Joi.object({
+          name: Joi.string().required(),
+          count: Joi.number().integer().min(0).required(),
+        })
+      )
+      .optional(),
+    images: Joi.array()
+      .max(2)
+      .items(
+        Joi.object({
+          url: Joi.string()
+            .custom(base64ImageSizeValidator, "Base64 image size validation")
+            .required(),
+        })
+      )
+      .optional(),
+  });
+
+  return schema.validate(data);
+}
+//get listings
+function get_listings(data) {
+  const schema = Joi.object({
+    skip: Joi.number().required(),
+    limit: Joi.number().required(),
+    organisation_id: Joi.string().required(),
+    key: Joi.string().required(),
+    listing_id: Joi.string().optional().allow("", null),
   });
   return schema.validate(data);
 }
@@ -752,4 +1358,21 @@ module.exports = {
   update_task_team,
   tasks_count,
   get_tasks,
+  add_super_admin,
+  Sadmin_login,
+  add_update_admin_controls,
+  skipLimit,
+  department_tree,
+  add_update_events,
+  event_id,
+  get_events,
+  add_leads,
+  get_leads,
+  add_update_delete_templates,
+  send_email_data,
+  lead_search,
+  add_update_postings,
+  get_postings,
+  add_update_listings,
+  get_listings,
 };

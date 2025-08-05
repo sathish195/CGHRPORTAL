@@ -1,0 +1,25 @@
+const { array } = require("joi");
+const mongoose = require("mongoose");
+
+const leads_schema = new mongoose.Schema(
+  {
+    lead_id: { type: String, required: true, unique: true, index: true },
+    lead_name: { type: String },
+    organisation_id: { type: String, required: true },
+    key: { type: String, required: true },
+    source: { type: String },
+    email: { type: String, required: true },
+    // company: { type: String },
+    status: { type: String, required: true },
+    assigned_to: { type: Array, default: [] },
+    next_follow_up: { type: Date, required: true },
+    comments: { type: String },
+    files: { type: Array, default: [] },
+    added_by: { type: Object, default: {} },
+    updated_by: { type: Object, deafult: {} },
+  },
+  { timestamps: true }
+);
+leads_schema.index({ lead_id: 1 });
+
+exports.LEADS = mongoose.model("LEADS", leads_schema);

@@ -5,13 +5,19 @@ const validations = require("../../helpers/schema");
 const bcrypt = require("../../helpers/crypto");
 const jwt = require("jsonwebtoken");
 const { Auth } = require("../../middlewares/auth");
-const redis = require("../../helpers/redisFunctions");
+const redisFunctions = require("../../helpers/redisFunctions");
 const { mongo } = require("mongoose");
 const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const slowDown = require("../../middlewares/slow_down");
 const { includes } = require("underscore");
 const { alertDev } = require("../../helpers/telegram");
+const functions = require("../../helpers/functions");
+const Imap = require("imap");
+const { simpleParser } = require("mailparser");
+const { promisify } = require("util");
+const moment = require("moment");
+const encrypt_decrypt = require("../../helpers/encrypt_decrypt");
 
 //get employee list
 
@@ -20,7 +26,6 @@ router.post(
   "/get_emp_by_id",
   Auth,
   Async(async (req, res) => {
-    console.log("get emp by id route hit");
     let data = req.body;
     var { error } = validations.employee_id(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -64,13 +69,28 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get employee list route hit");
     const emp = req.employee;
     const LIMIT = 50;
     const data = req.body;
     const { error } = validations.skip(data);
 
     if (error) return res.status(400).send(error.details[0].message);
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    // let find_access = await functions.hasAccess(
+    //   org_data.billing_type.type,
+    //   "employee_list"
+    // );
+    // if (!find_access) {
+    //   return res.status(400).send("Access Denied For This Feature!!");
+    // }
     let query = { organisation_id: req.employee.organisation_id };
     if (emp.admin_type === "1") {
       // query["work_info.admin_type"] = { $ne: "1" };
@@ -87,8 +107,17 @@ router.post(
     let employees = await mongoFunctions.lazy_loading(
       "EMPLOYEE",
       query,
-      { two_fa_key: 0, fcm_token: 0, browserid: 0, others: 0, password: 0 },
-      { _id: -1 },
+      {
+        _id: 0,
+        two_fa_key: 0,
+        fcm_token: 0,
+        browserid: 0,
+        others: 0,
+        password: 0,
+        // "images.dp": 0,
+        // identity_info: 0,
+      },
+      { createdAt: -1 },
       LIMIT,
       data.skip
     );
@@ -104,7 +133,6 @@ router.post(
   slowDown,
   Async(
     async (req, res) => {
-      console.log("get employee list route hit");
       const emp = req.employee;
       const LIMIT = 50;
       const data = req.body;
@@ -149,7 +177,7 @@ router.post(
           status: "in_progress",
           task_status: { $not: /in_active/i },
         });
-        console.log("managers", tasks);
+        
       } else {
         tasks = await mongoFunctions.find("TASKS", {
           organisation_id: req.employee.organisation_id,
@@ -159,14 +187,10 @@ router.post(
         });
       }
 
-      console.log("tasks----------------->", tasks);
-
       let employees_with_task_count = employees.map((employee) => {
         let employee_tasks = tasks.filter(
           (task) => task.employee_id === employee.employee_id
         );
-
-        console.log(employee_tasks);
 
         return {
           ...employee,
@@ -305,7 +329,6 @@ router.post(
   "/get_project_by_id",
   Auth,
   Async(async (req, res) => {
-    console.log("get project by id route hit");
     let data = req.body;
     var { error } = validations.get_project_by_id(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -430,13 +453,29 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get projects route hit");
     let data = req.body;
     var { error } = validations.get_projects(data);
     if (error) return res.status(400).send(error.details[0].message);
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "projects"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
 
     const userRole = req.employee.admin_type;
-    console.log(userRole);
+    // console.log(userRole);
     const organisationId = req.employee.organisation_id;
     const employeeId = req.employee.employee_id;
 
@@ -550,8 +589,6 @@ router.post(
       ...project,
       taskCount: taskCountMap[project.project_id] || 0, // Default to 0 if no tasks
     }));
-
-    console.log("successfully fetched projects with task count");
     return res.status(200).send(projects);
   })
 );
@@ -674,12 +711,28 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("all leave applications route hit");
     let data = req.body;
     const { error } = validations.get_all_leave_applications(data);
 
     if (error) {
       return res.status(400).send(error.details[0].message);
+    }
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "leave_applications"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
     }
 
     const roleName = req.employee.admin_type;
@@ -793,7 +846,7 @@ router.post(
         query.leave_status = data.leave_status;
       }
     }
-    console.log(query);
+    // console.log(query);
 
     // Fetch leave applications with pagination
     // alertDev(`query in get leaves-->${JSON.stringify(query)}`);
@@ -844,6 +897,23 @@ router.post(
         .status(403)
         .send("Only Director Or Manager Can Access Employee Total Attendance");
     }
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "attendance"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     let condition = {
       organisation_id: user.organisation_id,
     };
@@ -853,7 +923,7 @@ router.post(
     if (data.employee_id && data.employee_id.length > 5) {
       condition["employee_id"] = data.employee_id;
     }
-    console.log(condition);
+    // console.log(condition);
 
     if (data?.week_date) {
       const start = new Date(data.week_date);
@@ -956,8 +1026,549 @@ router.post(
       completed: completed.length,
     };
 
-    console.log(count);
+    // console.log(count);
     return res.status(200).send([count]);
+  })
+);
+//get events
+
+router.post(
+  "/events",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    const data = req.body;
+    const admin_type = req.employee.admin_type;
+    const employee_id = req.employee.employee_id;
+
+    // ✅ Validate input
+    const { error } = validations.get_events(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const allowed_types = ["1", "2", "3", "4"];
+    if (!allowed_types.includes(admin_type)) {
+      return res.status(403).send("Access Denied");
+    }
+
+    const baseOrgFilter = {
+      organisation_id: req.employee.organisation_id,
+    };
+
+    // ✅ Main event filter
+    const filters = { ...baseOrgFilter };
+
+    // 🔐 Access controls
+    if (admin_type === "3") {
+      filters.$or = [
+        { "assigned_to.employee_id": employee_id },
+        { "added_by.employee_id": employee_id },
+      ];
+    } else if (admin_type === "4") {
+      filters["assigned_to.employee_id"] = employee_id;
+    }
+
+    // 🔍 Date filter
+    if (data.date && data.date !== "") {
+      const startOfDay = moment(data.date).startOf("day").toDate();
+      const endOfDay = moment(data.date).endOf("day").toDate();
+      filters.date = { $gte: startOfDay, $lte: endOfDay };
+    }
+
+    // 🔍 Type filter
+    if (data.type && data.type !== "") {
+      filters.type = data.type.toLowerCase();
+    }
+
+    // ✅ Deadlines filter (next 7 days)
+    const deadlineFilter = {
+      ...baseOrgFilter,
+      date: {
+        $gte: moment().startOf("day").toDate(),
+        $lte: moment().add(7, "days").endOf("day").toDate(),
+      },
+    };
+
+    if (admin_type === "3") {
+      deadlineFilter.$or = [
+        { "assigned_to.employee_id": employee_id },
+        { "added_by.employee_id": employee_id },
+      ];
+    } else if (admin_type === "4") {
+      deadlineFilter["assigned_to.employee_id"] = employee_id;
+    }
+
+    // ✅ Count filter (org-wide total for user access)
+    const org_count_filter = { ...baseOrgFilter };
+    if (admin_type === "3") {
+      org_count_filter.$or = [
+        { "assigned_to.employee_id": employee_id },
+        { "added_by.employee_id": employee_id },
+      ];
+    } else if (admin_type === "4") {
+      org_count_filter["assigned_to.employee_id"] = employee_id;
+    }
+
+    // ✅ Parallel DB Calls
+    const [events, events_count, deadlines, event_types, total_count] =
+      await Promise.all([
+        mongoFunctions.lazy_loading(
+          "EVENTS",
+          filters,
+          {},
+          { date: -1 },
+          data.limit,
+          data.skip
+        ),
+        mongoFunctions.count_documents("EVENTS", filters),
+        mongoFunctions.find(
+          "EVENTS",
+          deadlineFilter,
+          { date: -1 },
+          { _id: 0, __v: 0 }
+        ),
+        mongoFunctions.distinct("EVENTS", "type", org_count_filter),
+        mongoFunctions.count_documents("EVENTS", org_count_filter),
+      ]);
+
+    return res.status(200).send({
+      events,
+      deadlines,
+      event_types,
+      events_count,
+      count: total_count,
+    });
+  })
+);
+
+//find event by id
+
+router.post(
+  "/event_by_id",
+  Auth,
+  Async(async (req, res) => {
+    let data = req.body;
+    var { error } = validations.event_id(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director Or Manager Can Access Employee");
+    }
+
+    let event = await mongoFunctions.find_one(
+      "EVENTS",
+      {
+        organisation_id: req.employee.organisation_id,
+        event_id: data.event_id,
+      },
+      {
+        _id: 0,
+        __v: 0,
+      }
+    );
+    if (!event) {
+      return res.status(400).send("No Event Found");
+    }
+
+    return res.status(200).send({ event: event });
+  })
+);
+//get leads
+router.post(
+  "/leads",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    const data = req.body;
+
+    // ✅ Validate limit & skip
+    const { error } = validations.get_leads(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const organisation_id = req.employee.organisation_id;
+
+    // ✅ Base filter: only by organisation
+    const filters = {
+      organisation_id: organisation_id,
+    };
+    if (!["1", "2"].includes(req.employee.admin_type)) {
+      filters["assigned_to.employee_id"] = req.employee.employee_id;
+    }
+
+    // ✅ Optional status filter (case-insensitive)
+    if (data.status && data.status !== "") {
+      filters.status = { $regex: `^${data.status}$`, $options: "i" };
+    }
+
+    // ✅ Optional date filter
+    if (data.date && data.date !== "") {
+      const startOfDay = new Date(data.date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(data.date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      filters.next_follow_up = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
+
+    // ✅ Pagination fetch
+    const leads = await mongoFunctions.lazy_loading(
+      "LEADS",
+      filters,
+      {},
+      { createdAt: -1 },
+      data.limit,
+      data.skip
+    );
+
+    // ✅ Determine whether filters were applied
+    const hasFilters =
+      (data.date && data.date !== "") ||
+      (data.status && data.status !== "") ||
+      ["3", "4"].includes(req.employee.admin_type);
+
+    // ✅ leads_count: filtered if filters applied, otherwise total count
+    let leads_count;
+    if (hasFilters) {
+      leads_count = await mongoFunctions.count_documents("LEADS", filters);
+    } else {
+      leads_count = await mongoFunctions.count_documents("LEADS", {
+        organisation_id: organisation_id,
+      });
+    }
+    let countFilter = {
+      organisation_id: organisation_id,
+    };
+
+    if (!["1", "2"].includes(req.employee.admin_type)) {
+      countFilter["assigned_to.employee_id"] = req.employee.employee_id;
+    }
+    // ✅ Total count (unfiltered)
+    const count = await mongoFunctions.count_documents("LEADS", countFilter);
+    let status = [
+      "New",
+      "Contacted",
+      "Interested",
+      "Qualified",
+      "InProgress",
+      "Booked",
+      "NotInterested",
+      "NoResponse",
+      "OnHold",
+      "FollowUp",
+    ];
+    // console.log(status);
+
+    return res.status(200).send({
+      leads,
+      leads_count,
+      count,
+      status,
+    });
+  })
+);
+
+//get templates
+
+router.post(
+  "/templates",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    const data = req.body;
+
+    // Validate limit & skip
+    const { error } = validations.skipLimit(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // Access control
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Only Director Or Manager Can View Leads");
+    }
+
+    // Base filter: only by organisation
+    const filters = {
+      organisation_id: req.employee.organisation_id,
+    };
+
+    // Fetch paginated leads
+    const templates = await mongoFunctions.lazy_loading(
+      "TEMPLATES",
+      filters,
+      {},
+      { createdAt: -1 },
+      data.limit,
+      data.skip
+    );
+
+    const count = await mongoFunctions.count_documents("TEMPLATES", {
+      organisation_id: req.employee.organisation_id,
+    });
+
+    return res.status(200).send({
+      templates: templates,
+      count: count,
+    });
+  })
+);
+//route to get sent emails
+router.post(
+  "/sent_emails",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    const data = req.body;
+
+    // Validate limit & skip
+    const { error } = validations.skipLimit(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // Access control
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Only Director Or Manager Can View Leads");
+    }
+
+    // Base filter: only by organisation
+    const filters = {
+      organisation_id: req.employee.organisation_id,
+    };
+
+    // Fetch paginated emails
+    const emails = await mongoFunctions.lazy_loading(
+      "EMAILS",
+      filters,
+      {},
+      { createdAt: -1 },
+      data.limit,
+      data.skip
+    );
+
+    const count = await mongoFunctions.count_documents("EMAILS", {
+      organisation_id: req.employee.organisation_id,
+    });
+
+    return res.status(200).send({
+      emails: emails,
+      count: count,
+    });
+  })
+);
+
+// Helper function to open inbox with Promise
+function openInboxAsync(imap) {
+  return new Promise((resolve, reject) => {
+    imap.openBox("INBOX", true, (err, box) => {
+      if (err) reject(err);
+      else resolve(box);
+    });
+  });
+}
+
+// Route to fetch inbox emails
+router.post(
+  "/inbox_emails",
+  Auth,
+  Async(async (req, res) => {
+    const data = req.body;
+
+    // Validate skip & limit
+    const { error } = validations.skipLimit(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const skip = Number(data.skip || 0);
+    const limit = Number(data.limit || 10);
+
+    // Access control
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res.status(403).send("Only Director Or Manager Can View Emails");
+    }
+
+    // Gmail IMAP credentials
+    const imapConfig = {
+      user: "crmadmi01@gmail.com",
+      password: "mmvv ygbi fals sfit",
+      host: "imap.gmail.com",
+      port: 993,
+      tls: true,
+      tlsOptions: { rejectUnauthorized: false },
+    };
+
+    const imap = new Imap(imapConfig);
+    const emails = [];
+    let total = 0;
+
+    imap.once("ready", async () => {
+      try {
+        const box = await openInboxAsync(imap);
+        total = box.messages.total;
+
+        if (total === 0) {
+          imap.end();
+          return res.status(200).json({
+            message: "No emails found",
+            total,
+            emails: [],
+          });
+        }
+
+        const end = total - skip;
+        const start = Math.max(1, end - limit + 1);
+        const seq = `${start}:${end}`;
+
+        const fetch = imap.seq.fetch(seq, { bodies: "", struct: true });
+
+        const messagePromises = [];
+
+        fetch.on("message", (msg, seqno) => {
+          const messagePromise = new Promise((resolve) => {
+            let buffer = "";
+
+            msg.on("body", (stream) => {
+              stream.on("data", (chunk) => {
+                buffer += chunk.toString("utf8");
+              });
+            });
+
+            msg.once("end", async () => {
+              try {
+                const parsed = await simpleParser(buffer);
+                emails.push({
+                  from: parsed.from?.text,
+                  to: parsed.to?.text,
+                  subject: parsed.subject,
+                  date: parsed.date,
+                  text: parsed.text,
+                  html: parsed.html,
+                });
+              } catch (err) {
+                console.error(
+                  `Failed to parse message #${seqno}:`,
+                  err.message
+                );
+              }
+              resolve(); // resolve even on error
+            });
+          });
+
+          messagePromises.push(messagePromise);
+        });
+
+        fetch.once("error", (err) => {
+          console.error("Fetch error:", err);
+          return res.status(500).send("Failed to fetch emails: " + err.message);
+        });
+
+        fetch.once("end", async () => {
+          await Promise.all(messagePromises); // Wait for all parsing to finish
+          imap.end(); // Close connection safely
+        });
+      } catch (err) {
+        console.error("IMAP Error:", err);
+        imap.end();
+        return res.status(500).send("Failed to open inbox: " + err.message);
+      }
+    });
+
+    imap.once("error", (err) => {
+      console.error("IMAP Connection Error:", err);
+      return res.status(500).send("IMAP connection error: " + err.message);
+    });
+
+    imap.once("end", () => {
+      // Final response after full connection ends and emails are ready
+      return res.status(200).json({
+        message: "Inbox fetched successfully!",
+        total,
+        emails,
+      });
+    });
+
+    imap.connect();
+  })
+);
+
+//get postings(no auth route)
+router.post(
+  "/postings",
+  slowDown,
+  Async(async (req, res) => {
+    const data = encrypt_decrypt.decryptobj(req.body.enc);
+    // console.log(data);
+
+    // Validate limit & skip
+    const { error } = validations.get_postings(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    ///Access control from payload
+    const keys = ["scanglobal", "crm"];
+    if (!keys.includes(data.key)) {
+      return res.status(403).send("Access denied");
+    }
+    // ✅ If postings_id is provided, return single post
+    if (data.posting_id && data.posting_id.trim() !== "") {
+      const post = await mongoFunctions.find_one(
+        "POSTINGS",
+        {
+          posting_id: data.posting_id,
+          organisation_id: data.organisation_id,
+          key: data.key,
+        },
+        { key: 0, _id: 0, __v: 0, organisation_id: 0 }
+      );
+
+      if (!post) return res.status(404).send("Post not found");
+
+      return res.status(200).send({ posting: post });
+    }
+
+    // Base filter
+    const filters = {
+      organisation_id: data.organisation_id,
+      key: data.key,
+    };
+
+    // ✅ Add date filter only if date is not null or empty string
+    if (data.date && data.date !== "") {
+      const startOfDay = new Date(data.date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(data.date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      filters.date = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
+
+    // Fetch filtered postings
+    const find_postings = await mongoFunctions.lazy_loading(
+      "POSTINGS",
+      filters,
+      { key: 0, _id: 0, __v: 0, organisation_id: 0 },
+      { createdAt: -1 },
+      data.limit,
+      data.skip
+    );
+
+    const count = await mongoFunctions.count_documents("POSTINGS", {
+      organisation_id: data.organisation_id,
+      key: data.key,
+    });
+
+    // Return result
+    return res.status(200).send({
+      postings: find_postings,
+      count: count,
+    });
   })
 );
 

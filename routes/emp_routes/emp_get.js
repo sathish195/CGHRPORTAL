@@ -5,7 +5,6 @@ const validations = require("../../helpers/schema");
 const bcrypt = require("../../helpers/crypto");
 const jwt = require("jsonwebtoken");
 const { Auth } = require("../../middlewares/auth");
-const redis = require("../../helpers/redisFunctions");
 const stats = require("../../helpers/stats");
 const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
@@ -14,6 +13,7 @@ const multer = require("multer");
 const XLSX = require("xlsx");
 const { Query } = require("mongoose");
 const { alertDev } = require("../../helpers/telegram");
+const functions = require("../../helpers/functions");
 const redisFunctions = require("../../helpers/redisFunctions");
 
 //get employee profile
@@ -23,8 +23,24 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get profile route hit");
     const employee = req.employee;
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "profile"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     let emp = await mongoFunctions.find_one(
       employee.collection,
       {
@@ -64,13 +80,29 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("emp universal route hit");
-    let org_data = await redis.redisGet(
+    
+    //check admin type
+    const admin_types = ["1", "2", "3", "4"];
+    if (!admin_types.includes(req.employee?.admin_type)) {
+      return res.status(403).send("Access Denied!!");
+    }
+
+    let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
     );
-    console.log(org_data);
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "dashboard"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     let filtered_org_data = { ...org_data };
 
     // Exclude specific fields
@@ -81,9 +113,9 @@ router.post(
     const birthdays = await stats.employees_with_birthday_today(
       req.employee.organisation_id
     );
-    console.log(birthdays);
+    
 
-    let statss = await redis.redisGetAll(req.employee.employee_id);
+    let statss = await redisFunctions.redisGetAll(req.employee.employee_id);
     const now = new Date();
     const start_day = new Date(now.setHours(0, 0, 0, 0));
     const end_day = new Date(now.setHours(23, 59, 59, 999));
@@ -103,6 +135,12 @@ router.post(
       organisation_id: req.employee.organisation_id,
       "work_info.employee_status": { $regex: /^active$/i }, // Case-insensitive regex
     });
+    // find_admins
+    const find_controls = await redisFunctions.redisGet(
+      "CGHR_ADMIN_CONTROLS",
+      "ADMIN_CONTROLS",
+      true
+    );
 
     let dashborad = {
       recent_hires: recent_hires,
@@ -111,8 +149,8 @@ router.post(
       stats: statss || {},
       today_attendance: today_attendance,
       total_emp_count: total_emp_count,
+      admin_controls: find_controls,
     };
-    console.log("dashboard data fetched successfully");
     return res.status(200).send(dashborad);
   })
 );
@@ -122,7 +160,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get tasks route hit");
 
     let data = req.body;
     const { error } = validations.get_tasks(data);
@@ -145,7 +182,6 @@ router.post(
             { employee_id: req.employee.employee_id },
           ],
         });
-        console.log(userRole);
         return res.status(200).send(findTask);
       }
       if (userRole === "2" || userRole === "1") {
@@ -157,7 +193,6 @@ router.post(
             $not: /in_active/i,
           },
         });
-        console.log(userRole);
         return res.status(200).send(findTask);
       }
       if (userRole === "3") {
@@ -215,7 +250,6 @@ router.post(
             $not: /in_active/i,
           },
         });
-        console.log(userRole);
         return res.status(200).send(findTask);
       } else if (userRole === "3") {
         findTask = await mongoFunctions.find("TASKS", {
@@ -254,7 +288,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get task by id route hit");
     let data = req.body;
     var { error } = validations.get_task_by_id(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -275,7 +308,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get all tasks route hit");
     let data = req.body;
     const { error } = validations.get_all_tasks(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -293,13 +325,12 @@ router.post(
         $not: /in_active/i,
       },
     };
-    console.log(query);
+
     // Add project_id filter if provided
     if (data.project_id) {
       query.project_id = data.project_id;
     }
 
-    console.log(query);
     if (
       userRole === "2" &&
       req.employee.designation_name !== "project manager"
@@ -316,7 +347,6 @@ router.post(
           $not: /in_active/i,
         },
       };
-      console.log(query);
 
       if (data.status && data.status.length > 0) {
         query.status = data.status;
@@ -335,7 +365,6 @@ router.post(
       if (data.status && data.status.length > 0) {
         query.status = data.status;
       }
-      console.log(query);
 
       if (data.date) {
         const date = new Date(data.date);
@@ -363,7 +392,6 @@ router.post(
           $not: /in_active/i,
         },
       };
-      console.log(query);
 
       if (data.status && data.status.length > 0) {
         query.status = data.status;
@@ -406,8 +434,6 @@ router.post(
         };
       }
     }
-    console.log("query------------------->", query);
-
     // Find tasks using the query object
     const findTask = await mongoFunctions.lazy_loading(
       "TASKS",
@@ -417,8 +443,6 @@ router.post(
       limit,
       skip
     );
-    console.log("all tasks fetched successfully");
-    console.log(findTask);
 
     return res.status(200).send(findTask);
   })
@@ -431,10 +455,26 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("leave applications route hit");
     let data = req.body;
     const { error } = validations.get_employee_leave_applications(data);
     if (error) return res.status(400).send(error.details[0].message);
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "emp_leave_applications"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     let query = {
       employee_id: req.employee.employee_id,
       organisation_id: req.employee.organisation_id,
@@ -494,7 +534,6 @@ router.post(
     // Add date range to the query
     query.from_date = { $gte: startOfMonth, $lte: endOfMonth };
 
-    console.log(query);
     let leaveApplications = await mongoFunctions.lazy_loading(
       "LEAVE",
       query,
@@ -505,7 +544,6 @@ router.post(
       { limit: 40 },
       { skip: data.skip }
     );
-    console.log("leave applications fetched successfully");
     return res.status(200).send(leaveApplications);
   })
 );
@@ -521,6 +559,23 @@ router.post(
     let data = req.body;
     var { error } = validations.get_emp_attendance_by_filter(data);
     if (error) return res.status(400).send(error.details[0].message);
+    //find org
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!org_data) {
+      return res.status(400).send("Organisation Not Found!!");
+    }
+    // //restrict access
+    let find_access = await functions.hasAccess(
+      org_data.billing_type.type,
+      "attendance"
+    );
+    if (!find_access) {
+      return res.status(400).send("Access Denied For This Feature!!");
+    }
     let condition = {
       organisation_id: user.organisation_id,
       employee_id: user.employee_id,
@@ -574,8 +629,6 @@ router.post(
       if (!data || data.length === 0) {
         return res.status(404).send("No employee data found.");
       }
-
-      console.log(data);
 
       const excelData = data.map((employee) => {
         const educationDetails = employee.educational_details || [];
@@ -708,21 +761,18 @@ router.post(
   upload.single("Employees"),
   Async(async (req, res) => {
     try {
-      console.log("Uploaded file:", req.file.filename);
 
       if (!req.file) {
         return res.status(400).send("No File Uploaded.");
       }
-      console.log(req.file);
 
       // Read the uploaded Excel file
       const workbook = XLSX.readFile(req.file.path);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      console.log(jsonData);
 
       // Check if the user is authorized
-      const org_data = await redis.redisGet(
+      const org_data = await redisFunctions.redisGet(
         "CRM_ORGANISATIONS",
         req.employee.organisation_id,
         true
@@ -862,7 +912,7 @@ router.post(
           "EMPLOYEE",
           new_emp_data
         );
-        console.log(new_emp);
+
         if (!new_emp) {
           return res.status(400).send("Failed To Add New Employee.");
         }

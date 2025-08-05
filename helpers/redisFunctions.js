@@ -28,9 +28,7 @@ module.exports = {
       });
       if (find_user) {
         obj = find_user;
-        console.log("found");
       } else {
-        console.log("update redis else------------>");
       }
     }
     if (COLLECTION === "ADMIN") {
@@ -55,8 +53,32 @@ module.exports = {
       obj.createdAt = undefined;
       obj.updatedAt = undefined;
       await client.hSet(
-        "CRM_ADMIN_CONTROLS",
+        "CGHR_ADMIN_CONTROLS",
         "ADMIN_CONTROLS",
+        JSON.stringify(obj),
+        (err, res) => {}
+      );
+      return true;
+    } else if (COLLECTION === "ADMIN_STATS") {
+      obj._id = undefined;
+      obj.__v = undefined;
+      obj.createdAt = undefined;
+      obj.updatedAt = undefined;
+      await client.hSet(
+        "CGHR_ADMIN_STATS",
+        "ADMIN_STATS",
+        JSON.stringify(obj),
+        (err, res) => {}
+      );
+      return true;
+    } else if (COLLECTION === "SUPER_ADMIN") {
+      obj._id = undefined;
+      obj.__v = undefined;
+      obj.createdAt = undefined;
+      obj.updatedAt = undefined;
+      await client.hSet(
+        "CG_SUPER_ADMIN",
+        obj.email,
         JSON.stringify(obj),
         (err, res) => {}
       );
@@ -112,13 +134,12 @@ module.exports = {
     if (parse) {
       data = JSON.stringify(data);
     }
-    console.log(hash, key, data, expirationInSeconds);
+
     client.hSet(hash, key, data, (err, reply) => {
       if (err) {
         console.error("Error setting hash field:", err);
         return err;
       }
-      console.log("reply---", reply);
       client.expire(
         `${hash} ${key}`,
         expirationInSeconds,
@@ -127,11 +148,6 @@ module.exports = {
             console.error("Error setting expiration:", expireErr);
             return err;
           }
-          console.log("expireReply---", expireReply);
-
-          console.log(
-            `Expiration set successfully for ${hash}:${key}: ${expirationInSeconds} seconds`
-          );
         }
       );
     });
@@ -174,7 +190,8 @@ module.exports = {
       var value = await client.hGetAll(key);
       if (value) {
         if (parse) {
-          value = JSON.parse(value);
+          let value_o = Object.values(value);
+          value = JSON.parse(value_o);
         }
         return value;
       }
@@ -231,18 +248,12 @@ module.exports = {
 
         // Store the object in Redis
         await client.hSet(key, initial_status_counts);
-        console.log(`Initialized status for employee ${employee_id}`);
       } else {
         await client.hIncrBy(key, current_status, 1); // Increment current status
-        console.log(`Updated status for employee ${employee_id}`);
       }
 
       // Retrieve the updated status counts for verification
       // const updatedStatusCounts = await client.hGetAll(key);
-      // console.log(
-      //   `Updated status counts for task ${employee_id}:`,
-      //   updatedStatusCounts
-      // );
     } catch (error) {
       console.error("Error managing task status:", error.message);
     }
@@ -255,18 +266,13 @@ module.exports = {
       const exists = await client.exists(key);
 
       if (!exists) {
-        console.log("not found");
       } else {
         await client.hIncrBy(key, current_status, -1); // Decrement current status
-        console.log(`Updated status for employee ${employee_id}`);
       }
 
       // Retrieve the updated status counts for verification
       // const updatedStatusCounts = await client.hGetAll(key);
-      // console.log(
-      //   `Updated status counts for task ${employee_id}:`,
-      //   updatedStatusCounts
-      // );
+      
     } catch (error) {
       console.error("Error managing task status:", error.message);
     }
@@ -292,20 +298,16 @@ module.exports = {
 
         // Store the object in Redis
         await client.hSet(key, initial_status_counts);
-        console.log(`Initialized status for employee ${employee_id}`);
       } else {
         await client.hIncrBy(key, prev_status, -1); // Decrement previous status
 
         await client.hIncrBy(key, current_status, 1); // Increment current status
-        console.log(`Updated status for employee ${employee_id}`);
+
       }
 
       // Retrieve the updated status counts for verification
       // const updatedStatusCounts = await client.hGetAll(key);
-      // console.log(
-      //   `Updated status counts for task ${employee_id}}:`,
-      //   updatedStatusCounts
-      // );
+      
     } catch (error) {
       console.error("Error managing task status:", error.message);
     }
@@ -318,7 +320,7 @@ module.exports = {
       const exists = await client.exists(key);
 
       if (!exists) {
-        console.log(`No status found for employee ${employee_id}`);
+       
         return;
       }
 
@@ -326,18 +328,14 @@ module.exports = {
         // Remove specific status from the hash
         const removed = await client.hDel(key, current_status);
         if (removed) {
-          console.log(
-            `Removed status "${current_status}" for employee ${employee_id}`
-          );
+          
         } else {
-          console.log(
-            `Status "${current_status}" not found for employee ${employee_id}`
-          );
+          
         }
       } else {
         // Delete the entire hash
         await client.del(key);
-        console.log(`Deleted all status counts for employee ${employee_id}`);
+        
       }
     } catch (error) {
       console.error("Error removing task status:", error.message);
