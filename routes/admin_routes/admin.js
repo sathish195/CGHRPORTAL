@@ -2892,11 +2892,9 @@ router.post("/lead_search", Auth, rateLimit(60, 60), async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   // 2. Only admin_type 1 and 2 can search
-  const admin_types = ["1", "2"];
+  const admin_types = ["1", "2", "3", "4"];
   if (!admin_types.includes(req.employee.admin_type)) {
-    return res
-      .status(403)
-      .send("Only Director or Manager can perform this search");
+    return res.status(403).send("You Cannot perform this search");
   }
 
   // 3. Prepare filter
@@ -2912,6 +2910,10 @@ router.post("/lead_search", Auth, rateLimit(60, 60), async (req, res) => {
   const filter = {
     organisation_id: req.employee.organisation_id,
   };
+  // 👇 Only for admin_type 3 and 4: restrict to their assigned leads
+  if (["3", "4"].includes(req.employee.admin_type)) {
+    filter["assigned_to.employee_id"] = req.employee.employee_id;
+  }
 
   if (leadName && source) {
     filter.$or = [

@@ -86,13 +86,13 @@ router.post(
       return res.status(400).send("Organisation Not Found!!");
     }
     // //restrict access
-    let find_access = await functions.hasAccess(
-      org_data.billing_type.type,
-      "employee_list"
-    );
-    if (!find_access) {
-      return res.status(400).send("Access Denied For This Feature!!");
-    }
+    // let find_access = await functions.hasAccess(
+    //   org_data.billing_type.type,
+    //   "employee_list"
+    // );
+    // if (!find_access) {
+    //   return res.status(400).send("Access Denied For This Feature!!");
+    // }
     let query = { organisation_id: req.employee.organisation_id };
     if (emp.admin_type === "1") {
       // query["work_info.admin_type"] = { $ne: "1" };
@@ -109,8 +109,17 @@ router.post(
     let employees = await mongoFunctions.lazy_loading(
       "EMPLOYEE",
       query,
-      { two_fa_key: 0, fcm_token: 0, browserid: 0, others: 0, password: 0 },
-      { _id: -1 },
+      {
+        _id: 0,
+        two_fa_key: 0,
+        fcm_token: 0,
+        browserid: 0,
+        others: 0,
+        password: 0,
+        // "images.dp": 0,
+        // identity_info: 0,
+      },
+      { createdAt: -1 },
       LIMIT,
       data.skip
     );
@@ -1233,7 +1242,8 @@ router.post(
 
     // ✅ Determine whether filters were applied
     const hasFilters =
-      (data.date && data.date !== "") || (data.status && data.status !== "")||
+      (data.date && data.date !== "") ||
+      (data.status && data.status !== "") ||
       ["3", "4"].includes(req.employee.admin_type);
 
     // ✅ leads_count: filtered if filters applied, otherwise total count

@@ -332,10 +332,8 @@ function add_employee_by_admin(data) {
         .trim()
         .optional()
         .allow(null, "")
-        .pattern(/^\d{8,16}$/)
-        .message(
-          "Aadhaar Number must be a numeric string between 8 and 16 digits"
-        ),
+        .pattern(/^\d{12}$/)
+        .message("Aadhaar Number must be a 12-digit numeric string"),
 
       passport_number: Joi.string()
         .trim()
