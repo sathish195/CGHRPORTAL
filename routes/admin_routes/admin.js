@@ -2910,7 +2910,7 @@ router.post("/lead_search", Auth, rateLimit(60, 60), async (req, res) => {
   const filter = {
     organisation_id: req.employee.organisation_id,
   };
-  // 👇 Only for admin_type 3 and 4: restrict to their assigned leads
+  // 👇 Only for admin_type 3 and 4: restrict to their assigned
   if (["3", "4"].includes(req.employee.admin_type)) {
     filter["assigned_to.employee_id"] = req.employee.employee_id;
   }
