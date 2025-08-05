@@ -1772,7 +1772,7 @@ router.post(
     let org = await mongoFunctions.find_one("ORGANISATIONS", {
       organisation_id: req.employee.organisation_id,
     });
-    await redis.update_redis("ORGANISATIONS", org);
+    await redisFunctions.update_redis("ORGANISATIONS", org);
     return res
       .status(200)
       .send("Universal data stored in redis successfully..!");
