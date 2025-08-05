@@ -241,7 +241,7 @@ function add_employee_by_admin(data) {
 
   const educational_details_obj = Joi.object({
     institute_name: Joi.string().trim().min(2).max(50).required(),
-    degree: Joi.string().trim().min(3).max(15).required(),
+    degree: Joi.string().trim().min(2).max(30).required(),
     specialization: Joi.string().trim().min(2).max(30).required(),
     year_of_completion: Joi.number()
       .integer()
