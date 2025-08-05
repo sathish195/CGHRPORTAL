@@ -27,7 +27,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-
     const data = req.body;
 
     // 1. Validate Input
@@ -775,7 +774,7 @@ router.post(
         // "work_info.admin_type": { $in: ["1", "2"] }
       }, //
       project,
-      { employee_id: -1 }
+      { createdAt: -1 }
     );
     let today = new Date();
     let tomorrow = new Date(today);
@@ -1179,7 +1178,6 @@ router.post(
   "/update_token",
   Auth,
   Async(async (req, res) => {
-
     const org_id = await mongoFunctions.find_one("ORGANISATIONS", {
       email: req.employee.email,
     });
@@ -1223,7 +1221,6 @@ router.post(
 router.post(
   "/add_admin",
   Async(async (req, res) => {
-
     const data = req.body;
     var { error } = validations.add_admin_emp(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -1333,7 +1330,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-
     // Validate data
     const { error, value } = validations.add_holidays(req.body);
     if (error) return res.status(400).send(error.details[0].message);
