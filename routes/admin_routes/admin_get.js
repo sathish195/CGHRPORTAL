@@ -26,7 +26,6 @@ router.post(
   "/get_emp_by_id",
   Auth,
   Async(async (req, res) => {
-    console.log("get emp by id route hit");
     let data = req.body;
     var { error } = validations.employee_id(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -70,7 +69,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get employee list route hit");
     const emp = req.employee;
     const LIMIT = 50;
     const data = req.body;
@@ -135,7 +133,6 @@ router.post(
   slowDown,
   Async(
     async (req, res) => {
-      console.log("get employee list route hit");
       const emp = req.employee;
       const LIMIT = 50;
       const data = req.body;
@@ -180,7 +177,7 @@ router.post(
           status: "in_progress",
           task_status: { $not: /in_active/i },
         });
-        // console.log("managers", tasks);
+        
       } else {
         tasks = await mongoFunctions.find("TASKS", {
           organisation_id: req.employee.organisation_id,
@@ -190,14 +187,10 @@ router.post(
         });
       }
 
-      console.log("tasks----------------->", tasks);
-
       let employees_with_task_count = employees.map((employee) => {
         let employee_tasks = tasks.filter(
           (task) => task.employee_id === employee.employee_id
         );
-
-        // console.log(employee_tasks);
 
         return {
           ...employee,
@@ -336,7 +329,6 @@ router.post(
   "/get_project_by_id",
   Auth,
   Async(async (req, res) => {
-    console.log("get project by id route hit");
     let data = req.body;
     var { error } = validations.get_project_by_id(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -461,7 +453,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get projects route hit");
     let data = req.body;
     var { error } = validations.get_projects(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -598,8 +589,6 @@ router.post(
       ...project,
       taskCount: taskCountMap[project.project_id] || 0, // Default to 0 if no tasks
     }));
-
-    console.log("successfully fetched projects with task count");
     return res.status(200).send(projects);
   })
 );
@@ -722,7 +711,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("all leave applications route hit");
     let data = req.body;
     const { error } = validations.get_all_leave_applications(data);
 
@@ -1227,7 +1215,6 @@ router.post(
         $lte: endOfDay,
       };
     }
-    console.log(filters);
 
     // ✅ Pagination fetch
     const leads = await mongoFunctions.lazy_loading(
@@ -1238,7 +1225,6 @@ router.post(
       data.limit,
       data.skip
     );
-    console.log(leads.length);
 
     // ✅ Determine whether filters were applied
     const hasFilters =

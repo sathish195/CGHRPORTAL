@@ -182,7 +182,6 @@ async function employees_with_birthday_today(organisation_id) {
 
     // Check if there are any employees
     if (allEmployees.length === 0) {
-      console.log("No employees found.");
       return [];
     }
 
@@ -204,7 +203,6 @@ async function employees_with_birthday_today(organisation_id) {
       return birthMonth === currentMonth && birthDay === currentDay;
     });
 
-    // console.log("Employees with birthday today:", employeesWithBirthday); // Debug: Print filtered results
     return employeesWithBirthday;
   } catch (error) {
     console.error("Error fetching employees:", error);
@@ -341,16 +339,12 @@ async function update_stats(
 //calculate worked_hours of tasks
 
 async function calculate_working_time(statusUpdates, task_id) {
-  console.log("route hit");
   const relevantStatuses = ["under_review", "hold"];
   let totalTime = 0; // In milliseconds
   if (statusUpdates.length >= 2) {
     const lastTwoUpdates = statusUpdates.slice(-2);
     const current = lastTwoUpdates[0];
     const next = lastTwoUpdates[1];
-    console.log("current", current);
-    console.log("next", next);
-    console.log(relevantStatuses.includes(next.currentStatus));
 
     if (relevantStatuses.includes(next.currentStatus)) {
       const currentTime = new Date(current.modifiedAt).getTime();
@@ -385,13 +379,10 @@ async function calculate_working_minutes(attendance) {
     for (let i = 0; i < checkin.length; i++) {
       const checkinTime = checkin[i].in_time;
       const checkoutTime = checkout[i].out_time;
-      console.log(checkinTime);
-      console.log(checkoutTime);
 
       // Ensure both times are valid dates
       if (!isNaN(checkinTime) && !isNaN(checkoutTime)) {
         const diffInMs = checkoutTime - checkinTime;
-        console.log("diffInMs--->", diffInMs);
 
         // Only add positive differences
         if (diffInMs > 0) {
@@ -401,7 +392,6 @@ async function calculate_working_minutes(attendance) {
       }
     }
 
-    console.log(totalTimeMinutes);
     let newStatus;
     if (totalTimeMinutes < 270) {
       // Less than 4.5 hours

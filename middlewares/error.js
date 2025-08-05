@@ -22,7 +22,6 @@
 // module.exports={handle500Errors}
 
 module.exports = function (err, req, res, next) {
-  console.log(err, "error------>");
 
   // console.log(err.message,"errormsg----->");
 

@@ -25,7 +25,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("employee reset password by admin route hit");
     let data = req.body;
     var { error } = validations.emp_reset_password_by_admin(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -53,9 +52,6 @@ router.post(
       data.new_password,
       employee.password
     );
-    console.log(verifyPassword);
-    console.log(employee.password);
-    console.log(data.new_password);
     if (verifyPassword)
       return res
         .status(400)
@@ -78,7 +74,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("add employee route hit");
     let data = req.body;
     var { error } = validations.add_employee_by_admin(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -96,7 +91,6 @@ router.post(
     if (!find_access) {
       return res.status(400).send("Access Denied For This Feature!!");
     }
-    console.log("1");
     const admin_types = ["1", "2"];
     if (!admin_types.includes(req.employee.admin_type)) {
       return res.status(403).send("Only Admin Or Manager Can Add New Employee");
@@ -151,7 +145,7 @@ router.post(
     // //     repo.basic_info.first_name + " " + repo.basic_info.last_name;
     // // }
     // if (!repo) return res.status(400).send("Reporting Manager Not Found..!");
-    console.log("2");
+    
     let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
@@ -288,7 +282,6 @@ router.post(
         return res.status(400).send("Labour Card ID Already Exists");
       }
     }
-    console.log("3");
     const new_password = data.password;
     let password_hash = await bcrypt.hash_password(new_password);
     let new_emp_data = {
@@ -382,7 +375,6 @@ router.post(
     await notify.add_notification(emp_add);
 
     // await redis.update_redis("EMPLOYEE", new_emp);
-    // console.log("added emp in redis");
     //   await stats.update_emp(new_emp, true, true);
     return res.status(200).send({
       success: "Employee Added Successfully..!!",
@@ -397,7 +389,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("update employee profile by admin route hit");
     // console.log(req.data);
     var { error, value } = validations.add_employee_by_admin(req.body);
     let data = value;
@@ -707,7 +698,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("add update project route hit");
 
     // Validate request data
     const { error, value } = validations.add_project(req.body);
@@ -762,7 +752,6 @@ router.post(
         },
         { new: true } // Optionally return the updated document
       );
-      console.log("project details updated");
 
       if (!project_data_up)
         return res.status(400).send("Project Update Failed");
@@ -810,7 +799,7 @@ router.post(
 
       // Create new project
       await mongoFunctions.create_new_record("PROJECTS", new_project_data);
-      console.log("new project created");
+      
 
       return res.status(201).send("Project created successfully");
     }
@@ -822,7 +811,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("add remove team route hit");
     let data = req.body;
 
     // Validate request data
@@ -989,7 +977,6 @@ router.post(
           );
         }
       }
-      console.log("team added succesfully");
 
       return res.status(200).send("Team Added Successfully");
     } else if (data.action.toLowerCase() === "remove") {
@@ -1141,7 +1128,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("add update task route hit");
 
     // Validate request data
     const { error, value } = validations.add_update_task(req.body);
@@ -1316,7 +1302,6 @@ router.post(
         // console.log(s);
       }
 
-      console.log("task updated successfully");
 
       if (!task_data_up) return res.status(400).send("Task Update Failed");
       if (data.action === "add") {
@@ -1432,7 +1417,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("update project route hit");
     let data = req.body;
     const { error } = validations.update_project(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -1471,7 +1455,6 @@ router.post(
       },
       { new: true } // Optionally return the updated document
     );
-    console.log("project updated successfully");
     if (!project_data_up) return res.status(400).send("Project Update Failed");
     return res.status(200).send("Project Updated Successfully");
   })
@@ -1482,7 +1465,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("update leave application by tl,manager route hit");
     let data = req.body;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -1722,7 +1704,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("updated leave status by admin route hit");
     let data = req.body;
     const { error } = validations.update_leave(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -1897,7 +1878,6 @@ router.post(
             "Attendance Update Failed To Create Leave Status Records After Approving Leave Application"
           );
 
-      console.log("updated count for pending to approved status");
       // Increment today's leave stats
       // const fromDateObj = leave_data_up.from_date; // Already a Date object
       // const toDateObj = leave_data_up.to_date; // Already a Date object
@@ -1950,7 +1930,6 @@ router.post(
           $inc: { lop_leaves: +findId.days_taken }, // Set the LOP leaves
         }
       );
-      console.log("updated count for pending to rejected status");
     }
     if (
       findId.leave_status === "Approved" &&
@@ -1987,19 +1966,13 @@ router.post(
           $inc: { "leaves.$.remaining_leaves": +findId.days_taken },
         }
       );
-      console.log("updated count for approved to rejected status");
       // Increment today's leave stats
       const fromDateObj = leave_data_up.from_date; // Date object
       const toDateObj = leave_data_up.to_date; // Date object
 
-      // Log the date objects for debugging
-      console.log("From Date Object:", fromDateObj);
-      console.log("To Date Object:", toDateObj);
-
       // Start of today (midnight in UTC)
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
-      console.log("Today:", today);
 
       // Create the next day of toDate
       const nextDayToDate = new Date(toDateObj);

@@ -27,7 +27,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("add_update_org_details route hit");
 
     const data = req.body;
 
@@ -119,7 +118,6 @@ router.post(
         new_billing.payment_date = payment_date;
         new_billing.exp_date = expiry_date;
         org_data.billing_type = new_billing;
-        console.log("Billing details updated.");
       }
 
       // 6. Update Organisation
@@ -131,8 +129,6 @@ router.post(
           : org_data,
         { new: true }
       );
-
-      console.log("Organisation details updated.");
       await redisFunctions.update_redis("ORGANISATIONS", org_data_up);
       return res.status(200).send({
         success: "Organisation Details Updated Successfully.",
@@ -191,7 +187,6 @@ router.post(
 
         billing_type.payment_date = payment_date;
         billing_type.exp_date = expiry_date;
-        console.log(payment_date, expiry_date);
       }
 
       // 9. Create Organisation
@@ -230,7 +225,6 @@ router.post(
         "ORGANISATIONS",
         new_org_data
       );
-      console.log("New organisation details added");
 
       alertDev(
         `🚀 New organisation created: *${
@@ -249,8 +243,6 @@ router.post(
         { new: true }
       );
 
-      console.log("Org ID updated to admin record");
-
       // 11. Update Stats
       const stats = await mongoFunctions.find_one_and_update(
         "ADMIN_STATS",
@@ -258,7 +250,6 @@ router.post(
         { $inc: { no_of_orgs: 1 } },
         { upsert: true, returnDocument: "after" }
       );
-      console.log("Admin stats updated", stats);
 
       await redisFunctions.update_redis("ADMIN_STATS", stats);
       await redisFunctions.update_redis("ORGANISATIONS", org_data_up);
@@ -277,7 +268,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("add update department route hit");
     let data = req.body;
 
     // ✅ Validate input
@@ -302,8 +292,6 @@ router.post(
     if (!org_data || org_data.organisation_id !== data.organisation_id) {
       return res.status(400).send("Invalid Organisation Id");
     }
-
-    console.log("fetched org data from redis");
 
     // ✅ Access control check
     let find_access = await functions.hasAccess(
@@ -369,8 +357,6 @@ router.post(
         }
       );
 
-      console.log("department data updated");
-
       // ✅ Propagate name change to EMPLOYEE collection
       await mongoFunctions.update_many(
         "EMPLOYEE",
@@ -384,8 +370,6 @@ router.post(
           },
         }
       );
-
-      console.log("department name updated in employees");
 
       await redisFunctions.update_redis("ORGANISATIONS", department_data_up);
       return res.status(200).send({
@@ -412,8 +396,6 @@ router.post(
         { new: true }
       );
 
-      console.log("new department data added");
-
       await redisFunctions.update_redis("ORGANISATIONS", department_data_up);
       return res.status(200).send({
         success: "Department Added Successfully..!",
@@ -429,8 +411,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("🔁 Add/Update Designation route hit");
-
     let data = req.body;
 
     // ✅ Input validation
@@ -529,11 +509,8 @@ router.post(
         }
       );
 
-      console.log("✅ Designation updated in EMPLOYEE collection");
-
       // ✅ Update Redis
       await redisFunctions.update_redis("ORGANISATIONS", updated_org);
-      console.log("✅ Redis updated");
 
       // ✅ Separate Return for Update
       return res.status(200).send({
@@ -555,11 +532,8 @@ router.post(
       { new: true }
     );
 
-    console.log("✅ New designation added");
-
     // ✅ Update Redis
     await redisFunctions.update_redis("ORGANISATIONS", updated_org);
-    console.log("✅ Redis updated");
 
     // ✅ Separate Return for Add
     return res.status(200).send({
@@ -575,7 +549,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("add update role route hit");
     let data = req.body;
 
     // Validate data
@@ -804,7 +777,6 @@ router.post(
       project,
       { employee_id: -1 }
     );
-    console.log("organisation data fetched in universal route");
     let today = new Date();
     let tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1); // Set to tomorrow
@@ -844,7 +816,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("add update leave route hit");
     let data = req.body;
 
     // Validate data
@@ -1037,7 +1008,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get team for task route hit");
     const data = req.body;
     const roleName = req.employee.admin_type;
 
@@ -1103,7 +1073,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get team for attendance route hit");
     const data = req.body;
     const roleName = req.employee.admin_type;
 
@@ -1167,7 +1136,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get team for project route hit");
     const roleName = req.employee.admin_type;
     const query = {
       organisation_id: req.employee.organisation_id,
@@ -1211,7 +1179,6 @@ router.post(
   "/update_token",
   Auth,
   Async(async (req, res) => {
-    console.log("update token route hit");
 
     const org_id = await mongoFunctions.find_one("ORGANISATIONS", {
       email: req.employee.email,
@@ -1246,7 +1213,6 @@ router.post(
       process.env.jwtPrivateKey,
       { expiresIn: "90d" }
     );
-    console.log("updated token");
 
     return res.status(200).send({
       success: token,
@@ -1257,7 +1223,6 @@ router.post(
 router.post(
   "/add_admin",
   Async(async (req, res) => {
-    console.log("add admin employee route hit");
 
     const data = req.body;
     var { error } = validations.add_admin_emp(data);
@@ -1354,7 +1319,6 @@ router.post(
       "EMPLOYEE",
       new_emp_data
     );
-    console.log("added admin in database");
 
     return res.status(200).send({
       success: "Success",
@@ -1369,7 +1333,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    console.log("add update holiday route hit");
 
     // Validate data
     const { error, value } = validations.add_holidays(req.body);
@@ -1577,7 +1540,6 @@ router.post(
     if (!req.file) {
       return res.status(400).send("No file uploaded.");
     }
-    console.log(req.file.size);
     // Check if file is within size limit
     if (req.file.size > 1 * 1024 * 1024) {
       return res.status(400).send("File size must be between 1 MB and 2 MB.");

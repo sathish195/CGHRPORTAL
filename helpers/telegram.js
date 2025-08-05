@@ -18,8 +18,6 @@ async function sendMessage(id, messaggio, token) {
       text: messaggio,
       parse_mode: "Markdown",
     });
-
-    console.log(`✅ Message sent to ${id}:`, response.data);
   } catch (err) {
     console.error(
       `❌ Failed to send message to ${id}:`,

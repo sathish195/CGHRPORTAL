@@ -47,7 +47,6 @@ router.post(
 
       { upsert: true, returnDocument: "after" }
     );
-    console.log("added super admin in database");
     await redisFunctions.update_redis("SUPER_ADMIN", new_s_admin);
 
     let super_admin_data = {
@@ -272,8 +271,6 @@ router.post(
       "EMPLOYEE",
       new_emp_data
     );
-
-    console.log("added admin in database");
     //add stats
     let stats = await mongoFunctions.find_one_and_update(
       "ADMIN_STATS",
@@ -288,7 +285,6 @@ router.post(
         returnDocument: "after",
       }
     );
-    console.log(stats);
     // if (!stats) {
     //   return res.status(400).send("Stats Update Failed..!!");
     // }

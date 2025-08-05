@@ -36,7 +36,6 @@ module.exports = {
 
     const isFromWeekend = fromDate.getDay() === 6 || fromDate.getDay() === 0; // Saturday is 6, Sunday is 0
     const isToWeekend = toDate.getDay() === 6 || toDate.getDay() === 0;
-    // console.log(isFromWeekend, isToWeekend);
     return isFromWeekend && isToWeekend;
   },
   get_time_diff_minutes: async (date1, date2) => {
@@ -118,7 +117,6 @@ module.exports = {
         totalDays++;
       }
     }
-    // console.log(totalDays);
     return totalDays;
   },
   add_overall_stats: async (object, date) => {
@@ -156,8 +154,6 @@ module.exports = {
         update,
         { upsert: true, returnDocument: "after" }
       );
-
-      // console.log("Result:", result);
     }
   },
 
@@ -183,12 +179,10 @@ module.exports = {
       "HOLIDAYS",
     ];
 
-    // console.log("Collections found:", collectionNames);
 
     for (const name of collectionNames) {
       await mongoFunctions.download_collection(name);
     }
-    // console.log("completed dumping");
     return true;
   },
   mongoRestore: async () => {
@@ -203,7 +197,6 @@ module.exports = {
       "HOLIDAYS",
     ];
 
-    console.log("Collections found:", collectionNames);
 
     for (const collection of collectionNames) {
       const filePath = path.join(
@@ -226,10 +219,6 @@ module.exports = {
       }
       let d = await mongoFunctions.delete_many(collection);
       let s = await mongoFunctions.insert_many_records(collection, docs);
-
-      console.log(
-        `✅ Restored ${docs.length} documents to collection: ${collection}`
-      );
     }
     return true;
   },

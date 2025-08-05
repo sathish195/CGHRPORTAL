@@ -3,14 +3,12 @@ const jwt = require("jsonwebtoken");
 module.exports = {
   Auth(req, res, next) {
     const token = req.headers["x-auth-token"];
-    console.log(token);
     if (!token) {
       return res.status(401).send({ message: "Token not provided" });
     }
     try {
       const decoded = jwt.verify(token, process.env.jwtPrivateKey);
       req.employee = decoded;
-      console.log(req.employee);
       if (req.employee.status === "disable") {
         return res
           .status(401)

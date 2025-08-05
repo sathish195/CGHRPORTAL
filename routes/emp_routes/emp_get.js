@@ -23,7 +23,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get profile route hit");
     const employee = req.employee;
     //find org
     let org_data = await redisFunctions.redisGet(
@@ -81,7 +80,7 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("emp universal route hit");
+    
     //check admin type
     const admin_types = ["1", "2", "3", "4"];
     if (!admin_types.includes(req.employee?.admin_type)) {
@@ -114,7 +113,7 @@ router.post(
     const birthdays = await stats.employees_with_birthday_today(
       req.employee.organisation_id
     );
-    console.log(birthdays);
+    
 
     let statss = await redisFunctions.redisGetAll(req.employee.employee_id);
     const now = new Date();
@@ -152,7 +151,6 @@ router.post(
       total_emp_count: total_emp_count,
       admin_controls: find_controls,
     };
-    console.log("dashboard data fetched successfully");
     return res.status(200).send(dashborad);
   })
 );
@@ -162,7 +160,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get tasks route hit");
 
     let data = req.body;
     const { error } = validations.get_tasks(data);
@@ -185,7 +182,6 @@ router.post(
             { employee_id: req.employee.employee_id },
           ],
         });
-        console.log(userRole);
         return res.status(200).send(findTask);
       }
       if (userRole === "2" || userRole === "1") {
@@ -197,7 +193,6 @@ router.post(
             $not: /in_active/i,
           },
         });
-        console.log(userRole);
         return res.status(200).send(findTask);
       }
       if (userRole === "3") {
@@ -255,7 +250,6 @@ router.post(
             $not: /in_active/i,
           },
         });
-        console.log(userRole);
         return res.status(200).send(findTask);
       } else if (userRole === "3") {
         findTask = await mongoFunctions.find("TASKS", {
@@ -294,7 +288,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get task by id route hit");
     let data = req.body;
     var { error } = validations.get_task_by_id(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -315,7 +308,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("get all tasks route hit");
     let data = req.body;
     const { error } = validations.get_all_tasks(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -451,7 +443,6 @@ router.post(
       limit,
       skip
     );
-    console.log("all tasks fetched successfully");
 
     return res.status(200).send(findTask);
   })
@@ -464,7 +455,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    console.log("leave applications route hit");
     let data = req.body;
     const { error } = validations.get_employee_leave_applications(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -554,7 +544,6 @@ router.post(
       { limit: 40 },
       { skip: data.skip }
     );
-    console.log("leave applications fetched successfully");
     return res.status(200).send(leaveApplications);
   })
 );
@@ -772,18 +761,15 @@ router.post(
   upload.single("Employees"),
   Async(async (req, res) => {
     try {
-      console.log("Uploaded file:", req.file.filename);
 
       if (!req.file) {
         return res.status(400).send("No File Uploaded.");
       }
-      console.log(req.file);
 
       // Read the uploaded Excel file
       const workbook = XLSX.readFile(req.file.path);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      console.log(jsonData);
 
       // Check if the user is authorized
       const org_data = await redisFunctions.redisGet(
