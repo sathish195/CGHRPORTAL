@@ -1017,7 +1017,13 @@ function add_update_events(data) {
       "date.base": "Date must be a valid ISO 8601 date",
       "date.format": "Date must be in ISO 8601 format",
     }),
-    type: Joi.string().trim().min(2).max(20).required(),
+    type: Joi.string()
+      .trim()
+      .min(2)
+      .max(20)
+      .pattern(/^[a-zA-Z0-9_-]+$/)
+      .required(),
+
     assigned_to: Joi.array().items(assignedTo).required(),
     event_id: Joi.string().trim().optional().allow("", null),
   });
@@ -1298,7 +1304,7 @@ function add_update_listings(data) {
             .required(),
         })
       )
-      .optional(),
+      .required(),
   });
 
   return schema.validate(data);
