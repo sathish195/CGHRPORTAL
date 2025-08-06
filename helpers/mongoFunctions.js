@@ -114,6 +114,26 @@ module.exports = {
       .skip(skip)
       .lean();
   },
+  lazy_loading_test: async (
+    collection,
+    condition,
+    select,
+    sort,
+    skip,
+    limit,
+    // batchSize
+  ) => {
+    return eval(collection)
+      .find(condition)
+      .select(select)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      // .batchSize(batchSize)
+      .lean()
+      .cursor(); // returns a streaming cursor
+  },
+
   aggregate: async (collection, pipeline) => {
     return await eval(collection).aggregate(pipeline);
   },
