@@ -96,11 +96,8 @@ router.post("/stream_emp_list", Auth, slowDown, async (req, res) => {
       break;
     }
 
-    for (const user of currentBatch) {
-      console.log(user);
-      res.write(JSON.stringify([user]) + "\n");
-      console.log(user);
-    }
+    console.log(currentBatch);
+    res.write(JSON.stringify([currentBatch]) + "\n");
 
     fetched += currentBatch.length;
     console.log("fetched___", fetched);
