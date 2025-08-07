@@ -1956,7 +1956,7 @@ router.post(
       (entry) => entry.employee_id === req.employee.employee_id
     );
 
-    return res.status(200).send({ assigned: isAssigned });
+    return res.status(200).send({ access: isAssigned });
   })
 );
 
