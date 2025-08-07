@@ -218,6 +218,14 @@ router.post(
             admin_type: "4",
           },
         ],
+        access_controls: [
+          {
+            control_id: functions.get_random_string("CONTROL", 5, true),
+            name: "postings",
+            status: false,
+            assigned_to: [],
+          },
+        ],
       };
 
       org_data_up = await mongoFunctions.create_new_record(
@@ -1818,6 +1826,137 @@ router.post(
         }
       });
     });
+  })
+);
+//---------access control for postings
+router.post(
+  "/update_access_controls",
+  Auth,
+  rateLimit(60, 40),
+  Async(async (req, res) => {
+    const rawInput = req.body;
+
+    // 1. Validate input
+    const { error, value: data } = validations.access_control(rawInput);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const { admin_type } = req.employee;
+
+    // 2. Allow only admin_type 1 or 2
+    if (!["1", "2"].includes(admin_type)) {
+      return res.status(403).send("Unauthorized: Invalid admin type");
+    }
+
+    // 3. Validate organisation
+    const org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+
+    if (
+      !org_data ||
+      org_data.organisation_id !== req.employee.organisation_id
+    ) {
+      return res.status(400).send("Invalid Organisation ID");
+    }
+
+    // 6. 🔄 Update Existing Control
+    if (data.control_id.length <= 2) {
+      return res.status(400).send("Control ID required for update");
+    }
+
+    const current_control = org_data.access_controls.find(
+      (e) => e.control_id.toLowerCase() === data.control_id.toLowerCase()
+    );
+    if (!current_control) {
+      return res.status(400).send("Control Id Doesn't Exist");
+    }
+
+    const old_emp_ids = current_control.assigned_to.map((e) => e.employee_id);
+    const new_emp_ids = data.assigned_to.map((e) => e.employee_id);
+
+    // 7. Check for duplicate employee assignments
+    const idCountMap = {};
+    new_emp_ids.forEach((id) => {
+      idCountMap[id] = (idCountMap[id] || 0) + 1;
+    });
+
+    const duplicate_ids = Object.keys(idCountMap).filter(
+      (id) => idCountMap[id] > 1
+    );
+
+    const duplicate_with_names = duplicate_ids.map((id) => {
+      const emp = data.assigned_to.find((e) => e.employee_id === id);
+      return `${emp?.employee_name || "Unknown"} (${id})`;
+    });
+
+    if (duplicate_with_names.length > 0) {
+      return res
+        .status(400)
+        .send(
+          `Employee(s) already assigned: ${duplicate_with_names.join(", ")}`
+        );
+    }
+
+    // 8. Perform Update (upsert ensures insert if not found — optional)
+    // ✅ Update department name in ORGANISATIONS
+    control_data_up = await mongoFunctions.find_one_and_update(
+      "ORGANISATIONS",
+      {
+        organisation_id: org_data.organisation_id,
+        "access_controls.control_id": data.control_id,
+      },
+      {
+        $set: {
+          "access_controls.$[dep].status": data.status,
+          "access_controls.$[dep].assigned_to": data.assigned_to,
+        },
+      },
+      {
+        arrayFilters: [{ "dep.control_id": data.control_id }],
+        new: true,
+      }
+    );
+    await redisFunctions.update_redis("ORGANISATIONS", control_data_up);
+
+    return res.status(200).send({ message: "Control Updated Successfully" });
+  })
+);
+
+//get access controls
+
+router.post(
+  "/find_access",
+  Auth,
+  slowDown,
+  Async(async (req, res) => {
+    // 3. Validate organisation
+    const org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+
+    if (
+      !org_data ||
+      org_data.organisation_id !== req.employee.organisation_id
+    ) {
+      return res.status(400).send("Invalid Organisation ID");
+    }
+
+    const current_control = org_data.access_controls.find(
+      (e) => e.control_id.toLowerCase() === data.control_id.toLowerCase()
+    );
+    if (!current_control) {
+      return res.status(400).send("Control Id Doesn't Exist");
+    }
+    // Check if current employee is in assigned_to
+    const isAssigned = current_control.assigned_to?.some(
+      (entry) => entry.employee_id === req.employee.employee_id
+    );
+
+    return res.status(200).send({ assigned: isAssigned });
   })
 );
 

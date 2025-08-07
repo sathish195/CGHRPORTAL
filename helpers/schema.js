@@ -1320,6 +1320,20 @@ function get_listings(data) {
   });
   return schema.validate(data);
 }
+//get access control
+function access_control(data) {
+  const assigned_to = Joi.object({
+    employee_id: Joi.string().required(),
+    employee_name: Joi.string().required(),
+  });
+  const schema = Joi.object({
+    status: Joi.boolean().required(),
+    control_id: Joi.string().trim().min(3).max(70).required().allow(""),
+    assigned_to: Joi.array().items(assigned_to).required(),
+  });
+
+  return schema.validate(data);
+}
 
 // Export the functions
 module.exports = {
@@ -1381,4 +1395,5 @@ module.exports = {
   get_postings,
   add_update_listings,
   get_listings,
+  access_control,
 };

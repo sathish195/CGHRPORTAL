@@ -37,6 +37,7 @@ const ORGANISATION_Schema = new mongoose.Schema(
     // { type: Array, default: [] },
     // designations: {, default: [] },
     designations: { type: Array, default: [] },
+    access_controls: { type: Array, default: [] },
 
     organisation_details: { type: Object, default: {} },
     images: { type: Object, default: {} },

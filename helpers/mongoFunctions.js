@@ -16,6 +16,7 @@ const { TEMPLATES } = require("../models/templates");
 const { EMAILS } = require("../models/emails");
 const { NOTIFICATIONS } = require("../models/notifications");
 const { LISTINGS } = require("../models/listings");
+const { ACCESS_CONTROLS } = require("../models/access_controls");
 
 const fs = require("fs");
 const path = require("path");
@@ -120,18 +121,20 @@ module.exports = {
     select,
     sort,
     skip,
-    limit,
+    limit
     // batchSize
   ) => {
-    return eval(collection)
-      .find(condition)
-      .select(select)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      // .batchSize(batchSize)
-      .lean()
-      .cursor(); // returns a streaming cursor
+    return (
+      eval(collection)
+        .find(condition)
+        .select(select)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        // .batchSize(batchSize)
+        .lean()
+        .cursor()
+    ); // returns a streaming cursor
   },
 
   aggregate: async (collection, pipeline) => {
