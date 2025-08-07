@@ -1946,7 +1946,7 @@ router.post(
     }
 
     const current_control = org_data.access_controls.find(
-      (e) => e.control_id.toLowerCase() === data.control_id.toLowerCase()
+      (e) => e.name.toLowerCase() === "postings"
     );
     if (!current_control) {
       return res.status(400).send("Control Id Doesn't Exist");

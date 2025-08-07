@@ -1328,7 +1328,7 @@ function access_control(data) {
   });
   const schema = Joi.object({
     status: Joi.boolean().required(),
-    control_id: Joi.string().trim().min(3).max(70).required().allow(""),
+    control_id: Joi.string().trim().min(3).max(70).required(),
     assigned_to: Joi.array().items(assigned_to).required(),
   });
 
