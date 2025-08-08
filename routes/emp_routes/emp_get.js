@@ -158,7 +158,9 @@ router.post(
       today_attendance: today_attendance,
       total_emp_count: total_emp_count,
       admin_controls: find_controls,
-      access: isAssigned,
+      access: {
+        postings: isAssigned,
+      },
     };
     return res.status(200).send(dashborad);
   })
