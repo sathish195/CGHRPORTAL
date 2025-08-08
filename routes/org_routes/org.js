@@ -1920,44 +1920,15 @@ router.post(
     );
     await redisFunctions.update_redis("ORGANISATIONS", control_data_up);
 
-    return res.status(200).send({ message: "Control Updated Successfully" });
+    return res
+      .status(200)
+      .send({
+        message: "Control Updated Successfully",
+        controls: control_data_up.access_controls,
+      });
   })
 );
 
 //get access controls
-
-router.post(
-  "/find_access",
-  Auth,
-  slowDown,
-  Async(async (req, res) => {
-    // 3. Validate organisation
-    const org_data = await redisFunctions.redisGet(
-      "CRM_ORGANISATIONS",
-      req.employee.organisation_id,
-      true
-    );
-
-    if (
-      !org_data ||
-      org_data.organisation_id !== req.employee.organisation_id
-    ) {
-      return res.status(400).send("Invalid Organisation ID");
-    }
-
-    const current_control = org_data.access_controls.find(
-      (e) => e.name.toLowerCase() === "postings"
-    );
-    if (!current_control) {
-      return res.status(400).send("Control Id Doesn't Exist");
-    }
-    // Check if current employee is in assigned_to
-    const isAssigned = current_control.assigned_to?.some(
-      (entry) => entry.employee_id === req.employee.employee_id
-    );
-
-    return res.status(200).send({ access: isAssigned });
-  })
-);
 
 module.exports = router;
