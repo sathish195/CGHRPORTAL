@@ -80,7 +80,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-    
     //check admin type
     const admin_types = ["1", "2", "3", "4"];
     if (!admin_types.includes(req.employee?.admin_type)) {
@@ -113,7 +112,6 @@ router.post(
     const birthdays = await stats.employees_with_birthday_today(
       req.employee.organisation_id
     );
-    
 
     let statss = await redisFunctions.redisGetAll(req.employee.employee_id);
     const now = new Date();
@@ -141,6 +139,16 @@ router.post(
       "ADMIN_CONTROLS",
       true
     );
+    const current_control = org_data.access_controls.find(
+      (e) => e.name.toLowerCase() === "postings"
+    );
+    if (!current_control) {
+      return res.status(400).send("Control Id Doesn't Exist");
+    }
+    // Check if current employee is in assigned_to
+    const isAssigned = current_control.assigned_to?.some(
+      (entry) => entry.employee_id === req.employee.employee_id
+    );
 
     let dashborad = {
       recent_hires: recent_hires,
@@ -150,6 +158,9 @@ router.post(
       today_attendance: today_attendance,
       total_emp_count: total_emp_count,
       admin_controls: find_controls,
+      access: {
+        postings: isAssigned,
+      },
     };
     return res.status(200).send(dashborad);
   })
@@ -160,7 +171,6 @@ router.post(
   Auth,
   slowDown,
   Async(async (req, res) => {
-
     let data = req.body;
     const { error } = validations.get_tasks(data);
     if (error) return res.status(400).send(error.details[0].message);
@@ -761,7 +771,6 @@ router.post(
   upload.single("Employees"),
   Async(async (req, res) => {
     try {
-
       if (!req.file) {
         return res.status(400).send("No File Uploaded.");
       }

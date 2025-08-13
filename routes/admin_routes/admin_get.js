@@ -63,6 +63,52 @@ router.post(
     return res.status(200).send({ employee: emp });
   })
 );
+//------------------dummy route for emp list with stream-------------------------
+router.post("/stream_emp_list", Auth, slowDown, async (req, res) => {
+  const totalLimit = parseInt(req.query.limit || "50");
+  const offset = parseInt(req.query.offset || "0");
+  const batchSize = 10;
+  const delay = 500; // milliseconds between batches
+
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Transfer-Encoding", "chunked");
+
+  let fetched = 0;
+  const limit = Math.min(batchSize, totalLimit - fetched); // limit
+  const skip = offset + fetched; // skip
+  console.log(skip, limit);
+
+  while (fetched < totalLimit) {
+    const currentBatchCursor = await mongoFunctions.lazy_loading_test(
+      "EMPLOYEE",
+      { organisation_id: "O9593C6393261F1" }, // filter condition
+      {}, // projection
+      {}, // sort
+      limit,
+      skip
+    );
+
+    const currentBatch =
+      (await currentBatchCursor.toArray?.()) || currentBatchCursor;
+
+    // Safety check if not array or empty
+    if (!Array.isArray(currentBatch) || currentBatch.length === 0) {
+      break;
+    }
+
+    console.log(currentBatch.length);
+    res.write(JSON.stringify(currentBatch) + "\n");
+
+    fetched += currentBatch.length;
+    console.log("fetched___", fetched);
+
+    // await new Promise((resolve) => setTimeout(resolve));
+  }
+  console.log(fetched);
+
+  res.end();
+});
+
 //-----------------get emp by lazy loading--------
 router.post(
   "/get_employee_list",
@@ -177,7 +223,6 @@ router.post(
           status: "in_progress",
           task_status: { $not: /in_active/i },
         });
-        
       } else {
         tasks = await mongoFunctions.find("TASKS", {
           organisation_id: req.employee.organisation_id,

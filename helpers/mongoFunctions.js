@@ -16,6 +16,8 @@ const { TEMPLATES } = require("../models/templates");
 const { EMAILS } = require("../models/emails");
 const { NOTIFICATIONS } = require("../models/notifications");
 const { LISTINGS } = require("../models/listings");
+const { ACCESS_CONTROLS } = require("../models/access_controls");
+const { ORG_LEVEL_CONTROLS } = require("../models/org_level_controls");
 
 const fs = require("fs");
 const path = require("path");
@@ -114,6 +116,28 @@ module.exports = {
       .skip(skip)
       .lean();
   },
+  lazy_loading_test: async (
+    collection,
+    condition,
+    select,
+    sort,
+    skip,
+    limit
+    // batchSize
+  ) => {
+    return (
+      eval(collection)
+        .find(condition)
+        .select(select)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        // .batchSize(batchSize)
+        .lean()
+        .cursor()
+    ); // returns a streaming cursor
+  },
+
   aggregate: async (collection, pipeline) => {
     return await eval(collection).aggregate(pipeline);
   },
