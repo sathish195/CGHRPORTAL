@@ -1768,6 +1768,7 @@ router.post(
     return res.status(400).send("Restore Failed..!");
   })
 );
+//set org data in redis
 router.post(
   "/set_universal_data",
   Auth,
@@ -1780,6 +1781,22 @@ router.post(
     return res
       .status(200)
       .send("Universal data stored in redis successfully..!");
+  })
+);
+//delete org data from redis
+router.post(
+  "/unset_universal_data",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let s = await redisFunctions.deleteOrganisationFromRedis(
+      req.employee.organisation_id
+    );
+    if (s) {
+      return res
+        .status(200)
+        .send("Universal data stored in redis successfully..!");
+    }
   })
 );
 //mongo backup test
