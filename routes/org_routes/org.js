@@ -1920,15 +1920,62 @@ router.post(
     );
     await redisFunctions.update_redis("ORGANISATIONS", control_data_up);
 
-    return res
-      .status(200)
-      .send({
-        message: "Control Updated Successfully",
-        controls: control_data_up.access_controls,
-      });
+    return res.status(200).send({
+      message: "Control Updated Successfully",
+      controls: control_data_up.access_controls,
+    });
   })
 );
 
-//get access controls
+//add update controls
+
+router.post(
+  "/add_update_org_admin_controls",
+  Auth,
+  Async(async (req, res) => {
+    const data = req.body;
+
+    // Validate input
+    var { error } = validations.org_level_controls(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // Only Super Admin can perform this
+    let find_s_admin = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+
+    if (!find_s_admin || req.employee.email !== find_s_admin.email) {
+      return res.status(403).send("Access Denied!!");
+    }
+
+    let controls_object = {
+      email: req.employee.email,
+      login: data.login,
+      add_organisation: data.add_organisation,
+      add_admin: data.add_admin,
+      suspend_organisation: data.suspend_organisation,
+      approve_organisation: data.approve_organisation,
+      billing: data.billing,
+    };
+
+    // Update or insert admin controls
+    const updated_controls = await mongoFunctions.find_one_and_update(
+      "ADMIN_CONTROLS",
+      { email: req.employee.email },
+      { $set: controls_object },
+      { upsert: true, new: true }
+    );
+
+    // Update Redis
+    await redisFunctions.update_redis("ADMIN_CONTROLS", updated_controls);
+
+    return res.status(200).send({
+      message: "Admin Controls Added Successfully",
+      admin_controls: updated_controls,
+    });
+  })
+);
 
 module.exports = router;

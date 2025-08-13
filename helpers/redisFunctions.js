@@ -59,6 +59,18 @@ module.exports = {
         (err, res) => {}
       );
       return true;
+    } else if (COLLECTION === "ORG_LEVEL_CONTROLS") {
+      obj._id = undefined;
+      obj.__v = undefined;
+      obj.createdAt = undefined;
+      obj.updatedAt = undefined;
+      await client.hSet(
+        "CGHR_ORG_LEVEL_CONTROLS",
+        "ORG_LEVEL_CONTROLS",
+        JSON.stringify(obj),
+        (err, res) => {}
+      );
+      return true;
     } else if (COLLECTION === "ADMIN_STATS") {
       obj._id = undefined;
       obj.__v = undefined;
@@ -272,7 +284,6 @@ module.exports = {
 
       // Retrieve the updated status counts for verification
       // const updatedStatusCounts = await client.hGetAll(key);
-      
     } catch (error) {
       console.error("Error managing task status:", error.message);
     }
@@ -302,12 +313,10 @@ module.exports = {
         await client.hIncrBy(key, prev_status, -1); // Decrement previous status
 
         await client.hIncrBy(key, current_status, 1); // Increment current status
-
       }
 
       // Retrieve the updated status counts for verification
       // const updatedStatusCounts = await client.hGetAll(key);
-      
     } catch (error) {
       console.error("Error managing task status:", error.message);
     }
@@ -320,7 +329,6 @@ module.exports = {
       const exists = await client.exists(key);
 
       if (!exists) {
-       
         return;
       }
 
@@ -328,14 +336,11 @@ module.exports = {
         // Remove specific status from the hash
         const removed = await client.hDel(key, current_status);
         if (removed) {
-          
         } else {
-          
         }
       } else {
         // Delete the entire hash
         await client.del(key);
-        
       }
     } catch (error) {
       console.error("Error removing task status:", error.message);
