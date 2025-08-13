@@ -71,7 +71,7 @@ router.post(
       ];
     }
 
-    // ✅ Fetch notifications with pagination
+    // ✅ Fetch notifications with lazy loading
     const [notifications, total] = await Promise.all([
       mongoFunctions.lazy_loading(
         "NOTIFICATIONS",
