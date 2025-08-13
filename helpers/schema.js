@@ -1335,6 +1335,123 @@ function access_control(data) {
   return schema.validate(data);
 }
 
+function org_level_controls(data) {
+  const toggleSchema = Joi.boolean(); // ON/OFF for toggles
+  const yesNoSchema = Joi.boolean(); // YES/NO for simple toggles
+
+  const scopeSchema = Joi.object({
+    reportingManager: yesNoSchema,
+    allEmployees: yesNoSchema,
+    team: yesNoSchema,
+  });
+
+  const typeSchema = Joi.object({
+    view: toggleSchema,
+    edit: toggleSchema,
+    scope: scopeSchema.optional(), // Optional scope
+  });
+
+  const simpleTypeSchema = Joi.object({
+    yesNo: yesNoSchema,
+  });
+
+  const allAssignedSchema = Joi.object({
+    all: Joi.object({
+      view: toggleSchema,
+      edit: toggleSchema,
+    }),
+    assignedTo: Joi.object({
+      view: toggleSchema,
+      edit: toggleSchema,
+    }),
+  });
+
+  // Return schema instead of overwriting the function name
+  const schema = Joi.object({
+    leaveApplications: Joi.object({
+      2: typeSchema.keys({
+        scope: Joi.object({
+          reportingManager: yesNoSchema,
+          allEmployees: yesNoSchema,
+        }),
+      }),
+      3: typeSchema.keys({
+        scope: Joi.object({
+          team: yesNoSchema,
+          reportingManager: yesNoSchema,
+        }),
+      }),
+      4: typeSchema,
+    }),
+    attendance: Joi.object({
+      2: typeSchema.keys({
+        scope: Joi.object({
+          reportingManager: yesNoSchema,
+          allEmployees: yesNoSchema,
+        }),
+      }),
+      3: typeSchema.keys({
+        scope: Joi.object({
+          team: yesNoSchema,
+          reportingManager: yesNoSchema,
+        }),
+      }),
+      4: typeSchema,
+    }),
+    rm: Joi.object({
+      2: simpleTypeSchema,
+      3: simpleTypeSchema,
+      4: simpleTypeSchema,
+    }),
+    addEmployee: Joi.object({
+      2: simpleTypeSchema,
+      3: simpleTypeSchema,
+      4: simpleTypeSchema,
+    }),
+    employeeList: Joi.object({
+      2: typeSchema,
+      3: typeSchema,
+      4: typeSchema,
+    }),
+    managementSettings: Joi.object({
+      2: typeSchema,
+      3: typeSchema,
+      4: typeSchema,
+    }),
+    companySettings: Joi.object({
+      2: typeSchema,
+      3: typeSchema,
+      4: typeSchema,
+    }),
+    changePassword: Joi.object({
+      2: simpleTypeSchema,
+      3: simpleTypeSchema,
+      4: simpleTypeSchema,
+    }),
+    leads: Joi.object({
+      2: allAssignedSchema,
+      3: allAssignedSchema,
+      4: allAssignedSchema,
+    }),
+    posts: Joi.object({
+      2: typeSchema,
+      3: typeSchema,
+      4: typeSchema,
+    }),
+    calendar: Joi.object({
+      2: allAssignedSchema,
+      3: allAssignedSchema,
+      4: allAssignedSchema,
+    }),
+    projects: Joi.object({
+      2: allAssignedSchema,
+      3: allAssignedSchema,
+      4: allAssignedSchema,
+    }),
+  });
+  return schema.validate(data);
+}
+
 // Export the functions
 module.exports = {
   emp_login,
@@ -1396,4 +1513,5 @@ module.exports = {
   add_update_listings,
   get_listings,
   access_control,
+  org_level_controls,
 };

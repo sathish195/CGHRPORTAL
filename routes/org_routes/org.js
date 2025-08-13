@@ -1944,55 +1944,61 @@ router.post(
   })
 );
 
-//add update controls
+//add update org level admin controls
 
 router.post(
   "/add_update_org_admin_controls",
   Auth,
   Async(async (req, res) => {
-    const data = req.body;
+    const rawInput = req.body;
 
-    // Validate input
-    var { error } = validations.org_level_controls(data);
+    // 1. Validate input
+    const { error, value: data } = validations.org_level_controls(rawInput);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // Only Super Admin can perform this
-    let find_s_admin = await redisFunctions.redisGet(
+    // 2. Ensure only Admin can perform the action
+    const find_s_admin = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
     );
 
-    if (!find_s_admin || req.employee.email !== find_s_admin.email) {
-      return res.status(403).send("Access Denied!!");
+    if (!find_s_admin) {
+      return res.status(403).send("Organisation Not Found!!");
+    }
+    if (!req.employee.admin_type == "1") {
+      return res.status(400).send("Access Denied!!");
     }
 
-    let controls_object = {
+    // 3. Build controls object
+    const controls_object = {
+      organisation_id: req.employee.organisation_id,
+      organisation_name: find_s_admin.organisation_name,
       email: req.employee.email,
-      login: data.login,
-      add_organisation: data.add_organisation,
-      add_admin: data.add_admin,
-      suspend_organisation: data.suspend_organisation,
-      approve_organisation: data.approve_organisation,
-      billing: data.billing,
+      employee_id: req.employee.employee_id,
+      controls: data,
     };
 
+    // 4. Upsert into MongoDB
     // Update or insert admin controls
     const updated_controls = await mongoFunctions.find_one_and_update(
-      "ADMIN_CONTROLS",
-      { email: req.employee.email },
+      "ORG_LEVEL_CONTROLS",
+      { organisation_id: req.employee.organisation_id },
       { $set: controls_object },
       { upsert: true, new: true }
     );
 
-    // Update Redis
-    await redisFunctions.update_redis("ADMIN_CONTROLS", updated_controls);
+    // 5. Update Redis
+    await redisFunctions.update_redis("ORG_LEVEL_CONTROLS", updated_controls);
 
     return res.status(200).send({
-      message: "Admin Controls Added Successfully",
+      message: "Admin Controls Added/Updated Successfully",
       admin_controls: updated_controls,
     });
   })
 );
+
+// get org level controls from redis
+
 
 module.exports = router;
