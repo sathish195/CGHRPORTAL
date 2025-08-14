@@ -1999,6 +1999,39 @@ router.post(
 );
 
 // get org level controls from redis
+router.post(
+  "/get_org_admin_controls",
+  Auth,
+  Async(async (req, res) => {
+    // 2. Ensure only Admin can perform the action
+    const find_s_admin = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
 
+    if (!find_s_admin) {
+      return res.status(403).send("Organisation Not Found!!");
+    }
+    let controls;
+    controls = await redisFunctions.redisGet(
+      "CGHR_ORG_LEVEL_CONTROLS",
+      req.employee.organisation_id,
+      true
+    );
+    if (!controls) {
+      console.log("fetched");
+      //get from db
+      controls = await mongoFunctions.find_one("ORG_LEVEL_CONTROLS", {
+        organisation_id: req.employee.organisation_id,
+      });
+
+      // 5. Update Redis
+      await redisFunctions.update_redis("ORG_LEVEL_CONTROLS", controls);
+    }
+
+    return res.status(200).send(controls);
+  })
+);
 
 module.exports = router;

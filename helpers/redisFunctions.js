@@ -66,7 +66,7 @@ module.exports = {
       obj.updatedAt = undefined;
       await client.hSet(
         "CGHR_ORG_LEVEL_CONTROLS",
-        "ORG_LEVEL_CONTROLS",
+        obj.organisation_id,
         JSON.stringify(obj),
         (err, res) => {}
       );
