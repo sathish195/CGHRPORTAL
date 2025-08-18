@@ -1073,6 +1073,7 @@ function add_leads(data) {
       email: Joi.string().email().optional(),
     }).optional(),
     lead_name: Joi.string().trim().min(3).max(30).optional(),
+    contact_number: Joi.string().trim().allow(null, "").required(),
     email: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
