@@ -2019,7 +2019,7 @@ router.post(
       req.employee.organisation_id,
       true
     );
-    
+
     if (!controls) {
       console.log("fetched");
       //get from db
@@ -2032,6 +2032,147 @@ router.post(
     }
 
     return res.status(200).send(controls);
+  })
+);
+//add update designation updated route
+
+router.post(
+  "/add_update_designation_new",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let data = req.body;
+
+    // ✅ Input validation
+    const { error } = validations.add_update_designation_new(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // ✅ Access Control: Only Director or Manager
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director or Manager can access this endpoint");
+    }
+
+    // ✅ Get Organisation Data from Redis
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+
+    if (!org_data || org_data.organisation_id !== data.organisation_id) {
+      return res.status(400).send("Invalid Organisation ID");
+    }
+
+    // ✅ Check feature access
+    const hasModuleAccess = await functions.hasAccess(
+      org_data.billing_type.type,
+      "controls"
+    );
+    if (!hasModuleAccess) {
+      return res.status(403).send("Access Denied For This Feature");
+    }
+
+    // ✅ Determine if it's an update or add
+    const isUpdate =
+      data.designation_id && data.designation_id.toString().length > 9;
+
+    // ✅ Duplicate Check
+    if (isUpdate) {
+      const duplicate = org_data.designations.find(
+        (e) =>
+          e.designation_name.toLowerCase() ===
+            data.designation_name.toLowerCase() &&
+          e.designation_id !== data.designation_id
+      );
+      if (duplicate) {
+        return res
+          .status(400)
+          .send("Another designation with the same name already exists");
+      }
+    } else {
+      const duplicate = org_data.designations.find(
+        (e) =>
+          e.designation_name.toLowerCase() ===
+          data.designation_name.toLowerCase()
+      );
+      if (duplicate) {
+        return res.status(400).send("Designation already exists");
+      }
+    }
+
+    let updated_org;
+
+    // ✅ Handle Update
+    if (isUpdate) {
+      updated_org = await mongoFunctions.find_one_and_update(
+        "ORGANISATIONS",
+        {
+          organisation_id: org_data.organisation_id,
+          "designations.designation_id": data.designation_id,
+        },
+        {
+          $set: {
+            "designations.$[d].designation_name":
+              data.designation_name.toLowerCase(),
+            "designations.$[d].controls": data.controls,
+          },
+        },
+        {
+          arrayFilters: [{ "d.designation_id": data.designation_id }],
+          new: true,
+        }
+      );
+
+      // ✅ Update all employees with new designation name
+      await mongoFunctions.update_many(
+        "EMPLOYEE",
+        {
+          organisation_id: org_data.organisation_id,
+          "work_info.designation_id": data.designation_id,
+        },
+        {
+          $set: {
+            "work_info.designation_name": data.designation_name.toLowerCase(),
+            controls: data.controls,
+          },
+        }
+      );
+
+      // ✅ Update Redis
+      await redisFunctions.update_redis("ORGANISATIONS", updated_org);
+
+      // ✅ Separate Return for Update
+      return res.status(200).send({
+        message: "Designation updated successfully",
+        data: updated_org.designations,
+      });
+    }
+
+    // ✅ Handle Add
+    const new_designation = {
+      designation_id: functions.get_random_string("D", 10, true),
+      designation_name: data.designation_name.toLowerCase(),
+      controls: data.controls,
+    };
+
+    updated_org = await mongoFunctions.find_one_and_update(
+      "ORGANISATIONS",
+      { organisation_id: org_data.organisation_id },
+      { $push: { designations: new_designation } },
+      { new: true }
+    );
+
+    // ✅ Update Redis
+    await redisFunctions.update_redis("ORGANISATIONS", updated_org);
+
+    // ✅ Separate Return for Add
+    return res.status(200).send({
+      message: "Designation added successfully",
+      data: updated_org.designations,
+    });
   })
 );
 

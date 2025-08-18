@@ -636,6 +636,35 @@ router.post(
       { employee_id: data.employee_id },
       { $set: new_emp_data }
     );
+    // Update emp name in attendance
+    if (
+      (
+        find_emp.basic_info.first_name + find_emp.basic_info.last_name
+      ).toLowerCase() !==
+      (
+        new_emp_data.basic_info.first_name + new_emp_data.basic_info.last_name
+      ).toLowerCase()
+    ) {
+      let update_emp_name_in_attendance =
+        await mongoFunctions.find_one_and_update(
+          "ATTENDANCE",
+          {
+            organisation_id: data.organisation_id,
+            employee_id: data.employee_id,
+          },
+          {
+            employee_name: `${new_emp_data.basic_info.first_name} ${new_emp_data.basic_info.last_name}`,
+          },
+          { returnDocument: "after" }
+        );
+
+      if (!update_emp_name_in_attendance) {
+        return res
+          .status(400)
+          .send("Failed to update employee name in attendance");
+      }
+    }
+
     //update stats
     if (
       find_emp.work_info.employee_status.toLowerCase() === "active" &&

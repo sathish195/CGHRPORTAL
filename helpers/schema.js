@@ -154,21 +154,141 @@ function add_update_department(data) {
   return schema.validate(data);
 }
 function add_update_designation(data) {
-  // const leaves_obj = Joi.object({
-  //     leave_name: Joi.string().required().min(4).max(15),
-  //     total_leaves: Joi.number().required().min(1).max(10),
-  //   });
   const schema = Joi.object({
     organisation_id: Joi.string().min(10).max(18).required(),
     designation_name: Joi.string().trim().strip().min(5).max(40).required(),
     designation_id: Joi.string().allow(null, "").optional(),
-    // leaves:Joi.array().items(leaves_obj).required(),
-    // leave_id:Joi.string().allow(null, "").optional(),
-    // leave_name: Joi.string().trim().strip().allow(null, "").optional(),
-    // max_leaves:Joi.number().allow(null, "").optional().optional(),
   });
   return schema.validate(data);
 }
+
+function add_update_designation_new(data) {
+  const viewSchema = Joi.object({
+    leaveApplications: Joi.object({
+      view: Joi.boolean().required(),
+      scope: Joi.object({
+        reportingManager: Joi.boolean().required(),
+        allEmployees: Joi.boolean().required(),
+        team: Joi.boolean().required(),
+      }).required(),
+    }),
+    attendance: Joi.object({
+      view: Joi.boolean().required(),
+      scope: Joi.object({
+        reportingManager: Joi.boolean().required(),
+        allEmployees: Joi.boolean().required(),
+        team: Joi.boolean().required(),
+      }).required(),
+    }),
+    employeeList: Joi.object({
+      view: Joi.boolean().required(),
+      scope: Joi.object({
+        reportingManager: Joi.boolean().required(),
+        allEmployees: Joi.boolean().required(),
+        team: Joi.boolean().required(),
+      }).required(),
+    }),
+    calendar: Joi.object({
+      view: Joi.boolean().required(),
+      scope: Joi.object({
+        all: Joi.boolean().required(),
+        assignedTo: Joi.boolean().required(),
+      }).required(),
+    }),
+    projects: Joi.object({
+      view: Joi.boolean().required(),
+      scope: Joi.object({
+        all: Joi.boolean().required(),
+        assignedTo: Joi.boolean().required(),
+      }).required(),
+    }),
+    leads: Joi.object({
+      view: Joi.boolean().required(),
+      scope: Joi.object({
+        all: Joi.boolean().required(),
+        assignedTo: Joi.boolean().required(),
+      }).required(),
+    }),
+
+    // ✅ Only Boolean (no object)
+    rm: Joi.boolean().required(),
+    addEmployee: Joi.boolean().required(),
+    managementSettings: Joi.boolean().required(),
+    companySettings: Joi.boolean().required(),
+    changePassword: Joi.boolean().required(),
+    posts: Joi.boolean().required(),
+  });
+
+  const editSchema = Joi.object({
+    leaveApplications: Joi.object({
+      edit: Joi.boolean().required(),
+      scope: Joi.object({
+        reportingManager: Joi.boolean().required(),
+        allEmployees: Joi.boolean().required(),
+        team: Joi.boolean().required(),
+      }).required(),
+    }),
+    attendance: Joi.object({
+      edit: Joi.boolean().required(),
+      scope: Joi.object({
+        reportingManager: Joi.boolean().required(),
+        allEmployees: Joi.boolean().required(),
+        team: Joi.boolean().required(),
+      }).required(),
+    }),
+    employeeList: Joi.object({
+      edit: Joi.boolean().required(),
+      scope: Joi.object({
+        reportingManager: Joi.boolean().required(),
+        allEmployees: Joi.boolean().required(),
+        team: Joi.boolean().required(),
+      }).required(),
+    }),
+    calendar: Joi.object({
+      edit: Joi.boolean().required(),
+      scope: Joi.object({
+        all: Joi.boolean().required(),
+        assignedTo: Joi.boolean().required(),
+      }).required(),
+    }),
+    projects: Joi.object({
+      edit: Joi.boolean().required(),
+      scope: Joi.object({
+        all: Joi.boolean().required(),
+        assignedTo: Joi.boolean().required(),
+      }).required(),
+    }),
+    leads: Joi.object({
+      edit: Joi.boolean().required(),
+      scope: Joi.object({
+        all: Joi.boolean().required(),
+        assignedTo: Joi.boolean().required(),
+      }).required(),
+    }),
+
+    // ✅ Only Boolean (no object)
+    rm: Joi.boolean().required(),
+    addEmployee: Joi.boolean().required(),
+    managementSettings: Joi.boolean().required(),
+    companySettings: Joi.boolean().required(),
+    changePassword: Joi.boolean().required(),
+    posts: Joi.boolean().required(),
+  });
+
+  const schema = Joi.object({
+    organisation_id: Joi.string().min(10).max(18).required(),
+    designation_name: Joi.string().trim().min(5).max(40).required(),
+    designation_id: Joi.string().allow(null, "").optional(),
+
+    controls: Joi.object({
+      view: viewSchema,
+      edit: editSchema,
+    }).required(),
+  });
+
+  return schema.validate(data);
+}
+
 function add_update_role(data) {
   const schema = Joi.object({
     organisation_id: Joi.string().min(10).max(18).required(),
@@ -1515,4 +1635,5 @@ module.exports = {
   get_listings,
   access_control,
   org_level_controls,
+  add_update_designation_new,
 };
