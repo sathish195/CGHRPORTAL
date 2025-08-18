@@ -645,18 +645,17 @@ router.post(
         new_emp_data.basic_info.first_name + new_emp_data.basic_info.last_name
       ).toLowerCase()
     ) {
-      let update_emp_name_in_attendance =
-        await mongoFunctions.find_one_and_update(
-          "ATTENDANCE",
-          {
-            organisation_id: data.organisation_id,
-            employee_id: data.employee_id,
-          },
-          {
-            employee_name: `${new_emp_data.basic_info.first_name} ${new_emp_data.basic_info.last_name}`,
-          },
-          { returnDocument: "after" }
-        );
+      let update_emp_name_in_attendance = await mongoFunctions.update_many(
+        "ATTENDANCE",
+        {
+          organisation_id: data.organisation_id,
+          employee_id: data.employee_id,
+        },
+        {
+          employee_name: `${new_emp_data.basic_info.first_name} ${new_emp_data.basic_info.last_name}`,
+        },
+        { returnDocument: "after" }
+      );
 
       if (!update_emp_name_in_attendance) {
         return res
