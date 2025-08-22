@@ -151,10 +151,10 @@ router.post(
         {
           organisation_id: req.employee.organisation_id,
           employee_id: data.employee_id.toUpperCase(),
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           // organisation_id: req.employee.organisation_id,
           "basic_info.email": data.email.toLowerCase(),
         },
@@ -181,38 +181,38 @@ router.post(
     let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           // organisation_id: req.employee.organisation_id,
           "contact_details.personal_email_address":
             data.personal_email_address.toLowerCase(),
         },
 
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.pan": data.identity_info.pan,
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.aadhaar": data.identity_info.aadhaar,
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.uan": data.identity_info.uan,
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.passport": data.identity_info.passport_number,
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "contact_details.mobile_number": data.mobile_number,
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.emirates_id": data.identity_info.emirates_id,
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.labour_card_id": data.identity_info.labour_card_id,
         },
       ],
@@ -452,12 +452,12 @@ router.post(
     let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "basic_info.email": data.email.toLowerCase(),
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           // organisation_id: req.employee.organisation_id,
           "contact_details.personal_email_address":
             data.personal_email_address.toLowerCase(),
@@ -465,37 +465,37 @@ router.post(
         },
 
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.pan": data.identity_info.pan,
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.aadhaar": data.identity_info.aadhaar,
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.uan": data.identity_info.uan,
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.passport_number": data.identity_info.passport_number,
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "contact_details.mobile_number": data.mobile_number,
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.emirates_id": data.identity_info.emirates_id,
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.labour_card_id": data.identity_info.labour_card_id,
           employee_id: { $ne: data.employee_id },
         },

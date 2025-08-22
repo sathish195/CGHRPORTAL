@@ -846,7 +846,7 @@ router.post(
           "ATTENDANCE",
           {
             attendance_id:
-              functions.get_random_string("A", 3, true) + Date.now(),
+              functions.get_random_string("A", 5, true) + Date.now(),
             organisation_id: find_emp.organisation_id,
             employee_id: find_emp.employee_id,
             employee_name: `${find_emp.basic_info.first_name} ${find_emp.basic_info.last_name}`,
