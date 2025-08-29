@@ -334,6 +334,7 @@ const functions = require("./functions");
 const { alertDev } = require("./telegram");
 const { calculate_working_minutes } = require("./stats");
 const { checkPreferences } = require("joi");
+const redisFunctions = require("./redisFunctions");
 
 async function getCurrentDayRange() {
   const now = moment().tz("Asia/Kolkata");
@@ -609,55 +610,80 @@ async function updateStatusOfNotCheckouts() {
 async function updateStatusBasedOnHolidays() {
   try {
     const { start, end } = await getCurrentDayRange();
-    const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
-      createdAt: { $gt: start, $lte: end },
-    });
-
-    const employees = await mongoFunctions.find(
-      "EMPLOYEE",
-      {},
-      { createdAt: -1 },
-      {
-        employee_id: 1,
-        "work_info.employee_status": 1,
-        organisation_id: 1,
-        "basic_info.first_name": 1,
-        "basic_info.last_name": 1,
-      }
-    );
-
-    const holidays = await mongoFunctions.find("HOLIDAYS");
-    console.log(holidays);
-    const attendanceSummary = {
-      todayAttendanceRecords: attendanceRecord.length,
-      totalEmployees: employees.length,
-    };
-
-    alertDev(JSON.stringify(attendanceSummary, null, 2));
-
     const today = new Date();
     const todayString = today.toISOString().split("T")[0];
-    const holidayNames = holidays
-      .filter(({ holiday_date }) => {
-        const holidayDay = new Date(holiday_date).toISOString().split("T")[0];
-        return holidayDay === todayString;
-      })
-      .map((h) => h.holiday_name);
 
-    if (holidayNames.length > 0) {
-      alertDev(`Today is holiday---${holidayNames}`);
-      const holidayName = holidayNames[0];
-      const employeeIdsInAttendance = attendanceRecord.map(
-        (r) => r.employee_id
+    // Step 1: Fetch all organisations
+    const organisations = await mongoFunctions.find(
+      "ORGANISATIONS",
+      {},
+      {},
+      { organisation_id: 1 }
+    );
+
+    for (const org of organisations) {
+      const orgId = org.organisation_id;
+
+      // Step 2: Fetch holidays for this organisation
+      const holidays = await mongoFunctions.find("HOLIDAYS", {
+        organisation_id: orgId,
+      });
+
+      // Step 3: Fetch employees for this organisation
+      const employees = await mongoFunctions.find(
+        "EMPLOYEE",
+        { organisation_id: orgId },
+        { createdAt: -1 },
+        {
+          employee_id: 1,
+          "work_info.employee_status": 1,
+          organisation_id: 1,
+          "basic_info.first_name": 1,
+          "basic_info.last_name": 1,
+        }
       );
-      const missingEmployees = employees.filter(
-        (e) => !employeeIdsInAttendance.includes(e.employee_id)
-      );
-      if (attendanceRecord.length > 0) {
-        if (missingEmployees.length > 0)
-          await createHolidayRecords(missingEmployees, holidayName, "holiday");
-      } else {
-        await createHolidayRecords(employees, holidayName, "holiday");
+
+      // Step 4: Fetch attendance records for today for this organisation
+      const attendanceRecord = await mongoFunctions.find("ATTENDANCE", {
+        organisation_id: orgId,
+        createdAt: { $gt: start, $lte: end },
+      });
+
+      // Step 5: Check if today is a holiday
+      const holidayNames = holidays
+        .filter(({ holiday_date }) => {
+          const holidayDay = new Date(holiday_date).toISOString().split("T")[0];
+          return holidayDay === todayString;
+        })
+        .map((h) => h.holiday_name);
+
+      if (holidayNames.length > 0) {
+        const holidayName = holidayNames[0];
+        alertDev(`Org ${orgId}: Today is holiday---${holidayName}`);
+
+        // Employees present today
+        const employeeIdsInAttendance = attendanceRecord.map(
+          (r) => r.employee_id
+        );
+
+        // Employees missing in attendance
+        const missingEmployees = employees.filter(
+          (e) => !employeeIdsInAttendance.includes(e.employee_id)
+        );
+
+        // Step 6: Create holiday records
+        if (attendanceRecord.length > 0) {
+          if (missingEmployees.length > 0) {
+            await createHolidayRecords(
+              missingEmployees,
+              holidayName,
+              "holiday",
+              orgId
+            );
+          }
+        } else {
+          await createHolidayRecords(employees, holidayName, "holiday", orgId);
+        }
       }
     }
   } catch (err) {
