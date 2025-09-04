@@ -1141,7 +1141,7 @@ function add_update_events(data) {
       .trim()
       .min(2)
       .max(20)
-      .pattern(/^[a-zA-Z0-9_-]+$/)
+      // .pattern(/^[a-zA-Z0-9_-]+$/)
       .required(),
 
     assigned_to: Joi.array().items(assignedTo).required(),
