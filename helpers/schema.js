@@ -1338,7 +1338,7 @@ function add_update_postings(data) {
     description: Joi.string()
       .min(10)
       .max(2000)
-      .pattern(/^[A-Za-z0-9\s.,-]+$/)
+      .pattern(/^[A-Za-z0-9\s.,\/-]+$/)
       .required()
       .messages({
         "string.pattern.base":
@@ -1405,7 +1405,7 @@ function add_update_listings(data) {
     description: Joi.string()
       .min(10)
       .max(2000)
-      .pattern(/^[A-Za-z0-9\s.,-]+$/)
+      .pattern(/^[A-Za-z0-9\s.,\/-]+$/)
       .required()
       .messages({
         "string.pattern.base":
