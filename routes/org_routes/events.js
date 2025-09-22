@@ -123,6 +123,7 @@ router.post(
       bathrooms: data.bathrooms,
       balconies: data.balconies,
       price: data.price,
+      currency_symbol:data.currency_symbol,
       type: data.type,
       location: data.location || {},
       area_sqft: data.area_sqft || null,

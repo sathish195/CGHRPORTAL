@@ -1335,7 +1335,15 @@ function add_update_postings(data) {
     key: Joi.string().required(),
     posting_id: Joi.string().optional().allow("", null),
     title: Joi.string().min(3).max(70).required(),
-    description: Joi.string().min(10).required(),
+    description: Joi.string()
+      .min(10)
+      .max(2000)
+      .pattern(/^[A-Za-z0-9\s.,-]+$/)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Description can only contain letters, numbers, spaces, commas (,), periods (.), and hyphens (-).",
+      }),
     images: Joi.array()
       .max(1)
       .items(
@@ -1366,20 +1374,20 @@ function add_update_listings(data) {
   const locationSchema = Joi.object({
     address: Joi.string().min(5).max(255).required(),
     city: Joi.string().min(2).max(100).required(),
-    state: Joi.string().min(2).max(100).required(),
+    // state: Joi.string().min(2).max(100).required(),
     country: Joi.string().min(2).max(100).required(),
-    pincode: Joi.string()
-      .trim()
-      .pattern(/^[A-Za-z0-9\- ]{3,10}$/)
-      .required()
-      .messages({
-        "string.pattern.base":
-          "Pincode must be 3 to 10 characters, and can contain letters, digits, hyphens, or spaces.",
-        "string.empty": "Pincode is required.",
-      }),
+    // pincode: Joi.string()
+    // .trim()
+    // .pattern(/^[A-Za-z0-9\- ]{3,10}$/)
+    // .required()
+    // .messages({
+    //   "string.pattern.base":
+    //     "Pincode must be 3 to 10 characters, and can contain letters, digits, hyphens, or spaces.",
+    //   "string.empty": "Pincode is required.",
+    // }),
     landmark: Joi.string().allow("", null),
-    latitude: Joi.number().min(-90).max(90).optional(),
-    longitude: Joi.number().min(-180).max(180).optional(),
+    // latitude: Joi.number().min(-90).max(90).optional(),
+    // longitude: Joi.number().min(-180).max(180).optional(),
   });
 
   // ✅ Main schema
@@ -1391,11 +1399,12 @@ function add_update_listings(data) {
     key: Joi.string().required(),
     type: Joi.string().min(3).max(50).required(),
     price: Joi.number().required(),
+    currency_symbol: Joi.string().required(),
     listing_id: Joi.string().optional().allow("", null),
     name: Joi.string().min(3).max(100).required(),
     description: Joi.string()
       .min(10)
-      .max(1000)
+      .max(2000)
       .pattern(/^[A-Za-z0-9\s.,-]+$/)
       .required()
       .messages({
