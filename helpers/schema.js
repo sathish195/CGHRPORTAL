@@ -1338,7 +1338,7 @@ function add_update_postings(data) {
     description: Joi.string()
       .min(10)
       .max(2000)
-      .pattern(/^[\x20-\x7E]+$/)
+      .pattern(/^[\s\S]*$/)
       .required()
       .messages({
         "string.pattern.base":
@@ -1405,7 +1405,7 @@ function add_update_listings(data) {
     description: Joi.string()
       .min(10)
       .max(2000)
-      .pattern(/^[\x20-\x7E]+$/)
+      .pattern(/^[\s\S]*$/)
       .required()
       .messages({
         "string.pattern.base":
