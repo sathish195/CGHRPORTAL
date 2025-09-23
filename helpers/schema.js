@@ -1337,7 +1337,7 @@ function add_update_postings(data) {
     title: Joi.string().min(3).max(70).required(),
     description: Joi.string()
       .min(10)
-      .max(2000)
+      .max(3000)
       .pattern(/^[\s\S]*$/)
       .required()
       .messages({
@@ -1404,7 +1404,7 @@ function add_update_listings(data) {
     name: Joi.string().min(3).max(100).required(),
     description: Joi.string()
       .min(10)
-      .max(2000)
+      .max(3000)
       .pattern(/^[\s\S]*$/)
       .required()
       .messages({
