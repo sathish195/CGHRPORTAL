@@ -154,21 +154,141 @@ function add_update_department(data) {
   return schema.validate(data);
 }
 function add_update_designation(data) {
-  // const leaves_obj = Joi.object({
-  //     leave_name: Joi.string().required().min(4).max(15),
-  //     total_leaves: Joi.number().required().min(1).max(10),
-  //   });
   const schema = Joi.object({
     organisation_id: Joi.string().min(10).max(18).required(),
     designation_name: Joi.string().trim().strip().min(5).max(40).required(),
     designation_id: Joi.string().allow(null, "").optional(),
-    // leaves:Joi.array().items(leaves_obj).required(),
-    // leave_id:Joi.string().allow(null, "").optional(),
-    // leave_name: Joi.string().trim().strip().allow(null, "").optional(),
-    // max_leaves:Joi.number().allow(null, "").optional().optional(),
   });
   return schema.validate(data);
 }
+
+function add_update_designation_new(data) {
+  const viewSchema = Joi.object({
+    leaveApplications: Joi.object({
+      view: Joi.boolean().required(),
+      scope: Joi.object({
+        reportingManager: Joi.boolean().required(),
+        allEmployees: Joi.boolean().required(),
+        team: Joi.boolean().required(),
+      }).required(),
+    }),
+    attendance: Joi.object({
+      view: Joi.boolean().required(),
+      scope: Joi.object({
+        reportingManager: Joi.boolean().required(),
+        allEmployees: Joi.boolean().required(),
+        team: Joi.boolean().required(),
+      }).required(),
+    }),
+    employeeList: Joi.object({
+      view: Joi.boolean().required(),
+      scope: Joi.object({
+        reportingManager: Joi.boolean().required(),
+        allEmployees: Joi.boolean().required(),
+        team: Joi.boolean().required(),
+      }).required(),
+    }),
+    calendar: Joi.object({
+      view: Joi.boolean().required(),
+      scope: Joi.object({
+        all: Joi.boolean().required(),
+        assignedTo: Joi.boolean().required(),
+      }).required(),
+    }),
+    projects: Joi.object({
+      view: Joi.boolean().required(),
+      scope: Joi.object({
+        all: Joi.boolean().required(),
+        assignedTo: Joi.boolean().required(),
+      }).required(),
+    }),
+    leads: Joi.object({
+      view: Joi.boolean().required(),
+      scope: Joi.object({
+        all: Joi.boolean().required(),
+        assignedTo: Joi.boolean().required(),
+      }).required(),
+    }),
+
+    // ✅ Only Boolean (no object)
+    rm: Joi.boolean().required(),
+    addEmployee: Joi.boolean().required(),
+    managementSettings: Joi.boolean().required(),
+    companySettings: Joi.boolean().required(),
+    changePassword: Joi.boolean().required(),
+    posts: Joi.boolean().required(),
+  });
+
+  const editSchema = Joi.object({
+    leaveApplications: Joi.object({
+      edit: Joi.boolean().required(),
+      scope: Joi.object({
+        reportingManager: Joi.boolean().required(),
+        allEmployees: Joi.boolean().required(),
+        team: Joi.boolean().required(),
+      }).required(),
+    }),
+    attendance: Joi.object({
+      edit: Joi.boolean().required(),
+      scope: Joi.object({
+        reportingManager: Joi.boolean().required(),
+        allEmployees: Joi.boolean().required(),
+        team: Joi.boolean().required(),
+      }).required(),
+    }),
+    employeeList: Joi.object({
+      edit: Joi.boolean().required(),
+      scope: Joi.object({
+        reportingManager: Joi.boolean().required(),
+        allEmployees: Joi.boolean().required(),
+        team: Joi.boolean().required(),
+      }).required(),
+    }),
+    calendar: Joi.object({
+      edit: Joi.boolean().required(),
+      scope: Joi.object({
+        all: Joi.boolean().required(),
+        assignedTo: Joi.boolean().required(),
+      }).required(),
+    }),
+    projects: Joi.object({
+      edit: Joi.boolean().required(),
+      scope: Joi.object({
+        all: Joi.boolean().required(),
+        assignedTo: Joi.boolean().required(),
+      }).required(),
+    }),
+    leads: Joi.object({
+      edit: Joi.boolean().required(),
+      scope: Joi.object({
+        all: Joi.boolean().required(),
+        assignedTo: Joi.boolean().required(),
+      }).required(),
+    }),
+
+    // ✅ Only Boolean (no object)
+    rm: Joi.boolean().required(),
+    addEmployee: Joi.boolean().required(),
+    managementSettings: Joi.boolean().required(),
+    companySettings: Joi.boolean().required(),
+    changePassword: Joi.boolean().required(),
+    posts: Joi.boolean().required(),
+  });
+
+  const schema = Joi.object({
+    organisation_id: Joi.string().min(10).max(18).required(),
+    designation_name: Joi.string().trim().min(5).max(40).required(),
+    designation_id: Joi.string().allow(null, "").optional(),
+
+    controls: Joi.object({
+      view: viewSchema,
+      edit: editSchema,
+    }).required(),
+  });
+
+  return schema.validate(data);
+}
+
 function add_update_role(data) {
   const schema = Joi.object({
     organisation_id: Joi.string().min(10).max(18).required(),
@@ -1021,7 +1141,7 @@ function add_update_events(data) {
       .trim()
       .min(2)
       .max(20)
-      .pattern(/^[a-zA-Z0-9_-]+$/)
+      // .pattern(/^[a-zA-Z0-9_-]+$/)
       .required(),
 
     assigned_to: Joi.array().items(assignedTo).required(),
@@ -1073,6 +1193,7 @@ function add_leads(data) {
       email: Joi.string().email().optional(),
     }).optional(),
     lead_name: Joi.string().trim().min(3).max(30).optional(),
+    contact_number: Joi.string().trim().allow(null, "").required(),
     email: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
@@ -1084,7 +1205,7 @@ function add_leads(data) {
       })
       .required(),
     // company: Joi.string().optional().allow("", null),
-    comments: Joi.string().min(3).optional().allow("", null),
+    comments: Joi.string().min(3).max(2000).optional().allow("", null),
     route_action: Joi.number()
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
       .required(),
@@ -1214,7 +1335,15 @@ function add_update_postings(data) {
     key: Joi.string().required(),
     posting_id: Joi.string().optional().allow("", null),
     title: Joi.string().min(3).max(70).required(),
-    description: Joi.string().min(10).required(),
+    description: Joi.string()
+      .min(10)
+      // .max(3000)
+      .pattern(/^[\s\S]*$/)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Description can only contain letters, numbers, spaces, commas (,), periods (.), and hyphens (-).",
+      }),
     images: Joi.array()
       .max(1)
       .items(
@@ -1245,20 +1374,20 @@ function add_update_listings(data) {
   const locationSchema = Joi.object({
     address: Joi.string().min(5).max(255).required(),
     city: Joi.string().min(2).max(100).required(),
-    state: Joi.string().min(2).max(100).required(),
+    // state: Joi.string().min(2).max(100).required(),
     country: Joi.string().min(2).max(100).required(),
-    pincode: Joi.string()
-      .trim()
-      .pattern(/^[A-Za-z0-9\- ]{3,10}$/)
-      .required()
-      .messages({
-        "string.pattern.base":
-          "Pincode must be 3 to 10 characters, and can contain letters, digits, hyphens, or spaces.",
-        "string.empty": "Pincode is required.",
-      }),
+    // pincode: Joi.string()
+    // .trim()
+    // .pattern(/^[A-Za-z0-9\- ]{3,10}$/)
+    // .required()
+    // .messages({
+    //   "string.pattern.base":
+    //     "Pincode must be 3 to 10 characters, and can contain letters, digits, hyphens, or spaces.",
+    //   "string.empty": "Pincode is required.",
+    // }),
     landmark: Joi.string().allow("", null),
-    latitude: Joi.number().min(-90).max(90).optional(),
-    longitude: Joi.number().min(-180).max(180).optional(),
+    // latitude: Joi.number().min(-90).max(90).optional(),
+    // longitude: Joi.number().min(-180).max(180).optional(),
   });
 
   // ✅ Main schema
@@ -1270,12 +1399,13 @@ function add_update_listings(data) {
     key: Joi.string().required(),
     type: Joi.string().min(3).max(50).required(),
     price: Joi.number().required(),
+    currency_symbol: Joi.string().required(),
     listing_id: Joi.string().optional().allow("", null),
     name: Joi.string().min(3).max(100).required(),
     description: Joi.string()
       .min(10)
-      .max(1000)
-      .pattern(/^[A-Za-z0-9\s.,-]+$/)
+      .max(3000)
+      .pattern(/^[\s\S]*$/)
       .required()
       .messages({
         "string.pattern.base":
@@ -1332,6 +1462,123 @@ function access_control(data) {
     assigned_to: Joi.array().items(assigned_to).required(),
   });
 
+  return schema.validate(data);
+}
+
+function org_level_controls(data) {
+  const toggleSchema = Joi.boolean(); // ON/OFF for toggles
+  const yesNoSchema = Joi.boolean(); // YES/NO for simple toggles
+
+  const scopeSchema = Joi.object({
+    reportingManager: yesNoSchema,
+    allEmployees: yesNoSchema,
+    team: yesNoSchema,
+  });
+
+  const typeSchema = Joi.object({
+    view: toggleSchema,
+    edit: toggleSchema,
+    scope: scopeSchema.optional(), // Optional scope
+  });
+
+  const simpleTypeSchema = Joi.object({
+    yesNo: yesNoSchema,
+  });
+
+  const allAssignedSchema = Joi.object({
+    all: Joi.object({
+      view: toggleSchema,
+      edit: toggleSchema,
+    }),
+    assignedTo: Joi.object({
+      view: toggleSchema,
+      edit: toggleSchema,
+    }),
+  });
+
+  // Return schema instead of overwriting the function name
+  const schema = Joi.object({
+    leaveApplications: Joi.object({
+      2: typeSchema.keys({
+        scope: Joi.object({
+          reportingManager: yesNoSchema,
+          allEmployees: yesNoSchema,
+        }),
+      }),
+      3: typeSchema.keys({
+        scope: Joi.object({
+          team: yesNoSchema,
+          reportingManager: yesNoSchema,
+        }),
+      }),
+      4: typeSchema,
+    }),
+    attendance: Joi.object({
+      2: typeSchema.keys({
+        scope: Joi.object({
+          reportingManager: yesNoSchema,
+          allEmployees: yesNoSchema,
+        }),
+      }),
+      3: typeSchema.keys({
+        scope: Joi.object({
+          team: yesNoSchema,
+          reportingManager: yesNoSchema,
+        }),
+      }),
+      4: typeSchema,
+    }),
+    rm: Joi.object({
+      2: simpleTypeSchema,
+      3: simpleTypeSchema,
+      4: simpleTypeSchema,
+    }),
+    addEmployee: Joi.object({
+      2: simpleTypeSchema,
+      3: simpleTypeSchema,
+      4: simpleTypeSchema,
+    }),
+    employeeList: Joi.object({
+      2: typeSchema,
+      3: typeSchema,
+      4: typeSchema,
+    }),
+    managementSettings: Joi.object({
+      2: typeSchema,
+      3: typeSchema,
+      4: typeSchema,
+    }),
+    companySettings: Joi.object({
+      2: typeSchema,
+      3: typeSchema,
+      4: typeSchema,
+    }),
+    changePassword: Joi.object({
+      2: simpleTypeSchema,
+      3: simpleTypeSchema,
+      4: simpleTypeSchema,
+    }),
+    leads: Joi.object({
+      2: allAssignedSchema,
+      3: allAssignedSchema,
+      4: allAssignedSchema,
+    }),
+    posts: Joi.object({
+      2: typeSchema,
+      3: typeSchema,
+      4: typeSchema,
+    }),
+    calendar: Joi.object({
+      2: allAssignedSchema,
+      3: allAssignedSchema,
+      4: allAssignedSchema,
+    }),
+    projects: Joi.object({
+      2: allAssignedSchema,
+      3: allAssignedSchema,
+      4: allAssignedSchema,
+    }),
+  });
   return schema.validate(data);
 }
 
@@ -1396,4 +1643,6 @@ module.exports = {
   add_update_listings,
   get_listings,
   access_control,
+  org_level_controls,
+  add_update_designation_new,
 };

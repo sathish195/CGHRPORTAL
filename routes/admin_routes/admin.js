@@ -145,16 +145,16 @@ router.post(
     // //     repo.basic_info.first_name + " " + repo.basic_info.last_name;
     // // }
     // if (!repo) return res.status(400).send("Reporting Manager Not Found..!");
-    
+
     let find_emp = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
           organisation_id: req.employee.organisation_id,
           employee_id: data.employee_id.toUpperCase(),
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           // organisation_id: req.employee.organisation_id,
           "basic_info.email": data.email.toLowerCase(),
         },
@@ -181,38 +181,38 @@ router.post(
     let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           // organisation_id: req.employee.organisation_id,
           "contact_details.personal_email_address":
             data.personal_email_address.toLowerCase(),
         },
 
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.pan": data.identity_info.pan,
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.aadhaar": data.identity_info.aadhaar,
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.uan": data.identity_info.uan,
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.passport": data.identity_info.passport_number,
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "contact_details.mobile_number": data.mobile_number,
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.emirates_id": data.identity_info.emirates_id,
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.labour_card_id": data.identity_info.labour_card_id,
         },
       ],
@@ -452,12 +452,12 @@ router.post(
     let find_adhar = await mongoFunctions.find_one("EMPLOYEE", {
       $or: [
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "basic_info.email": data.email.toLowerCase(),
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           // organisation_id: req.employee.organisation_id,
           "contact_details.personal_email_address":
             data.personal_email_address.toLowerCase(),
@@ -465,37 +465,37 @@ router.post(
         },
 
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.pan": data.identity_info.pan,
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.aadhaar": data.identity_info.aadhaar,
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.uan": data.identity_info.uan,
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.passport_number": data.identity_info.passport_number,
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "contact_details.mobile_number": data.mobile_number,
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.emirates_id": data.identity_info.emirates_id,
           employee_id: { $ne: data.employee_id },
         },
         {
-          "work_info.employee_status": { $regex: /^active$/i },
+          // "work_info.employee_status": { $regex: /^active$/i },
           "identity_info.labour_card_id": data.identity_info.labour_card_id,
           employee_id: { $ne: data.employee_id },
         },
@@ -636,6 +636,34 @@ router.post(
       { employee_id: data.employee_id },
       { $set: new_emp_data }
     );
+    // Update emp name in attendance
+    if (
+      (
+        find_emp.basic_info.first_name + find_emp.basic_info.last_name
+      ).toLowerCase() !==
+      (
+        new_emp_data.basic_info.first_name + new_emp_data.basic_info.last_name
+      ).toLowerCase()
+    ) {
+      let update_emp_name_in_attendance = await mongoFunctions.update_many(
+        "ATTENDANCE",
+        {
+          organisation_id: data.organisation_id,
+          employee_id: data.employee_id,
+        },
+        {
+          employee_name: `${new_emp_data.basic_info.first_name} ${new_emp_data.basic_info.last_name}`,
+        },
+        { returnDocument: "after" }
+      );
+
+      if (!update_emp_name_in_attendance) {
+        return res
+          .status(400)
+          .send("Failed to update employee name in attendance");
+      }
+    }
+
     //update stats
     if (
       find_emp.work_info.employee_status.toLowerCase() === "active" &&
@@ -698,7 +726,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-
     // Validate request data
     const { error, value } = validations.add_project(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -799,7 +826,6 @@ router.post(
 
       // Create new project
       await mongoFunctions.create_new_record("PROJECTS", new_project_data);
-      
 
       return res.status(201).send("Project created successfully");
     }
@@ -1128,7 +1154,6 @@ router.post(
   Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-
     // Validate request data
     const { error, value } = validations.add_update_task(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -1301,7 +1326,6 @@ router.post(
 
         // console.log(s);
       }
-
 
       if (!task_data_up) return res.status(400).send("Task Update Failed");
       if (data.action === "add") {
@@ -2405,6 +2429,7 @@ router.post(
       key: data.key,
       source: data.source || org_data.organisation_name,
       email: data.email?.toLowerCase(),
+      contact_number: data.contact_number,
       // company: data.company,
       status: data.status,
       assigned_to: data.assigned_to || [],
@@ -2483,6 +2508,7 @@ router.post(
             $set: {
               status: data.status,
               comments: data.comments || "",
+              contact_number: data.contact_number,
               files: data.files || [],
               next_follow_up: moment(data.next_follow_up).toDate(),
               updated_by: {
@@ -2555,6 +2581,7 @@ router.post(
             organisation_id: data.organisation_id,
             lead_name: data.lead_name?.toLowerCase(),
             key: data.key,
+            contact_number: data.contact_number,
             // source: data.source || org_data.organisation_name,
             email: data.email?.toLowerCase(),
             // company: data.company?.toLowerCase(),

@@ -6,20 +6,21 @@ const listingSchema = new mongoose.Schema(
       type: {
         address: { type: String },
         city: { type: String },
-        state: { type: String },
+        // state: { type: String },
         country: { type: String },
-        pincode: {
-          type: String,
-          // match: [/^\d{6}$/, "Pincode must be a 6-digit number"],
-        },
+        // pincode: {
+        //   type: String,
+        //   // match: [/^\d{6}$/, "Pincode must be a 6-digit number"],
+        // },
         landmark: { type: String, default: "" },
-        latitude: { type: Number, default: 0 },
-        longitude: { type: Number, default: 0 },
+        // latitude: { type: Number, default: 0 },
+        // longitude: { type: Number, default: 0 },
       },
 
       default: {},
     },
     organisation_id: { type: String, required: true },
+    currency_symbol: { type: String, required: true },
     key: { type: String, required: true },
     type: { type: String, required: true },
     price: { type: Number, required: true },

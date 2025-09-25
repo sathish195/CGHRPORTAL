@@ -66,7 +66,7 @@ module.exports = {
       obj.updatedAt = undefined;
       await client.hSet(
         "CGHR_ORG_LEVEL_CONTROLS",
-        "ORG_LEVEL_CONTROLS",
+        obj.organisation_id,
         JSON.stringify(obj),
         (err, res) => {}
       );
@@ -238,6 +238,19 @@ module.exports = {
     var dta = await client.del(key);
     return dta;
   },
+  deleteOrganisationFromRedis: async (organisationId) => {
+    try {
+      const result = await client.hDel("CRM_ORGANISATIONS", organisationId);
+      if (result > 0) {
+        console.log(`Organisation ${organisationId} deleted from Redis`);
+      } else {
+        console.log(`Organisation ${organisationId} not found in Redis`);
+      }
+    } catch (err) {
+      console.error("Error deleting organisation from Redis:", err);
+    }
+  },
+
   add_task_status: async (employee_id, current_status) => {
     try {
       const key = employee_id;

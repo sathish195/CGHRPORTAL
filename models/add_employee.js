@@ -110,6 +110,7 @@ const EMPLOYEE_Schema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+EMPLOYEE_Schema.index({ createdAt: 1 });
 EMPLOYEE_Schema.index({ organisation_id: 1, employee_id: 1 });
 EMPLOYEE_Schema.index({ organisation_id: 1, "basic_info.email": 1 });
 EMPLOYEE_Schema.index({

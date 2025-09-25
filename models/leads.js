@@ -1,4 +1,4 @@
-const { array } = require("joi");
+const { array, required } = require("joi");
 const mongoose = require("mongoose");
 
 const leads_schema = new mongoose.Schema(
@@ -12,6 +12,7 @@ const leads_schema = new mongoose.Schema(
     // company: { type: String },
     status: { type: String, required: true },
     assigned_to: { type: Array, default: [] },
+    contact_number: { type: String, required: true },
     next_follow_up: { type: Date, required: true },
     comments: { type: String },
     files: { type: Array, default: [] },

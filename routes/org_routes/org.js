@@ -1768,6 +1768,7 @@ router.post(
     return res.status(400).send("Restore Failed..!");
   })
 );
+//set org data in redis
 router.post(
   "/set_universal_data",
   Auth,
@@ -1780,6 +1781,22 @@ router.post(
     return res
       .status(200)
       .send("Universal data stored in redis successfully..!");
+  })
+);
+//delete org data from redis
+router.post(
+  "/unset_universal_data",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let s = await redisFunctions.deleteOrganisationFromRedis(
+      req.employee.organisation_id
+    );
+    if (s) {
+      return res
+        .status(200)
+        .send("Universal data stored in redis successfully..!");
+    }
   })
 );
 //mongo backup test
@@ -1927,53 +1944,234 @@ router.post(
   })
 );
 
-//add update controls
+//add update org level admin controls
 
 router.post(
   "/add_update_org_admin_controls",
   Auth,
   Async(async (req, res) => {
-    const data = req.body;
+    const rawInput = req.body;
 
-    // Validate input
-    var { error } = validations.org_level_controls(data);
+    // 1. Validate input
+    const { error, value: data } = validations.org_level_controls(rawInput);
     if (error) return res.status(400).send(error.details[0].message);
 
-    // Only Super Admin can perform this
-    let find_s_admin = await redisFunctions.redisGet(
+    // 2. Ensure only Admin can perform the action
+    const find_s_admin = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,
       true
     );
 
-    if (!find_s_admin || req.employee.email !== find_s_admin.email) {
-      return res.status(403).send("Access Denied!!");
+    if (!find_s_admin) {
+      return res.status(403).send("Organisation Not Found!!");
+    }
+    if (!req.employee.admin_type == "1") {
+      return res.status(400).send("Access Denied!!");
     }
 
-    let controls_object = {
+    // 3. Build controls object
+    const controls_object = {
+      organisation_id: req.employee.organisation_id,
+      organisation_name: find_s_admin.organisation_name,
       email: req.employee.email,
-      login: data.login,
-      add_organisation: data.add_organisation,
-      add_admin: data.add_admin,
-      suspend_organisation: data.suspend_organisation,
-      approve_organisation: data.approve_organisation,
-      billing: data.billing,
+      employee_id: req.employee.employee_id,
+      controls: data,
     };
 
+    // 4. Upsert into MongoDB
     // Update or insert admin controls
     const updated_controls = await mongoFunctions.find_one_and_update(
-      "ADMIN_CONTROLS",
-      { email: req.employee.email },
+      "ORG_LEVEL_CONTROLS",
+      { organisation_id: req.employee.organisation_id },
       { $set: controls_object },
       { upsert: true, new: true }
     );
 
-    // Update Redis
-    await redisFunctions.update_redis("ADMIN_CONTROLS", updated_controls);
+    // 5. Update Redis
+    await redisFunctions.update_redis("ORG_LEVEL_CONTROLS", updated_controls);
 
     return res.status(200).send({
-      message: "Admin Controls Added Successfully",
+      message: "Admin Controls Added/Updated Successfully",
       admin_controls: updated_controls,
+    });
+  })
+);
+
+// get org level controls from redis
+router.post(
+  "/get_org_admin_controls",
+  Auth,
+  Async(async (req, res) => {
+    // 2. Ensure only Admin can perform the action
+    const find_s_admin = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+
+    if (!find_s_admin) {
+      return res.status(403).send("Organisation Not Found!!");
+    }
+    let controls;
+    controls = await redisFunctions.redisGet(
+      "CGHR_ORG_LEVEL_CONTROLS",
+      req.employee.organisation_id,
+      true
+    );
+
+    if (!controls) {
+      console.log("fetched");
+      //get from db
+      controls = await mongoFunctions.find_one("ORG_LEVEL_CONTROLS", {
+        organisation_id: req.employee.organisation_id,
+      });
+
+      // 5. Update Redis
+      await redisFunctions.update_redis("ORG_LEVEL_CONTROLS", controls);
+    }
+
+    return res.status(200).send(controls);
+  })
+);
+//add update designation updated route
+
+router.post(
+  "/add_update_designation_new",
+  Auth,
+  rateLimit(60, 10),
+  Async(async (req, res) => {
+    let data = req.body;
+
+    // ✅ Input validation
+    const { error } = validations.add_update_designation_new(data);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    // ✅ Access Control: Only Director or Manager
+    const admin_types = ["1", "2"];
+    if (!admin_types.includes(req.employee.admin_type)) {
+      return res
+        .status(403)
+        .send("Only Director or Manager can access this endpoint");
+    }
+
+    // ✅ Get Organisation Data from Redis
+    let org_data = await redisFunctions.redisGet(
+      "CRM_ORGANISATIONS",
+      req.employee.organisation_id,
+      true
+    );
+
+    if (!org_data || org_data.organisation_id !== data.organisation_id) {
+      return res.status(400).send("Invalid Organisation ID");
+    }
+
+    // ✅ Check feature access
+    const hasModuleAccess = await functions.hasAccess(
+      org_data.billing_type.type,
+      "controls"
+    );
+    if (!hasModuleAccess) {
+      return res.status(403).send("Access Denied For This Feature");
+    }
+
+    // ✅ Determine if it's an update or add
+    const isUpdate =
+      data.designation_id && data.designation_id.toString().length > 9;
+
+    // ✅ Duplicate Check
+    if (isUpdate) {
+      const duplicate = org_data.designations.find(
+        (e) =>
+          e.designation_name.toLowerCase() ===
+            data.designation_name.toLowerCase() &&
+          e.designation_id !== data.designation_id
+      );
+      if (duplicate) {
+        return res
+          .status(400)
+          .send("Another designation with the same name already exists");
+      }
+    } else {
+      const duplicate = org_data.designations.find(
+        (e) =>
+          e.designation_name.toLowerCase() ===
+          data.designation_name.toLowerCase()
+      );
+      if (duplicate) {
+        return res.status(400).send("Designation already exists");
+      }
+    }
+
+    let updated_org;
+
+    // ✅ Handle Update
+    if (isUpdate) {
+      updated_org = await mongoFunctions.find_one_and_update(
+        "ORGANISATIONS",
+        {
+          organisation_id: org_data.organisation_id,
+          "designations.designation_id": data.designation_id,
+        },
+        {
+          $set: {
+            "designations.$[d].designation_name":
+              data.designation_name.toLowerCase(),
+            "designations.$[d].controls": data.controls,
+          },
+        },
+        {
+          arrayFilters: [{ "d.designation_id": data.designation_id }],
+          new: true,
+        }
+      );
+
+      // ✅ Update all employees with new designation name
+      await mongoFunctions.update_many(
+        "EMPLOYEE",
+        {
+          organisation_id: org_data.organisation_id,
+          "work_info.designation_id": data.designation_id,
+        },
+        {
+          $set: {
+            "work_info.designation_name": data.designation_name.toLowerCase(),
+            controls: data.controls,
+          },
+        }
+      );
+
+      // ✅ Update Redis
+      await redisFunctions.update_redis("ORGANISATIONS", updated_org);
+
+      // ✅ Separate Return for Update
+      return res.status(200).send({
+        message: "Designation updated successfully",
+        data: updated_org.designations,
+      });
+    }
+
+    // ✅ Handle Add
+    const new_designation = {
+      designation_id: functions.get_random_string("D", 10, true),
+      designation_name: data.designation_name.toLowerCase(),
+      controls: data.controls,
+    };
+
+    updated_org = await mongoFunctions.find_one_and_update(
+      "ORGANISATIONS",
+      { organisation_id: org_data.organisation_id },
+      { $push: { designations: new_designation } },
+      { new: true }
+    );
+
+    // ✅ Update Redis
+    await redisFunctions.update_redis("ORGANISATIONS", updated_org);
+
+    // ✅ Separate Return for Add
+    return res.status(200).send({
+      message: "Designation added successfully",
+      data: updated_org.designations,
     });
   })
 );
