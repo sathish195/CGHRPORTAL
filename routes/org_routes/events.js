@@ -97,6 +97,7 @@ router.post(
   rateLimit(60, 20),
   Async(async (req, res) => {
     const rawInput = encrypt_decrypt.decryptobj(req.body.enc);
+    console.log(rawInput);
 
     // ✅ Validate input
     const { error, value: data } = validations.add_update_listings(rawInput);
@@ -123,7 +124,7 @@ router.post(
       bathrooms: data.bathrooms,
       balconies: data.balconies,
       price: data.price,
-      currency_symbol:data.currency_symbol,
+      currency_symbol: data.currency_symbol,
       type: data.type,
       location: data.location || {},
       area_sqft: data.area_sqft || null,
