@@ -209,7 +209,7 @@ router.post(
   rateLimit(60, 60),
   Async(async (req, res) => {
     const data = encrypt_decrypt.decryptobj(req.body.enc);
-    // console.log(data);
+    console.log(data);
 
     // Validate limit & skip
     const { error } = validations.get_listings(data);
