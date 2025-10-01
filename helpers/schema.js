@@ -1398,10 +1398,14 @@ function add_update_listings(data) {
     organisation_id: Joi.string().required(),
     key: Joi.string().required(),
     type: Joi.string().min(3).max(50).required(),
+    listing_type: Joi.string()
+      .valid("Rent", "Sale", "Hot Listing", "Offplan", "Ready To Move")
+      .required(),
     price: Joi.number().required(),
     currency_symbol: Joi.string().required(),
     listing_id: Joi.string().optional().allow("", null),
     name: Joi.string().min(3).max(100).required(),
+
     description: Joi.string()
       .min(10)
       .max(3000)

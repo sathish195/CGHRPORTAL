@@ -1,3 +1,4 @@
+const { required } = require("joi");
 const mongoose = require("mongoose");
 
 const listingSchema = new mongoose.Schema(
@@ -21,6 +22,7 @@ const listingSchema = new mongoose.Schema(
     },
     organisation_id: { type: String, required: true },
     currency_symbol: { type: String, required: true },
+    listing_type: { type: String, required: true },
     key: { type: String, required: true },
     type: { type: String, required: true },
     price: { type: Number, required: true },
