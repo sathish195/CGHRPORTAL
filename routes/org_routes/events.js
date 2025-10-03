@@ -242,7 +242,7 @@ router.post(
     // Base filter
     const filters = {
       organisation_id: data.organisation_id,
-      key: data.key,
+      // key: data.key,
     };
 
     // ✅ Add date filter only if date is not null or empty string
