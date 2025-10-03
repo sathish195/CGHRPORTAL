@@ -1436,12 +1436,7 @@ function add_update_listings(data) {
       .max(2)
       .items(
         Joi.object({
-          url: Joi.string()
-            .custom(base64ImageSizeValidator)
-            .required()
-            .messages({
-              "string.pattern.base": "Size should be 256 KB only.",
-            }),
+          url: Joi.string().custom(base64ImageSizeValidator).required(),
         })
       ),
   });
