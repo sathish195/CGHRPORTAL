@@ -1434,11 +1434,13 @@ function add_update_listings(data) {
       .items(
         Joi.object({
           url: Joi.string()
-            .custom(base64ImageSizeValidator, "Base64 image size validation")
-            .required(),
+            .custom(base64ImageSizeValidator)
+            .required()
+            .messages({
+              "string.pattern.base": "Size should be 256 KB only.",
+            }),
         })
-      )
-      .required(),
+      ),
   });
 
   return schema.validate(data);
