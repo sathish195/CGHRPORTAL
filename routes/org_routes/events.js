@@ -229,7 +229,7 @@ router.post(
         {
           listing_id: data.listing_id,
           organisation_id: data.organisation_id,
-          key: data.key,
+          // key: data.key,
         },
         { key: 0, _id: 0, __v: 0, organisation_id: 0 }
       );
@@ -284,7 +284,7 @@ router.post(
 
     const count = await mongoFunctions.count_documents("LISTINGS", {
       organisation_id: data.organisation_id,
-      key: data.key,
+      // key: data.key,
     });
 
     // Return result
