@@ -74,7 +74,7 @@ const base64ImageSizeValidator = (value, helpers) => {
   const limitBytes = 256 * 1024;
   if (sizeInBytes <= limitBytes) return value;
   else {
-    return helpers.message("File size must not exceed 256 KB");
+    return helpers.message("Image size must not exceed 256 KB");
   }
 };
 const base64FileSizeValidator = (value, helpers) => {
@@ -94,7 +94,7 @@ const base64FileSizeValidator = (value, helpers) => {
 
   if (sizeInBytes > limitBytes) {
     return helpers.error("any.invalid", {
-      message: "File size must not exceed 250 KB",
+      message: "File size must not exceed 256 KB",
     });
   }
 
