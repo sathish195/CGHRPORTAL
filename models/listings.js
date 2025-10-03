@@ -33,7 +33,7 @@ const listingSchema = new mongoose.Schema(
     listing_id: { type: String, required: true }, // ✅ now required
     name: { type: String, required: true },
     description: { type: String, required: true },
-    area_sqft: { type: String, required: true },
+    area_sqft: { type: String},
 
     amenities: {
       type: [
