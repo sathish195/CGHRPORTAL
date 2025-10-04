@@ -1185,17 +1185,33 @@ function add_leads(data) {
   });
   const schema = Joi.object({
     lead_id: Joi.string().trim().optional().allow("", null),
-    organisation_id: Joi.string().required(),
-    key: Joi.string().required(),
-    admin_type: Joi.string().required(),
-    source: Joi.string().optional().allow("", null),
     added_by: Joi.object({
       name: Joi.string().optional(),
       employee_id: Joi.string().optional(),
       email: Joi.string().email().optional(),
     }).optional(),
-    lead_name: Joi.string().trim().min(3).max(30).optional(),
+
     contact_number: Joi.string().trim().allow(null, "").required(),
+
+    assigned_to: Joi.array().items(assignedTo).optional().default([]),
+    next_follow_up: Joi.date().iso().optional().messages({
+      "date.base": "Date must be a valid ISO 8601 date",
+      "date.format": "Date must be in ISO 8601 format",
+    }),
+    files: Joi.alternatives()
+      .try(
+        fileSchema, // single file object
+        Joi.array().items(fileSchema).max(2) // array of file objects
+      )
+      .optional(),
+    //scanglobal specific
+    organisation_id: Joi.string().required(),
+    key: Joi.string().required(),
+    lead_name: Joi.string().trim().min(3).max(30).optional(),
+    admin_type: Joi.string().required(),
+    route_action: Joi.number()
+      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
+      .required(),
     email: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
@@ -1206,11 +1222,17 @@ function add_leads(data) {
         "string.pattern.base": "Email Should be valid mail",
       })
       .required(),
-    // company: Joi.string().optional().allow("", null),
+    listing_name: Joi.string().optional().allow("", null),
+    price: Joi.string().optional().allow("", null),
+    area: Joi.string().optional().allow("", null),
+    address: Joi.string().optional().allow("", null),
+    city: Joi.string().optional().allow("", null),
+    type: Joi.string().optional().allow("", null),
+    currency_symbol: Joi.string().optional().allow("", null),
+    listing_type: Joi.string().optional().allow("", null),
+    country: Joi.string().optional().allow("", null),
     comments: Joi.string().min(3).max(2000).optional().allow("", null),
-    route_action: Joi.number()
-      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
-      .required(),
+    source: Joi.string().optional().allow("", null),
     status: Joi.string()
       .trim()
       .valid(
@@ -1226,17 +1248,6 @@ function add_leads(data) {
         "FollowUp"
       )
       .required(),
-    assigned_to: Joi.array().items(assignedTo).optional().default([]),
-    next_follow_up: Joi.date().iso().required().messages({
-      "date.base": "Date must be a valid ISO 8601 date",
-      "date.format": "Date must be in ISO 8601 format",
-    }),
-    files: Joi.alternatives()
-      .try(
-        fileSchema, // single file object
-        Joi.array().items(fileSchema).max(2) // array of file objects
-      )
-      .optional(),
   });
   return schema.validate(data);
 }

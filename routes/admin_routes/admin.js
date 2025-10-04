@@ -2429,14 +2429,26 @@ router.post(
       key: data.key,
       source: data.source || org_data.organisation_name,
       email: data.email?.toLowerCase(),
-      contact_number: data.contact_number,
+      contact_number: data.contact_number || "",
       // company: data.company,
       status: data.status,
       assigned_to: data.assigned_to || [],
-      next_follow_up: moment(data.next_follow_up).toDate(),
+      next_follow_up: data.next_follow_up
+        ? moment(data.next_follow_up).toDate()
+        : "",
+
       comments: data.comments || "",
       files: data.files || [],
       added_by: data.added_by,
+      listing_name: data?.listing_name || "",
+      price: data?.price || "",
+      area: data?.area || "",
+      address: data?.address || "",
+      city: data?.city || "",
+      type: data?.type || "",
+      currency_symbol: data?.currency_symbol || "",
+      listing_type: data?.listing_type || "",
+      country: data?.country || "",
     };
 
     let lead;
