@@ -1191,7 +1191,7 @@ function add_leads(data) {
       email: Joi.string().email().optional(),
     }).optional(),
 
-    contact_number: Joi.string().trim().allow(null, "").required(),
+    contact_number: Joi.string().trim().allow(null, "").optional(),
 
     assigned_to: Joi.array().items(assignedTo).optional().default([]),
     next_follow_up: Joi.date().iso().optional().messages({
