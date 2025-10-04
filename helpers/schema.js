@@ -72,6 +72,7 @@ const base64ImageSizeValidator = (value, helpers) => {
   const buffer = Buffer.from(value, "base64");
   const sizeInBytes = buffer.length;
   const limitBytes = 256 * 1024;
+  console.log(sizeInBytes, limitBytes);
   if (sizeInBytes <= limitBytes) return value;
   else {
     return helpers.message("Image size must not exceed 256 KB");
