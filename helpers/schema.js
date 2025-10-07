@@ -68,37 +68,37 @@ function emp_reset_password(data) {
   return schema.validate(data);
 }
 
-// const base64ImageSizeValidator = (value, helpers) => {
-//   const buffer = Buffer.from(value, "base64");
-//   const sizeInBytes = buffer.length;
-//   const limitBytes = 1 * 1024 * 1024; // 1 MB
-//   console.log(sizeInBytes, limitBytes);
-//   if (sizeInBytes <= limitBytes) return value;
-//   else {
-//     return helpers.message("Image size must not exceed 256 KB");
-//   }
-// };
 const base64ImageSizeValidator = (value, helpers) => {
-  // Regex to check if string is base64 (basic check)
-  const base64Regex =
-    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
-
-  if (!base64Regex.test(value)) {
-    console.log("Not base64 thats why it entered this block");
-    // If not base64, skip validation (or return value as is)
-    return value;
-  }
-  console.log("flow Came here because its base64");
-
   const buffer = Buffer.from(value, "base64");
   const sizeInBytes = buffer.length;
   const limitBytes = 1 * 1024 * 1024; // 1 MB
   console.log(sizeInBytes, limitBytes);
-
   if (sizeInBytes <= limitBytes) return value;
-
-  return helpers.message("Image size must not exceed 1 MB");
+  else {
+    return helpers.message("Image size must not exceed 1MB");
+  }
 };
+// const base64ImageSizeValidator = (value, helpers) => {
+//   // Regex to check if string is base64 (basic check)
+//   const base64Regex =
+//     /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+
+//   if (!base64Regex.test(value)) {
+//     console.log("Not base64 thats why it entered this block");
+//     // If not base64, skip validation (or return value as is)
+//     return value;
+//   }
+//   console.log("flow Came here because its base64");
+
+//   const buffer = Buffer.from(value, "base64");
+//   const sizeInBytes = buffer.length;
+//   const limitBytes = 1 * 1024 * 1024; // 1 MB
+//   console.log(sizeInBytes, limitBytes);
+
+//   if (sizeInBytes <= limitBytes) return value;
+
+//   return helpers.message("Image size must not exceed 1 MB");
+// };
 
 const base64FileSizeValidator = (value, helpers) => {
   const matches = value.match(/^data:(.+);base64,(.+)$/);
