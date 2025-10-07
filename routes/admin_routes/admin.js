@@ -3008,7 +3008,7 @@ router.post(
       const existing_posting = await mongoFunctions.find_one("POSTINGS", {
         posting_id: data.posting_id,
         organisation_id: data.organisation_id,
-        key: data.key,
+        // key: data.key,
       });
 
       if (!existing_posting) {
@@ -3020,7 +3020,7 @@ router.post(
         {
           posting_id: data.posting_id,
           organisation_id: data.organisation_id,
-          key: data.key,
+          // key: data.key,
         },
         { $set: postings_object }
       );
@@ -3038,7 +3038,7 @@ router.post(
       const result = await mongoFunctions.find_one_and_delete("POSTINGS", {
         posting_id: data.posting_id,
         organisation_id: data.organisation_id,
-        key: data.key,
+        // key: data.key,
       });
 
       if (!result) {

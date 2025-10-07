@@ -68,16 +68,38 @@ function emp_reset_password(data) {
   return schema.validate(data);
 }
 
+// const base64ImageSizeValidator = (value, helpers) => {
+//   const buffer = Buffer.from(value, "base64");
+//   const sizeInBytes = buffer.length;
+//   const limitBytes = 1 * 1024 * 1024; // 1 MB
+//   console.log(sizeInBytes, limitBytes);
+//   if (sizeInBytes <= limitBytes) return value;
+//   else {
+//     return helpers.message("Image size must not exceed 256 KB");
+//   }
+// };
 const base64ImageSizeValidator = (value, helpers) => {
+  // Regex to check if string is base64 (basic check)
+  const base64Regex =
+    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+
+  if (!base64Regex.test(value)) {
+    console.log("Not base64 thats why it entered this block");
+    // If not base64, skip validation (or return value as is)
+    return value;
+  }
+  console.log("flow Came here because its base64");
+
   const buffer = Buffer.from(value, "base64");
   const sizeInBytes = buffer.length;
   const limitBytes = 1 * 1024 * 1024; // 1 MB
   console.log(sizeInBytes, limitBytes);
+
   if (sizeInBytes <= limitBytes) return value;
-  else {
-    return helpers.message("Image size must not exceed 256 KB");
-  }
+
+  return helpers.message("Image size must not exceed 1 MB");
 };
+
 const base64FileSizeValidator = (value, helpers) => {
   const matches = value.match(/^data:(.+);base64,(.+)$/);
   if (!matches) {
@@ -1348,7 +1370,7 @@ function add_update_postings(data) {
     organisation_id: Joi.string().required(),
     key: Joi.string().required(),
     posting_id: Joi.string().optional().allow("", null),
-    title: Joi.string().min(3).max(70).required(),
+    title: Joi.string().min(3).max(100).required(),
     description: Joi.string()
       .min(10)
       // .max(3000)
@@ -1413,7 +1435,14 @@ function add_update_listings(data) {
     key: Joi.string().required(),
     type: Joi.string().min(3).max(50).required(),
     listing_type: Joi.string()
-      .valid("Rent", "Sale", "Hot Listing", "Offplan", "Ready To Move")
+      .valid(
+        "Rent",
+        "Sale",
+        "Hot Listing",
+        "Offplan",
+        "Ready To Move",
+        "Sold/Rented"
+      )
       .required(),
     price: Joi.number().required(),
     currency_symbol: Joi.string().required(),

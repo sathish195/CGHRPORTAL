@@ -160,7 +160,7 @@ router.post(
       const existing_listing = await mongoFunctions.find_one("LISTINGS", {
         listing_id: data.listing_id,
         organisation_id: data.organisation_id,
-        key: data.key,
+        // key: data.key,
       });
 
       if (!existing_listing) {
@@ -172,7 +172,7 @@ router.post(
         {
           listing_id: data.listing_id,
           organisation_id: data.organisation_id,
-          key: data.key,
+          // key: data.key,
         },
         { $set: listings_object }
       );
@@ -191,7 +191,7 @@ router.post(
       const result = await mongoFunctions.find_one_and_delete("LISTINGS", {
         listing_id: data.listing_id,
         organisation_id: data.organisation_id,
-        key: data.key,
+        // key: data.key,
       });
 
       if (!result) {
