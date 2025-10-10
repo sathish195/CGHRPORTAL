@@ -1564,7 +1564,7 @@ router.post(
         {
           posting_id: data.posting_id,
           organisation_id: data.organisation_id,
-          key: data.key,
+          // key: data.key,
         },
         { key: 0, _id: 0, __v: 0, organisation_id: 0 }
       );
@@ -1577,7 +1577,7 @@ router.post(
     // Base filter
     const filters = {
       organisation_id: data.organisation_id,
-      key: data.key,
+      // key: data.key,
     };
 
     // ✅ Add date filter only if date is not null or empty string
@@ -1606,7 +1606,7 @@ router.post(
 
     const count = await mongoFunctions.count_documents("POSTINGS", {
       organisation_id: data.organisation_id,
-      key: data.key,
+      // key: data.key,
     });
 
     // Return result

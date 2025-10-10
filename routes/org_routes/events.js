@@ -97,6 +97,7 @@ router.post(
   rateLimit(60, 20),
   Async(async (req, res) => {
     const rawInput = encrypt_decrypt.decryptobj(req.body.enc);
+    // console.log(rawInput);
 
     // ✅ Validate input
     const { error, value: data } = validations.add_update_listings(rawInput);
@@ -123,8 +124,9 @@ router.post(
       bathrooms: data.bathrooms,
       balconies: data.balconies,
       price: data.price,
-      currency_symbol:data.currency_symbol,
+      currency_symbol: data.currency_symbol,
       type: data.type,
+      listing_type: data.listing_type,
       location: data.location || {},
       area_sqft: data.area_sqft || null,
       images: data.images || [],
@@ -158,7 +160,7 @@ router.post(
       const existing_listing = await mongoFunctions.find_one("LISTINGS", {
         listing_id: data.listing_id,
         organisation_id: data.organisation_id,
-        key: data.key,
+        // key: data.key,
       });
 
       if (!existing_listing) {
@@ -170,7 +172,7 @@ router.post(
         {
           listing_id: data.listing_id,
           organisation_id: data.organisation_id,
-          key: data.key,
+          // key: data.key,
         },
         { $set: listings_object }
       );
@@ -189,7 +191,7 @@ router.post(
       const result = await mongoFunctions.find_one_and_delete("LISTINGS", {
         listing_id: data.listing_id,
         organisation_id: data.organisation_id,
-        key: data.key,
+        // key: data.key,
       });
 
       if (!result) {
@@ -227,7 +229,7 @@ router.post(
         {
           listing_id: data.listing_id,
           organisation_id: data.organisation_id,
-          key: data.key,
+          // key: data.key,
         },
         { key: 0, _id: 0, __v: 0, organisation_id: 0 }
       );
@@ -240,7 +242,7 @@ router.post(
     // Base filter
     const filters = {
       organisation_id: data.organisation_id,
-      key: data.key,
+      // key: data.key,
     };
 
     // ✅ Add date filter only if date is not null or empty string
@@ -282,7 +284,7 @@ router.post(
 
     const count = await mongoFunctions.count_documents("LISTINGS", {
       organisation_id: data.organisation_id,
-      key: data.key,
+      // key: data.key,
     });
 
     // Return result

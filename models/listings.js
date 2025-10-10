@@ -1,3 +1,4 @@
+const { required } = require("joi");
 const mongoose = require("mongoose");
 
 const listingSchema = new mongoose.Schema(
@@ -21,6 +22,7 @@ const listingSchema = new mongoose.Schema(
     },
     organisation_id: { type: String, required: true },
     currency_symbol: { type: String, required: true },
+    listing_type: { type: String, required: true },
     key: { type: String, required: true },
     type: { type: String, required: true },
     price: { type: Number, required: true },
@@ -31,13 +33,13 @@ const listingSchema = new mongoose.Schema(
     listing_id: { type: String, required: true }, // ✅ now required
     name: { type: String, required: true },
     description: { type: String, required: true },
-    area_sqft: { type: String, required: true },
+    area_sqft: { type: String },
 
     amenities: {
       type: [
         {
-          name: { type: String, required: true },
-          count: { type: Number, required: true, min: 0 },
+          name: { type: String },
+          count: { type: Number },
         },
       ],
       default: [],

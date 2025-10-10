@@ -71,10 +71,35 @@ function emp_reset_password(data) {
 const base64ImageSizeValidator = (value, helpers) => {
   const buffer = Buffer.from(value, "base64");
   const sizeInBytes = buffer.length;
-  const limitBytes = 256 * 1024;
+  const limitBytes = 1 * 1024 * 1024; // 1 MB
+  console.log(sizeInBytes, limitBytes);
   if (sizeInBytes <= limitBytes) return value;
-  else return helpers.error("any.invalid");
+  else {
+    return helpers.message("Image size must not exceed 1MB");
+  }
 };
+// const base64ImageSizeValidator = (value, helpers) => {
+//   // Regex to check if string is base64 (basic check)
+//   const base64Regex =
+//     /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+
+//   if (!base64Regex.test(value)) {
+//     console.log("Not base64 thats why it entered this block");
+//     // If not base64, skip validation (or return value as is)
+//     return value;
+//   }
+//   console.log("flow Came here because its base64");
+
+//   const buffer = Buffer.from(value, "base64");
+//   const sizeInBytes = buffer.length;
+//   const limitBytes = 1 * 1024 * 1024; // 1 MB
+//   console.log(sizeInBytes, limitBytes);
+
+//   if (sizeInBytes <= limitBytes) return value;
+
+//   return helpers.message("Image size must not exceed 1 MB");
+// };
+
 const base64FileSizeValidator = (value, helpers) => {
   const matches = value.match(/^data:(.+);base64,(.+)$/);
   if (!matches) {
@@ -92,7 +117,7 @@ const base64FileSizeValidator = (value, helpers) => {
 
   if (sizeInBytes > limitBytes) {
     return helpers.error("any.invalid", {
-      message: "File size must not exceed 250 KB",
+      message: "File size must not exceed 256 KB",
     });
   }
 
@@ -1183,17 +1208,33 @@ function add_leads(data) {
   });
   const schema = Joi.object({
     lead_id: Joi.string().trim().optional().allow("", null),
-    organisation_id: Joi.string().required(),
-    key: Joi.string().required(),
-    admin_type: Joi.string().required(),
-    source: Joi.string().optional().allow("", null),
     added_by: Joi.object({
       name: Joi.string().optional(),
       employee_id: Joi.string().optional(),
       email: Joi.string().email().optional(),
     }).optional(),
+
+    contact_number: Joi.string().trim().allow(null, "").optional(),
+
+    assigned_to: Joi.array().items(assignedTo).optional().default([]),
+    next_follow_up: Joi.date().iso().optional().messages({
+      "date.base": "Date must be a valid ISO 8601 date",
+      "date.format": "Date must be in ISO 8601 format",
+    }),
+    files: Joi.alternatives()
+      .try(
+        fileSchema, // single file object
+        Joi.array().items(fileSchema).max(2) // array of file objects
+      )
+      .optional(),
+    //scanglobal specific
+    organisation_id: Joi.string().required(),
+    key: Joi.string().required(),
     lead_name: Joi.string().trim().min(3).max(30).optional(),
-    contact_number: Joi.string().trim().allow(null, "").required(),
+    admin_type: Joi.string().required(),
+    route_action: Joi.number()
+      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
+      .required(),
     email: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
       .trim()
@@ -1204,11 +1245,17 @@ function add_leads(data) {
         "string.pattern.base": "Email Should be valid mail",
       })
       .required(),
-    // company: Joi.string().optional().allow("", null),
+    listing_name: Joi.string().optional().allow("", null),
+    price: Joi.string().optional().allow("", null),
+    area: Joi.string().optional().allow("", null),
+    address: Joi.string().optional().allow("", null),
+    city: Joi.string().optional().allow("", null),
+    type: Joi.string().optional().allow("", null),
+    currency_symbol: Joi.string().optional().allow("", null),
+    listing_type: Joi.string().optional().allow("", null),
+    country: Joi.string().optional().allow("", null),
     comments: Joi.string().min(3).max(2000).optional().allow("", null),
-    route_action: Joi.number()
-      .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
-      .required(),
+    source: Joi.string().optional().allow("", null),
     status: Joi.string()
       .trim()
       .valid(
@@ -1224,17 +1271,6 @@ function add_leads(data) {
         "FollowUp"
       )
       .required(),
-    assigned_to: Joi.array().items(assignedTo).optional().default([]),
-    next_follow_up: Joi.date().iso().required().messages({
-      "date.base": "Date must be a valid ISO 8601 date",
-      "date.format": "Date must be in ISO 8601 format",
-    }),
-    files: Joi.alternatives()
-      .try(
-        fileSchema, // single file object
-        Joi.array().items(fileSchema).max(2) // array of file objects
-      )
-      .optional(),
   });
   return schema.validate(data);
 }
@@ -1334,7 +1370,7 @@ function add_update_postings(data) {
     organisation_id: Joi.string().required(),
     key: Joi.string().required(),
     posting_id: Joi.string().optional().allow("", null),
-    title: Joi.string().min(3).max(70).required(),
+    title: Joi.string().min(3).max(100).required(),
     description: Joi.string()
       .min(10)
       // .max(3000)
@@ -1398,10 +1434,21 @@ function add_update_listings(data) {
     organisation_id: Joi.string().required(),
     key: Joi.string().required(),
     type: Joi.string().min(3).max(50).required(),
+    listing_type: Joi.string()
+      .valid(
+        "Rent",
+        "Sale",
+        "Hot Listing",
+        "Offplan",
+        "Ready To Move",
+        "Sold/Rented"
+      )
+      .required(),
     price: Joi.number().required(),
     currency_symbol: Joi.string().required(),
     listing_id: Joi.string().optional().allow("", null),
     name: Joi.string().min(3).max(100).required(),
+
     description: Joi.string()
       .min(10)
       .max(3000)
@@ -1429,12 +1476,9 @@ function add_update_listings(data) {
       .max(2)
       .items(
         Joi.object({
-          url: Joi.string()
-            .custom(base64ImageSizeValidator, "Base64 image size validation")
-            .required(),
+          url: Joi.string().custom(base64ImageSizeValidator).required(),
         })
-      )
-      .required(),
+      ),
   });
 
   return schema.validate(data);
