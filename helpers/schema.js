@@ -78,6 +78,7 @@ const base64ImageSizeValidator = (value, helpers) => {
     return helpers.message("Image size must not exceed 256KB");
   }
 };
+
 // const base64ImageSizeValidator = (value, helpers) => {
 //   // Regex to check if string is base64 (basic check)
 //   const base64Regex =
