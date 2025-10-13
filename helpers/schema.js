@@ -71,11 +71,11 @@ function emp_reset_password(data) {
 const base64ImageSizeValidator = (value, helpers) => {
   const buffer = Buffer.from(value, "base64");
   const sizeInBytes = buffer.length;
-  const limitBytes = 1 * 1024 * 1024; // 1 MB
+  const limitBytes = 256 * 1024; // 256 KB
   console.log(sizeInBytes, limitBytes);
   if (sizeInBytes <= limitBytes) return value;
   else {
-    return helpers.message("Image size must not exceed 1MB");
+    return helpers.message("Image size must not exceed 256KB");
   }
 };
 // const base64ImageSizeValidator = (value, helpers) => {
