@@ -1442,7 +1442,8 @@ function add_update_listings(data) {
         "Hot Listing",
         "Offplan",
         "Ready To Move",
-        "Sold/Rented"
+        "Sold/Rented",
+        "Investor Friendly Project"
       )
       .required(),
     price: Joi.number().required(),
