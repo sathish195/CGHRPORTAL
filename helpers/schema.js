@@ -886,7 +886,7 @@ function apply_leave(data) {
     }),
     leave_type: Joi.string().min(9).required(),
     reason: Joi.string()
-      .pattern(/^[a-zA-Z0-9.,_()[\]& ]+$/)
+      .pattern(/^[a-zA-Z0-9.,-_()[\]/&?@]+$/)
       .trim()
       .min(5)
       .max(100)

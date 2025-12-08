@@ -14,6 +14,8 @@ const Async = require("../../middlewares/async");
 const rateLimit = require("../../helpers/custom_rateLimiter");
 const redisFunctions = require("../../helpers/redisFunctions");
 const slowDown = require("../../middlewares/slow_down");
+const { Collection } = require("mongoose");
+const { forEach } = require("underscore");
 
 //dummy route to add super admin
 
@@ -34,7 +36,6 @@ router.post(
 
     let new_s_admin_data = {
       password: password_hash,
-
       email: data.email,
       first_name: data.first_name,
       last_name: data.last_name,
@@ -44,7 +45,6 @@ router.post(
       "SUPER_ADMIN",
       { email: data.email },
       new_s_admin_data,
-
       { upsert: true, returnDocument: "after" }
     );
     await redisFunctions.update_redis("SUPER_ADMIN", new_s_admin);
@@ -737,6 +737,110 @@ router.post(
     return res.status(200).send({ organisations_data: orgs });
   })
 );
+
+// update redis
+// router.post("/update_redis", async (req, res) => {
+//   const COLLECTION = req.body.collection.trim();
+//   console.log("Updating Redis for:", COLLECTION);
+//   // Fetch records from MongoDB
+//   const records = await mongoFunctions.find(COLLECTION);
+//   console.log(records.length);
+//   if (!records || records.length === 0) {
+//     return res.status(404).send({ message: "No records found" });
+//   }
+//   let i = 1;
+//   for (const obj of records) {
+//     console.log(i++);
+//     const { _id, __v, createdAt, updatedAt, ...cleanedObj } = obj;
+//     console.log(obj);
+
+//     console.log(cleanedObj);
+//     if (COLLECTION === "ORGANISATIONS") {
+//       await redisFunctions.redisInsert(
+//         "CRM_ORGANISATIONS",
+//         obj.organisation_id,
+//         JSON.stringify(cleanedObj)
+//       );
+//     } else if (COLLECTION === "SUPER_ADMIN") {
+//       await redisFunctions.redisInsert(
+//         "CG_SUPER_ADMIN",
+//         obj.email,
+//         JSON.stringify(obj)
+//       );
+//     } else if (COLLECTION === "ORG_LEVEL_CONTROLS") {
+//       await redisFunctions.redisInsert(
+//         "CGHR_ORG_LEVEL_CONTROLS",
+//         obj.organisation_id,
+//         JSON.stringify(obj)
+//       );
+//     } else if (COLLECTION === "ADMIN_CONTROLS") {
+//       await redisFunctions.redisInsert(
+//         "CGHR_ADMIN_CONTROLS",
+//         "ADMIN_CONTROLS",
+//         JSON.stringify(obj)
+//       );
+//     } else if (COLLECTION === "ADMIN_STATS") {
+//       await redisFunctions.redisInsert(
+//         "CGHR_ADMIN_STATS",
+//         "ADMIN_STATS",
+//         JSON.stringify(obj)
+//       );
+//     }
+
+//     console.log(`✅ ${COLLECTION} data updated in Redis`);
+//     return res.send(true);
+//   }
+// });
+router.post("/update_redis", async (req, res) => {
+  const COLLECTION = req.body.collection.trim();
+  console.log("Updating Redis for:", COLLECTION);
+
+  // Fetch records from MongoDB
+  const records = await mongoFunctions.find(COLLECTION);
+  console.log(records.length);
+
+  if (!records || records.length === 0) {
+    return res.status(404).send({ message: "No records found" });
+  }
+
+  // Use a Promise.all to ensure all operations complete before responding
+  const redisUpdates = records.map(async (obj, index) => {
+    console.log(`Processing record ${index + 1}...`);
+    const { _id, __v, createdAt, updatedAt, ...cleanedObj } = obj;
+
+    console.log(cleanedObj);
+
+    // Depending on the collection, insert the data into Redis with corresponding keys
+    switch (COLLECTION) {
+      case "ORGANISATIONS":
+        await redisFunctions.redisInsert("CRM_ORGANISATIONS", obj.organisation_id, JSON.stringify(cleanedObj));
+        break;
+      case "SUPER_ADMIN":
+        await redisFunctions.redisInsert("CG_SUPER_ADMIN", obj.email, JSON.stringify(obj));
+        break;
+      case "ORG_LEVEL_CONTROLS":
+        await redisFunctions.redisInsert("CGHR_ORG_LEVEL_CONTROLS", obj.organisation_id, JSON.stringify(obj));
+        break;
+      case "ADMIN_CONTROLS":
+        await redisFunctions.redisInsert("CGHR_ADMIN_CONTROLS", "ADMIN_CONTROLS", JSON.stringify(obj));
+        break;
+      case "ADMIN_STATS":
+        await redisFunctions.redisInsert("CGHR_ADMIN_STATS", "ADMIN_STATS", JSON.stringify(obj));
+        break;
+      default:
+        console.log(`No matching collection for ${COLLECTION}`);
+    }
+
+    console.log(`✅ Record ${index + 1} updated in Redis`);
+  });
+
+  // Wait for all Redis updates to complete
+  await Promise.all(redisUpdates);
+
+  // After all records are processed, send a response
+  console.log(`${COLLECTION} data updated in Redis`);
+  res.send(true);
+});
 
 //billing feature
 
