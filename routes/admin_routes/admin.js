@@ -2975,8 +2975,7 @@ router.post(
     }
 
 
-    const MAX_SIZE =0.005
-    //  2 * 1024 * 1024; // 2MB
+    const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
 if (Array.isArray(data.images)) {
     for (let i = 0; i < data.images.length; i++) {
