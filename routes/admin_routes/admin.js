@@ -2981,11 +2981,11 @@ if (Array.isArray(data.images)) {
     for (let i = 0; i < data.images.length; i++) {
         const image = data.images[i];
 
-        if (typeof image !== 'string') {
+        if (typeof image.url !== 'string') {
             return res.status(400).send('Invalid image format');
         }
 
-        const size = Buffer.byteLength(image, 'utf8');
+        const size = Buffer.byteLength(image.url, 'utf8');
 
         if (size > MAX_SIZE) {
             return res
