@@ -5,7 +5,7 @@ module.exports = function (handler) {
     try {
       await handler(req, res);
     } catch (ex) {
-      const errorMessage = `Error occurred:x::x::x::x:: ${ex.stack}`;
+      const errorMessage = `Error occurred:x::x::x::x:: ${ex}`;
       alertDev(errorMessage);
       next(ex);
     }
