@@ -16,6 +16,8 @@ module.exports = {
           .send({ message: "Token is not valid for disabled account" });
       }
       next();
+    console.log("testing------------------------------------->");
+
     } catch (err) {
       if (err.name === "TokenExpiredError") {
         return res.status(401).send({ message: "Token Is Expired" });

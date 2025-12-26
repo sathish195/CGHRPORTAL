@@ -1512,6 +1512,7 @@ router.post(
       req.employee.organisation_id,
       true
     );
+    console.log(org_data,"org_data============>");
     if (!org_data) {
       return res.status(400).send("Organisation Not Found!!");
     }
