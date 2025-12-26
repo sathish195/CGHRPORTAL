@@ -1506,6 +1506,7 @@ router.post(
         .status(403)
         .send("Only Director Or Manager Can Access Holidays List");
     }
+    console.log("Fetching holidays for organisation:");
     let org_data = await redisFunctions.redisGet(
       "CRM_ORGANISATIONS",
       req.employee.organisation_id,

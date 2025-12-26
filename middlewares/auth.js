@@ -6,6 +6,7 @@ module.exports = {
     if (!token) {
       return res.status(401).send({ message: "Token not provided" });
     }
+    console.log(token);
     try {
       const decoded = jwt.verify(token, process.env.jwtPrivateKey);
       req.employee = decoded;
