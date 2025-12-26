@@ -2974,26 +2974,28 @@ router.post(
       return res.status(400).send("Invalid route_action provided");
     }
 
-    const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
-    function getBase64Size(base64) {
-        const cleaned = base64.replace(/^data:image\/\w+;base64,/, '');
-        return Buffer.byteLength(cleaned, 'base64');
-    }
-    
-    if (Array.isArray(data.images)) {
-        for (const image of data.images) {
-            const size = getBase64Size(image.url);
-            console.log(size,"size");
-    
-            if (size > MAX_SIZE) {
-                return res
-                    .status(400)
-                    .send('Invalid image size. Maximum allowed size is 2MB');
-            }
+    const MAX_SIZE =0.005
+    //  2 * 1024 * 1024; // 2MB
+
+if (Array.isArray(data.images)) {
+    for (let i = 0; i < data.images.length; i++) {
+        const image = data.images[i];
+
+        if (typeof image.url !== 'string') {
+            return res.status(400).send('Invalid image format');
+        }
+
+        const size = Buffer.byteLength(image.url, 'utf8');
+        console.log(size,"size----->");
+
+        if (size > MAX_SIZE) {
+            return res
+                .status(400)
+                .send('Invalid image size. Maximum allowed size is 2MB');
         }
     }
-    
+}
 
 
     // Construct postings data
