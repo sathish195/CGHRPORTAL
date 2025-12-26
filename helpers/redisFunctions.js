@@ -3,11 +3,19 @@ const mongofunctions = require("./mongoFunctions");
 let client;
 const { alertDev } = require("./telegram");
 
+// if (process.env.REDIS_URL) {
+//   client = RedisClient.createClient({
+//     url: `redis://${process.env.REDIS_URL}:${process.env.REDIS_PORT}`,
+//   });
+// }
+
 if (process.env.REDIS_URL) {
   client = RedisClient.createClient({
-    url: `redis://${process.env.REDIS_URL}:${process.env.REDIS_PORT}`,
+    url: `redis://:${process.env.REDIS_PASSWORD}@${process.env.REDIS_URL}:${process.env.REDIS_PORT}`,
   });
+
 }
+
 // alertDev(process.env.REDIS_URL);
 
 client.on("error", (err) => {
