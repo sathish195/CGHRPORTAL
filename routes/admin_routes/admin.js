@@ -2974,6 +2974,28 @@ router.post(
       return res.status(400).send("Invalid route_action provided");
     }
 
+
+    const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+
+if (Array.isArray(data.images)) {
+    for (let i = 0; i < data.images.length; i++) {
+        const image = data.images[i];
+
+        if (typeof image !== 'string') {
+            return res.status(400).send('Invalid image format');
+        }
+
+        const size = Buffer.byteLength(image, 'utf8');
+
+        if (size > MAX_SIZE) {
+            return res
+                .status(400)
+                .send('Invalid image size. Maximum allowed size is 2MB');
+        }
+    }
+}
+
+
     // Construct postings data
     const postings_object = {
       organisation_id: data.organisation_id,

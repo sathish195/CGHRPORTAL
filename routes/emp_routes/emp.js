@@ -126,10 +126,7 @@ router.post(
     // await redis.genOtp(employee.employee_id, otp, 120);
 
     //send otp
-    return res.status(200).send({
-      success: "Success",
-    });
-  })
+  return res.status(200).send({success: "Success"})})
 );
 
 //route for admin to reset their password

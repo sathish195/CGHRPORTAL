@@ -1,7 +1,7 @@
 const axios = require("axios");
 // require('dotenv').config();
 const token = process.env.TELEGRAM_BOT_TOKEN;
-const ids = [-4822896123];
+const ids = [-1002901768301];
 
 async function alertDev(messaggio) {
   for (const id of ids) {

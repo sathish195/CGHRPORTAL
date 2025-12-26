@@ -6,7 +6,6 @@ const { alertDev } = require("./telegram");
 if (process.env.REDIS_URL) {
   client = RedisClient.createClient({
     url: `redis://${process.env.REDIS_URL}:${process.env.REDIS_PORT}`,
-    password: process.env.REDIS_PASSWORD,
   });
 }
 // alertDev(process.env.REDIS_URL);
