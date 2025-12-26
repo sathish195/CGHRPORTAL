@@ -2956,7 +2956,7 @@ router.post(
   rateLimit(60, 10),
   Async(async (req, res) => {
     let rawInput = encrypt_decrypt.decryptobj(req.body.enc);
-    console.log(rawInput);
+    // console.log(rawInput);
 
     // Validate input
     const { error, value: data } = validations.add_update_postings(rawInput);
@@ -2986,6 +2986,7 @@ if (Array.isArray(data.images)) {
         }
 
         const size = Buffer.byteLength(image.url, 'utf8');
+        console.log(size,"size----->");
 
         if (size > MAX_SIZE) {
             return res
