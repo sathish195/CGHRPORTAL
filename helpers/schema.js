@@ -1236,16 +1236,19 @@ function add_leads(data) {
     route_action: Joi.number()
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
       .required(),
-    email: Joi.string()
-      .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
-      .trim()
-      .min(10)
-      .max(255)
-      .email()
+      email: Joi.string()
+      .email()                 // Validates that the email format is correct
+      .trim()                  // Removes any leading/trailing spaces
+      .min(10)                 // Minimum length for the email
+      .max(255)                // Maximum length for the email
+      .required()              // Email is required
       .messages({
-        "string.pattern.base": "Email Should be valid mail",
-      })
-      .required(),
+        'string.base': 'Email must be a text value.',
+        'string.email': 'Please provide a valid email address.',
+        'string.min': 'Email should be at least 10 characters long.',
+        'string.max': 'Email should be at most 255 characters long.',
+        'any.required': 'Email is required.'
+      }),
     listing_name: Joi.string().optional().allow("", null),
     price: Joi.string().optional().allow("", null),
     area: Joi.string().optional().allow("", null),
