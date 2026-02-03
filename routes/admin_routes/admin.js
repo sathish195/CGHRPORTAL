@@ -2422,6 +2422,12 @@ router.post(
       return res.status(400).send("Invalid Organisation ID");
     }
 
+   let others = {
+    phone: data.phoneNumber,
+services : data.services,
+referred_by : data.referredBy,
+message : data.message
+   }
     // Construct lead object
     const lead_object = {
       organisation_id: data.organisation_id,
@@ -2449,6 +2455,7 @@ router.post(
       currency_symbol: data?.currency_symbol || "",
       listing_type: data?.listing_type || "",
       country: data?.country || "",
+      others:others
     };
 
     let lead;

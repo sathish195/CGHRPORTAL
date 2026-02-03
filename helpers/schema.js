@@ -1277,10 +1277,10 @@ function add_leads(data) {
       .required(),
 
       phoneNumber: Joi.string()
-      .pattern(/^[0-9]$/)  // Ensures the phone number has 6 to 15 digits
-      .min(6)                     // Minimum of 6 characters
-      .max(15)                    // Maximum of 15 characters
-      .required()                 // Phone number is required
+      .pattern(/^[0-9]$/)  
+      .min(6)                    
+      .max(15)                  
+      .required()                 
       .messages({
         'string.base': 'Phone number must be a text value.',
         'string.pattern.base': 'Phone number must be between 6 and 15 digits long.',

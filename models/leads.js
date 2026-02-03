@@ -27,6 +27,7 @@ const leads_schema = new mongoose.Schema(
     currency_symbol: { type: String },
     listing_type: { type: String },
     country: { type: String },
+    others: { type: Object, default: {} },
   },
   { timestamps: true }
 );
