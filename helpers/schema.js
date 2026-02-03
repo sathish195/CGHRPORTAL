@@ -1237,11 +1237,11 @@ function add_leads(data) {
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
       .required(),
       email: Joi.string()
-      .email({ tlds: { allow: false } })                 // Validates that the email format is correct
-      .trim()                  // Removes any leading/trailing spaces
-      .min(10)                 // Minimum length for the email
-      .max(255)                // Maximum length for the email
-      .required()              // Email is required
+      .email({ tlds: {  allow: ['com', 'org', 'net', 'edu', 'gov']  } })
+      .trim()                  
+      .min(10)                 
+      .max(255)                
+      .required()              
       .messages({
         'string.base': 'Email must be a text value.',
         'string.email': 'Please provide a valid email address.',
