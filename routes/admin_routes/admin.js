@@ -3082,7 +3082,7 @@ const { alertDev } = require("../../helpers/tel_topics");
 router.post('/contact_us', rateLimit(60, 10), Async(async (req, res) => {
 
   const data = encrypt_decrypt.decryptobj(req.body.enc);
-  // console.log(rawInput);
+  console.log(data);
 
   // // Validate input
   // const { error, value: data } = validations.add_leads(rawInput);
