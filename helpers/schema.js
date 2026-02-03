@@ -1302,12 +1302,6 @@ referredBy: Joi.string()
     'string.min': 'ReferredBy must be at least 3 characters long.',
     'string.max': 'ReferredBy can be a maximum of 100 characters.',
     'any.required': 'ReferredBy is required.'
-  }),
-
-message: Joi.string()
-  .optional()
-  .messages({
-    'string.base': 'Message must be a text value.'
   })
   });
   return schema.validate(data);
