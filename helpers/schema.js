@@ -1202,7 +1202,7 @@ function add_leads(data) {
         "any.invalid": "File size must not exceed 256 KB",
       }),
     contentType: Joi.string().optional(),
-  });
+});
   const assignedTo = Joi.object({
     employee_id: Joi.string().required(),
     employee_name: Joi.string().required(),
@@ -1272,6 +1272,43 @@ function add_leads(data) {
         "FollowUp"
       )
       .required(),
+
+  phoneNumber: Joi.string()
+  .pattern(/^[0-9]{12}$/) 
+  .required()
+  .messages({
+    'string.base': 'Phone number must be a text value.',
+    'string.pattern.base': 'Phone number must be 12 digits long.',
+    'any.required': 'Phone number is required.'
+  }),
+
+services: Joi.string()
+  .min(3) 
+  .max(100) 
+  .required()
+  .messages({
+    'string.base': 'Services must be a text value.',
+    'string.min': 'Services must be at least 3 characters long.',
+    'string.max': 'Services can be a maximum of 100 characters.',
+    'any.required': 'Services are required.'
+  }),
+
+referredBy: Joi.string()
+  .min(3)
+  .max(100)
+  .required()
+  .messages({
+    'string.base': 'ReferredBy must be a text value.',
+    'string.min': 'ReferredBy must be at least 3 characters long.',
+    'string.max': 'ReferredBy can be a maximum of 100 characters.',
+    'any.required': 'ReferredBy is required.'
+  }),
+
+message: Joi.string()
+  .optional()
+  .messages({
+    'string.base': 'Message must be a text value.'
+  })
   });
   return schema.validate(data);
 }
@@ -1662,8 +1699,8 @@ function contact_us(data) {
     }),
 
   services: Joi.string()
-    .min(3) // Optional: Minimum length of 3 characters for services
-    .max(100) // Optional: Maximum length for services
+    .min(3) 
+    .max(100) 
     .required()
     .messages({
       'string.base': 'Services must be a text value.',
@@ -1673,8 +1710,8 @@ function contact_us(data) {
     }),
 
   referredBy: Joi.string()
-    .min(3) // Optional: Minimum length of 3 characters for referredBy
-    .max(100) // Optional: Maximum length for referredBy
+    .min(3)
+    .max(100)
     .required()
     .messages({
       'string.base': 'ReferredBy must be a text value.',

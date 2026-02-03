@@ -2461,6 +2461,8 @@ router.post(
 
       const new_lead_id = functions.get_random_string("LEAD", 10, true);
       lead_object.lead_id = new_lead_id;
+  const tl = await alertDev(`✅ : New Contact Us message is coming✅\nName: ${data.leadName}\nEmail: ${data.email}\nPhone: ${data.phoneNumber}\nServices: ${data.services}\nReferred By: ${data.referredBy}\nMessage: ${data.message}`,"Contactus");
+
 
       await mongoFunctions.create_new_record("LEADS", lead_object);
       // Add notification
