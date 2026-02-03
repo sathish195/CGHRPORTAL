@@ -2426,7 +2426,7 @@ router.post(
     phone: data.phoneNumber,
 services : data.services,
 referred_by : data.referredBy,
-message : data.message
+message : data.message || ""
    }
     // Construct lead object
     const lead_object = {

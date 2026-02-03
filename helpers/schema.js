@@ -1237,7 +1237,7 @@ function add_leads(data) {
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
       .required(),
       email: Joi.string()
-      .email({ tlds: {  allow: ['com', 'in','org', 'net', 'edu', 'gov']  } })
+      .email({ tlds: {  allow: false } })
       .trim()                  
       .min(10)                 
       .max(255)                
@@ -1279,13 +1279,13 @@ function add_leads(data) {
       phoneNumber: Joi.string()
       .pattern(/^[0-9]$/)  
       .min(6)                    
-      .max(15)                  
+      .max(18)                  
       .required()                 
       .messages({
         'string.base': 'Phone number must be a text value.',
         'string.pattern.base': 'Phone number must be between 6 and 15 digits long.',
         'string.min': 'Phone number must be at least 6 digits long.',
-        'string.max': 'Phone number must be at most 15 digits long.',
+        'string.max': 'Phone number must be at most 18 digits long.',
         'any.required': 'Phone number is required.'
       }),
 
