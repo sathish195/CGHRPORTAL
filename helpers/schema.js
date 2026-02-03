@@ -1628,6 +1628,70 @@ function org_level_controls(data) {
   return schema.validate(data);
 }
 
+
+
+function contact_us(data) {
+  const schema = Joi.object({
+    name: Joi.string()
+    .min(3) // Optional: Minimum length of 3 characters for name
+    .max(100) // Optional: Maximum length for name
+    .required()
+    .messages({
+      'string.base': 'Name must be a text value.',
+      'string.min': 'Name must be at least 3 characters long.',
+      'string.max': 'Name can be a maximum of 100 characters.',
+      'any.required': 'Name is required.'
+    }),
+
+  email: Joi.string()
+    .email({ tlds: { allow: false } }) // Validates the email format
+    .required()
+    .messages({
+      'string.base': 'Email must be a text value.',
+      'string.email': 'Email must be a valid email address.',
+      'any.required': 'Email is required.'
+    }),
+
+  phoneNumber: Joi.string()
+    .pattern(/^[0-9]{10}$/) // Validates a 10-digit phone number (adjust regex if needed)
+    .required()
+    .messages({
+      'string.base': 'Phone number must be a text value.',
+      'string.pattern.base': 'Phone number must be 10 digits long.',
+      'any.required': 'Phone number is required.'
+    }),
+
+  services: Joi.string()
+    .min(3) // Optional: Minimum length of 3 characters for services
+    .max(100) // Optional: Maximum length for services
+    .required()
+    .messages({
+      'string.base': 'Services must be a text value.',
+      'string.min': 'Services must be at least 3 characters long.',
+      'string.max': 'Services can be a maximum of 100 characters.',
+      'any.required': 'Services are required.'
+    }),
+
+  referredBy: Joi.string()
+    .min(3) // Optional: Minimum length of 3 characters for referredBy
+    .max(100) // Optional: Maximum length for referredBy
+    .required()
+    .messages({
+      'string.base': 'ReferredBy must be a text value.',
+      'string.min': 'ReferredBy must be at least 3 characters long.',
+      'string.max': 'ReferredBy can be a maximum of 100 characters.',
+      'any.required': 'ReferredBy is required.'
+    }),
+
+  message: Joi.string()
+    .optional()
+    .messages({
+      'string.base': 'Message must be a text value.'
+    })
+  });
+  return schema.validate(data);
+}
+
 // Export the functions
 module.exports = {
   emp_login,
@@ -1691,4 +1755,5 @@ module.exports = {
   access_control,
   org_level_controls,
   add_update_designation_new,
+  contact_us
 };

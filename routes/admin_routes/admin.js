@@ -3075,3 +3075,19 @@ if (Array.isArray(data.images)) {
     }
   })
 );
+
+// tesing contactus
+const { alertDev } = require("../../helpers/tel_topics");
+
+router.post('/contact_us', rateLimit(60, 10), Async(async (req, res) => {
+  const data = req.body;
+  var { error } = validations.contact_us(data);
+  if (error) return res.status(400).send(error.details[0].message);
+  // const tl = await alertDev(`✅ : New Contracts is comming/n ${data}`);
+  // const tl = await alertDev(`✅ : New Contact Us message is coming✅ \n${data.data}`);
+  const tl = await alertDev(`✅ : New Contact Us message is coming✅\nName: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phoneNumber}\nServices: ${data.services}\nReferred By: ${data.referredBy}\nMessage: ${data.message}`);
+
+
+  return res.status(200).send("Message sent successfully");
+
+}));
