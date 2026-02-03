@@ -2461,7 +2461,7 @@ router.post(
 
       const new_lead_id = functions.get_random_string("LEAD", 10, true);
       lead_object.lead_id = new_lead_id;
- await alertDev(`📩 New Contact Us Submission\n\n\n\nName : ${data.lead_name}\nEmail : ${data.email}\nPhone: +${data.phoneNumber}\nServices : ${data.services}\nReferred By : ${data.referredBy}\n\n\nMessage : ${data.comments ? data.comments : ""}\n`,"Contactus");
+ await alertDev(`📩 New Contact Us Submission\n\nName : ${data.lead_name}\nEmail : ${data.email}\nPhone: +${data.phoneNumber}\nServices : ${data.services}\nReferred By : ${data.referredBy}\n\nMessage : ${data.comments ? data.comments : ""}\n`,"Contactus");
 
 
       await mongoFunctions.create_new_record("LEADS", lead_object);
