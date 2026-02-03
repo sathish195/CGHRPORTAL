@@ -1237,7 +1237,7 @@ function add_leads(data) {
       .valid(1, 2, 3) // 1 - add, 2 - update, 3 - delete
       .required(),
       email: Joi.string()
-      .email({ tlds: {  allow: ['com', 'org', 'net', 'edu', 'gov']  } })
+      .email({ tlds: {  allow: ['com', 'in','org', 'net', 'edu', 'gov']  } })
       .trim()                  
       .min(10)                 
       .max(255)                
