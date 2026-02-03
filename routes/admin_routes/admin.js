@@ -2394,7 +2394,7 @@ router.post(
   rateLimit(60, 10),
   Async(async (req, res) => {
     const rawInput = encrypt_decrypt.decryptobj(req.body.enc);
-    // console.log(rawInput);
+    console.log(rawInput);
 
     // Validate input
     const { error, value: data } = validations.add_leads(rawInput);

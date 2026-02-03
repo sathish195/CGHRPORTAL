@@ -1275,7 +1275,6 @@ function add_leads(data) {
         "FollowUp"
       )
       .required(),
-
       phoneNumber: Joi.string()
       .pattern(/^[0-9]$/)  
       .min(6)                    
@@ -1691,8 +1690,10 @@ function contact_us(data) {
     }),
 
   phoneNumber: Joi.string()
-    .pattern(/^[0-9]{10}$/) // Validates a 10-digit phone number (adjust regex if needed)
+    .pattern(/^[0-9]$/) // Validates a 10-digit phone number (adjust regex if needed)
     .required()
+    .min(6)
+    .max(18)
     .messages({
       'string.base': 'Phone number must be a text value.',
       'string.pattern.base': 'Phone number must be 10 digits long.',
