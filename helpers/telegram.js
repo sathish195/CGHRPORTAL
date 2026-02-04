@@ -31,11 +31,11 @@ const scanglobal_token = process.env.TELEGRAM_BOT_TOKENN;
 
 const subGroupMap = {
   Contactus: {
-    chat_id: -3875988887,
+    chat_id: -1003875988887,
     message_thread_id: 3, 
   },
   all: {
-    chat_id: -3875988887, 
+    chat_id: -1003875988887, 
   },
 };
 
