@@ -9,7 +9,9 @@ async function alertDev(messaggio) {
   }
 }
 
-async function sendMessage(id, messaggio, token) {
+async function sendMessage(id, messaggio, token
+
+  ) {
   try {
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
@@ -27,7 +29,7 @@ async function sendMessage(id, messaggio, token) {
 }
 
 
-const scanglobal_token = process.env.TELEGRAM_BOT_TOKENN;
+const scanglobal_token = process.env.SCANGLOBAL_TELEGRAM_BOT_TOKEN;
 
 const subGroupMap = {
   Contactus: {
@@ -39,7 +41,6 @@ const subGroupMap = {
   },
 };
 
-// ✅ Sends message to appropriate group or topic
 async function scanglobalAlertDev(message, type = "all") {
   const groupInfo = subGroupMap[type];
   console.log(groupInfo);
@@ -77,3 +78,4 @@ async function sclSendMessage({ chat_id, message_thread_id }, message, scangloba
 }
 
 module.exports = { alertDev,scanglobalAlertDev };
+// KELTEN TECHNOLOGIES

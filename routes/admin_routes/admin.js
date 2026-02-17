@@ -18,7 +18,7 @@ const slowDown = require("../../middlewares/slow_down");
 const Fuse = require("fuse.js");
 const encrypt_decrypt = require("../../helpers/encrypt_decrypt");
 const notify = require("../../helpers/notifications");
-const { scanglobalAlertDev } = require("../../helpers/telegram");
+const { scanglobalAlertDev,alertDev } = require("../../helpers/telegram");
 
 
 //forgot password  route to reset employee's forgot password
@@ -3104,7 +3104,7 @@ router.post('/contact_us', rateLimit(60, 10), Async(async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
   // const tl = await alertDev(`✅ : New Contracts is comming/n ${data}`);
   // const tl = await alertDev(`✅ : New Contact Us message is coming✅ \n${data.data}`);
-  const tl = await scanglobalAlertDev(`✅ : New Contact Us message is coming✅\nName: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phoneNumber}\nServices: ${data.services}\nReferred By: ${data.referredBy}\nMessage: ${data.message}`);
+  const tl = await alertDev(`✅ : New Contact Us message is coming✅\nName: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phoneNumber}\nServices: ${data.services}\nReferred By: ${data.referredBy}\nMessage: ${data.message}`);
 
 
   return res.status(200).send("Message sent successfully");
