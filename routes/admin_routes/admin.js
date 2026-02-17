@@ -2470,7 +2470,7 @@ message : data.message || ""
 
       const new_lead_id = functions.get_random_string("LEAD", 10, true);
       lead_object.lead_id = new_lead_id;
- await scanglobalAlertDev(`📩 New Contact Us Submission\n\nName : ${data.lead_name}\nEmail : ${data.email}\nPhone: +${data.phoneNumber}\nServices : ${data.services}\nReferred By : ${data.referredBy}\n\nMessage : ${data.comments ? data.comments : ""}\n`,"Contactus");
+ await alertDev(`📩 New Contact Us Submission\n\nName : ${data.lead_name}\nEmail : ${data.email}\nPhone: +${data.phoneNumber}\nServices : ${data.services}\nReferred By : ${data.referredBy}\n\nMessage : ${data.comments ? data.comments : ""}\n`,"Contactus");
 
 
       await mongoFunctions.create_new_record("LEADS", lead_object);
