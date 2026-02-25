@@ -97,7 +97,7 @@ router.post(
   rateLimit(60, 20),
   Async(async (req, res) => {
     // alertDev("Listings route hit");
-    const rawInput = encrypt_decrypt.decryptobj(req.body.enc);
+    const rawInput = encrypt_decrypt.decrypt(req.body.enc);
     // console.log(rawInput);
     // alertDev(rawInput);
 
@@ -212,7 +212,7 @@ router.post(
   "/listings",
   rateLimit(60, 60),
   Async(async (req, res) => {
-    const data = encrypt_decrypt.decryptobj(req.body.enc);
+    const data = encrypt_decrypt.decrypt(req.body.enc);
     // console.log(data);
 
     // Validate limit & skip

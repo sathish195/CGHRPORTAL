@@ -2395,7 +2395,7 @@ router.post(
   // Auth,
   rateLimit(60, 10),
   Async(async (req, res) => {
-    const rawInput = encrypt_decrypt.decryptobj(req.body.enc);
+    const rawInput = encrypt_decrypt.decrypt(req.body.enc);
     console.log(rawInput);
 
     // Validate input
@@ -2966,7 +2966,7 @@ router.post(
   "/add_update_postings",
   rateLimit(60, 10),
   Async(async (req, res) => {
-    let rawInput = encrypt_decrypt.decryptobj(req.body.enc);
+    let rawInput = encrypt_decrypt.decrypt(req.body.enc);
     // console.log(rawInput);
 
     // Validate input
@@ -3091,7 +3091,7 @@ if (Array.isArray(data.images)) {
 
 router.post('/contact_us', rateLimit(60, 10), Async(async (req, res) => {
 
-  const data = encrypt_decrypt.decryptobj(req.body.enc);
+  const data = encrypt_decrypt.decrypt(req.body.enc);
   console.log(data);
 
   // // Validate input
