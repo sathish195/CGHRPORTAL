@@ -160,13 +160,13 @@ function add_update_org(data) {
     address: Joi.string().min(5).max(100).required().trim(),
 
     billing_type: Joi.object({
-      type: Joi.string().valid("free", "paid").required(),
+      type: Joi.string().valid("free", "paid").optional(),
       plan: Joi.when("type", {
         is: "paid",
-        then: Joi.string().valid("6_months", "3_months", "1_year").required(),
+        then: Joi.string().valid("6_months", "3_months", "1_year").optional(),
         otherwise: Joi.string().allow(null, "").optional(),
       }),
-    }).required(),
+    }).optional(),
   });
 
   return schema.validate(data);
