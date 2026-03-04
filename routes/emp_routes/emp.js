@@ -70,6 +70,7 @@ router.post(
     const token = jwt.sign(
       {
         organisation_id: up_emp.organisation_id,
+        organisation_name: employee.organisation_name,
         employee_id: up_emp.employee_id,
         first_name: up_emp.basic_info.first_name,
         last_name: up_emp.basic_info.last_name,
@@ -115,6 +116,7 @@ router.post(
     const token = jwt.sign(
       {
         organisation_id: employee.organisation_id,
+        organisation_name: employee.organisation_name,
         employee_id: employee.employee_id,
         first_name: employee.basic_info.first_name,
         last_name: employee.basic_info.last_name,

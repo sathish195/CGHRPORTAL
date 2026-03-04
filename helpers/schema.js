@@ -6,7 +6,7 @@ function emp_login(data) {
   const schema = Joi.object({
     email: Joi.string().required().max(55),
     password: Joi.string().required().min(8).max(15),
-    last_ip: Joi.string().required(),
+    // last_ip: Joi.string().required(),
     fcm_token: Joi.string().required(),
     device_id: Joi.string().required(),
     browserid: Joi.string().required(),
@@ -504,31 +504,36 @@ function add_employee_by_admin(data) {
         .message(
           "Labour Card ID must be a numeric string between 6 and 10 digits"
         ),
-      passport_attachment: Joi.alternatives()
-        .try(
-          fileSchema, // single file object
-          Joi.array().items(fileSchema).max(2) // array of file objects
-        )
-        .optional(),
-      emirates_attachment: Joi.alternatives()
-        .try(
-          fileSchema, // single file object
-          Joi.array().items(fileSchema).max(2) // array of file objects
-        )
-        .optional(),
-      labour_card_attachment: Joi.alternatives()
-        .try(
-          fileSchema, // single file object
-          Joi.array().items(fileSchema).max(2) // array of file objects
-        )
-        .optional(),
-      other_attachments: Joi.alternatives()
-        .try(
-          fileSchema, // single file object
-          Joi.array().items(fileSchema).max(3) // array of file objects
-        )
-        .optional(),
+      // passport_attachment: Joi.alternatives()
+      //   .try(
+      //     fileSchema, // single file object
+      //     Joi.array().items(fileSchema).max(2) // array of file objects
+      //   )
+      //   .optional(),
+      // emirates_attachment: Joi.alternatives()
+      //   .try(
+      //     fileSchema, // single file object
+      //     Joi.array().items(fileSchema).max(2) // array of file objects
+      //   )
+      //   .optional(),
+      // labour_card_attachment: Joi.alternatives()
+      //   .try(
+      //     fileSchema, // single file object
+      //     Joi.array().items(fileSchema).max(2) // array of file objects
+      //   )
+      //   .optional(),
+    //   other_attachments: Joi.alternatives()
+    //     .try(
+    //       fileSchema, 
+    //       Joi.array())
+    //     .optional(),
+
+    other_attachments: Joi.array()
+    .items(Joi.string().min(5).max(255)) 
+    .max(3) 
+    .optional()
     }).required(),
+
     mobile_number: Joi.string().trim().allow(null, "").required(),
     personal_email_address: Joi.string()
       .pattern(/^[a-z0-9._]+@[a-z0-9.-]+\.[a-z]{2,}$/)
