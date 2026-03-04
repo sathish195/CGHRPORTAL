@@ -6,7 +6,7 @@ function emp_login(data) {
   const schema = Joi.object({
     email: Joi.string().required().max(55),
     password: Joi.string().required().min(8).max(15),
-    last_ip: Joi.string().required(),
+    // last_ip: Joi.string().required(),
     fcm_token: Joi.string().required(),
     device_id: Joi.string().required(),
     browserid: Joi.string().required(),

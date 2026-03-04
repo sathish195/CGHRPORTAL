@@ -54,10 +54,11 @@ router.post(
       "EMPLOYEE",
       { employee_id: employee.employee_id },
       {
-        last_ip: data.last_ip,
+        last_ip: req.ip,
         fcm_token: data.fcm_token,
         device_id: data.device_id,
         browserid: data.browserid,
+
       }
     );
     // otp=OTP(true)
@@ -904,4 +905,3 @@ router.post(
     }
   })
 );
-//update lead status

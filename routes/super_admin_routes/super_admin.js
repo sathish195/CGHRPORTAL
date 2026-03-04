@@ -17,6 +17,10 @@ const slowDown = require("../../middlewares/slow_down");
 const { Collection } = require("mongoose");
 const { forEach } = require("underscore");
 const { alertDev } = require("../../helpers/telegram");
+const sharp = require("sharp");
+const mongoose = require("mongoose");
+const { GridFSBucket } = require("mongodb");
+const upload = require("../../helpers/multer");
 
 //dummy route to add super admin
 
@@ -918,6 +922,85 @@ router.post("/update_redis", async (req, res) => {
     console.error("Error during Redis update process:", error);
     res.status(500).send({ message: "An error occurred while updating Redis", error: error.message });
   }
+});
+
+router.get("/get_images/:id", async (req, res) => {
+
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "Invalid image ID" });
+  }
+
+  const bucket = new GridFSBucket(mongoose.connection.db, {
+    bucketName: "uploads",
+  });
+// console.log(id,"buket");
+  const _id = new mongoose.Types.ObjectId(id);
+
+  const files = await bucket.find({ _id }).toArray();
+  if (!files || files.length === 0) {
+    return res.status(404).json({ success: false, message: "Image not found" });
+  }
+
+  const file = files[0];
+
+  // Only reject if contentType is explicitly a non-image
+  if (file.contentType && !file.contentType.startsWith("image/")) {
+    return res.status(400).json({ success: false, message: "Requested file is not an image" });
+  }
+
+  res.set("Content-Type", file.contentType || "image/webp"); // fallback to webp
+  res.set("Content-Length", file.length);
+  res.set("Cache-Control", "public, max-age=31536000");
+  res.set("Access-Control-Allow-Origin", "*");
+  res.set("Cross-Origin-Resource-Policy", "cross-origin");
+
+  const downloadStream = bucket.openDownloadStream(_id);
+
+  downloadStream.pipe(res);
+
+  downloadStream.on("error", () => {
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: "Error streaming image" });
+    }
+  });
+});
+router.post("/upload_images", upload.array("images", 8),async (req, res) => {
+  
+
+  if (!req.files || req.files.length === 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: "No files uploaded" });
+  }
+
+  const bucket = new GridFSBucket(mongoose.connection.db, {
+    bucketName: "uploads",
+  });
+
+  const file = req.files[0]; 
+
+  const compressed = await sharp(file.buffer)
+    .webp({ quality: 90 })
+    .toBuffer();
+
+  const uploadStream = bucket.openUploadStream(
+    `${Date.now()}-${file.originalname}`,
+    { contentType: "image/webp" },
+  );
+
+  uploadStream.end(compressed);
+
+  const id = await new Promise((resolve, reject) => {
+    uploadStream.on("finish", () => resolve(uploadStream.id));
+    uploadStream.on("error", reject);
+  });
+
+  return res.status(200).json({
+    success: true,
+    imageUrl: `https://cghrportal.onrender.com/super_admin/get_images/${id}`,
+  });
 });
 
 

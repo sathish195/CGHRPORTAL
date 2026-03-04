@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const {connectDB} = require("./helpers/db");
 
 app = express();
 app.set("trust proxy", 1);
@@ -9,7 +10,8 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 require("./helpers/cors")(app);
-require("./helpers/db")();
+// require("./helpers/db")();
+connectDB()
 require("./helpers/redisFunctions");
 require("./helpers/cron_job");
 
