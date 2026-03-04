@@ -6,7 +6,7 @@ function emp_login(data) {
   const schema = Joi.object({
     email: Joi.string().required().max(55),
     password: Joi.string().required().min(8).max(15),
-    // last_ip: Joi.string().required(),
+    last_ip: Joi.string().required(),
     fcm_token: Joi.string().required(),
     device_id: Joi.string().required(),
     browserid: Joi.string().required(),
@@ -160,13 +160,13 @@ function add_update_org(data) {
     address: Joi.string().min(5).max(100).required().trim(),
 
     billing_type: Joi.object({
-      type: Joi.string().valid("free", "paid").optional(),
+      type: Joi.string().valid("free", "paid").required(),
       plan: Joi.when("type", {
         is: "paid",
-        then: Joi.string().valid("6_months", "3_months", "1_year").optional(),
+        then: Joi.string().valid("6_months", "3_months", "1_year").required(),
         otherwise: Joi.string().allow(null, "").optional(),
       }),
-    }).optional(),
+    }).required(),
   });
 
   return schema.validate(data);
