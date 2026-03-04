@@ -98,9 +98,10 @@ router.post(
 router.post(
   "/update_jwt",
   rateLimit(60, 40),
+  Auth,
   Async(async (req, res) => {
   const employee = await mongoFunctions.find_one("EMPLOYEE", {
-    "basic_info.email": req.employee.email,
+    "basic_info.email": req.employee.email.toLowerCase(),
   });
   if (!employee)
     return res.status(400).send("No Employee Found With The Given Email");
