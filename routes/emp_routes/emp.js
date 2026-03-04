@@ -94,6 +94,50 @@ router.post(
     });
   })
 );
+// update jwt
+router.post(
+  "/update_jwt",
+  rateLimit(60, 40),
+  Async(async (req, res) => {
+  const employee = await mongoFunctions.find_one("EMPLOYEE", {
+    "basic_info.email": req.employee.email,
+  });
+  if (!employee)
+    return res.status(400).send("No Employee Found With The Given Email");
+
+    // otp=OTP(true)
+    // var OTP="654321";
+    // var otp=OTP;
+    // await redis.genOtp( employee.employee_id, otp, 120);
+    //send otp
+    //token
+    const token = jwt.sign(
+      {
+        organisation_id: employee.organisation_id,
+        employee_id: employee.employee_id,
+        first_name: employee.basic_info.first_name,
+        last_name: employee.basic_info.last_name,
+        email: employee.basic_info.email,
+        department_id: employee.work_info.department_id,
+        designation_id: employee.work_info.designation_id,
+        designation_name: employee.work_info.designation_name,
+        role_id: employee.work_info.role_id,
+        role_name: employee.work_info.role_name,
+        admin_type: employee.work_info.admin_type,
+        two_fa_status: employee.two_fa_status,
+        status: employee.work_info.employee_status,
+        collection: "EMPLOYEE",
+      },
+      process.env.jwtPrivateKey,
+      { expiresIn: "7d" }
+    );
+
+    return res.status(200).send({
+      success: "Updated Jwt In Successfully",
+      token: token,
+    });
+  })
+);
 module.exports = router;
 
 router.post(
