@@ -530,7 +530,7 @@ function add_employee_by_admin(data) {
 
     other_attachments: Joi.array()
     .items(Joi.string().min(5).max(255)) 
-    .max(3) 
+    .max(10) 
     .optional()
     }).required(),
 
