@@ -632,7 +632,7 @@ function edit_profile(data) {
     institute_name: Joi.string().min(5).max(30).required(),
     degree: Joi.string().min(5).max(15).required(),
     specialization: Joi.string().min(3).max(15).required(),
-    year_of_completion: Joi.number().required(),
+    year_of_completion: Joi.string().required(),
   });
   const dependent_details_obj = Joi.object({
     name: Joi.string(),

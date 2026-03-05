@@ -8,6 +8,8 @@ const error = require("../middlewares/error");
 const queue = require("express-queue");
 const super_admin = require("../routes/super_admin_routes/super_admin");
 const events = require("../routes/org_routes/events");
+const upload = require("../routes/upload");
+const chat = require("../routes/chat");
 
 module.exports = (app) => {
   // Middleware setup
@@ -70,6 +72,22 @@ module.exports = (app) => {
   app.use(
     "/crm",
     events,
+    queue({
+      activeLimit: 1,
+      queuedLimit: -1,
+    })
+  );
+  app.use(
+    "/crm_up",
+    upload,
+    queue({
+      activeLimit: 1,
+      queuedLimit: -1,
+    })
+  );
+  app.use(
+    "/chat",
+    chat,
     queue({
       activeLimit: 1,
       queuedLimit: -1,

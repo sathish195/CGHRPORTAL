@@ -13,11 +13,9 @@ if (process.env.REDIS_URL) {
   client = RedisClient.createClient({
     url: `redis://:${process.env.REDIS_PASSWORD}@${process.env.REDIS_URL}:${process.env.REDIS_PORT}`,
   });
-
 }
 
 // alertDev(process.env.REDIS_URL);
-
 client.on("error", (err) => {
   console.log("redis err--->", err);
 });
@@ -366,4 +364,115 @@ module.exports = {
       console.error("Error removing task status:", error.message);
     }
   },
+
+  // Socket <-> Username mapping
+  redisAddSocket: async (username, socketId) => {
+    await client.sAdd(`${PROJECT_KEY}socket:user:${username}`, socketId);
+  },
+
+  redisRemoveSocket: async (username, socketId) => {
+    await client.sRem(`${PROJECT_KEY}socket:user:${username}`, socketId);
+  },
+
+  redisSocketCount: async (username) => {
+    return await client.sCard(`${PROJECT_KEY}socket:user:${username}`);
+  },
+
+  redisGetSockets: async (username) => {
+    return await client.sMembers(`${PROJECT_KEY}socket:user:${username}`);
+  },
+
+  // Force logout
+  redisForceLogout: async (username, io) => {
+    const sockets = await client.sMembers(
+      `${PROJECT_KEY}socket:user:${username}`,
+    );
+    for (const sid of sockets) {
+      io.to(sid).emit("account_disabled");
+      io.sockets.sockets.get(sid)?.disconnect(true);
+    }
+    await client.del(`socket:user:${username}`);
+  },
+  // 🔴 PUSH OFFLINE MESSAGE
+  redisPushOfflineMessage: async (username, message) => {
+    await client.rPush(
+      `${PROJECT_KEY}offline:${username}`,
+      JSON.stringify(message),
+    );
+  },
+
+  // 🟢 POP ALL OFFLINE MESSAGES
+  redisPopOfflineMessages: async (username) => {
+    const key = `${PROJECT_KEY}offline:${username}`;
+
+    const messages = await client.lRange(key, 0, -1);
+
+    if (messages && messages.length > 0) {
+      await client.del(key);
+      return messages.map((m) => JSON.parse(m));
+    }
+
+    return [];
+  },
+  redisIncrementUnread: async (username, conversationId) => {
+    await client.incr(`${PROJECT_KEY}unread:${username}:${conversationId}`);
+  },
+
+  redisResetUnread: async (username, conversationId) => {
+    await client.del(`${PROJECT_KEY}unread:${username}:${conversationId}`);
+  },
+
+  redisGetUnread: async (username, conversationId) => {
+    const count = await client.get(
+      `${PROJECT_KEY}unread:${username}:${conversationId}`,
+    );
+    return Number(count || 0);
+  },
+
+  redisSetTyping: async (key) => {
+    await client.setEx(PROJECT_KEY + key, 3, "1"); // 3 seconds TTL
+  },
+
+  redisIsTyping: async (key) => {
+    return await client.exists(PROJECT_KEY + key);
+  },
+
+  redisSetOnCall: async (username) => {
+    await client.setEx(`${PROJECT_KEY}oncall:${username}`, 120, "1");
+  },
+  redisClearOnCall: async (username) => {
+    await client.del(`${PROJECT_KEY}oncall:${username}`);
+  },
+
+  redisIsOnCall: async (username) => {
+    return await client.exists(`${PROJECT_KEY}oncall:${username}`);
+  },
+  redisSetCallSession: async (callId, data) => {
+    await client.setEx(
+      `${PROJECT_KEY}call:${callId}`,
+      60,
+      JSON.stringify(data),
+    );
+  },
+
+  redisGetCallSession: async (callId) => {
+    const data = await client.get(`${PROJECT_KEY}call:${callId}`);
+    return data ? JSON.parse(data) : null;
+  },
+
+  redisClearCallSession: async (callId) => {
+    await client.del(`${PROJECT_KEY}call:${callId}`);
+  },
+  redisSetCallStart: async (callId) => {
+    await client.set(`${PROJECT_KEY}call_start:${callId}`, Date.now());
+  },
+
+  redisGetCallStart: async (callId) => {
+    return await client.get(`${PROJECT_KEY}call_start:${callId}`);
+  },
+
+  redisClearCallStart: async (callId) => {
+    await client.del(`${PROJECT_KEY}call_start:${callId}`);
+  },
 };
+

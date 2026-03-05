@@ -73,7 +73,7 @@ const EMPLOYEE_Schema = new mongoose.Schema(
           institute_name: { type: String, default: "" },
           degree: { type: String, default: "" },
           specialization: { type: String, default: "" },
-          year_of_completion: { type: Number, default: 0 },
+          year_of_completion: { type: String, default: 0 },
         },
       ],
     },
@@ -106,7 +106,33 @@ const EMPLOYEE_Schema = new mongoose.Schema(
       enum: ["Enable", "Disable"],
       default: "Disable",
     },
+    avatar: String,
+    about: String,
+
+    user_status: {
+      type: String,
+      enum: ["active", "inactive", "suspended"],
+      default: "inactive",
+      // index: true,
+    },
+
+    presence_status: {
+      type: String,
+      enum: ["online", "offline", "away"],
+      default: "offline",
+    },
+
+    lastSeen: Date,
+
+    devices: [
+      {
+        socketId: String,
+        platform: String,
+        lastActive: Date,
+      },
+    ],
     permissions: { type: Object, default: {} },
+    
   },
   { timestamps: true }
 );
